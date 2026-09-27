@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c1214">
+<title>Jimny JB74 改裝零件目錄</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Same night-trail palette as the configurator, so the two pages read as one
+   product rather than two sites that happen to link to each other. */
+:root{
+  --bg:#0c1214; --panel:#131b1e; --panel-2:#1a2428; --ink:#eff4f3; --ink-2:#94a5a8; --ink-3:#61747b;
+  --rule:#223034; --rule-2:#33454c; --key:#ffb24a; --key-dim:#2b2317; --key-ink:#11181a; --warn:#f0b64a;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --disp:"Archivo","Noto Sans TC","PingFang TC",sans-serif;
+  --body:"Noto Sans TC","PingFang TC",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+header{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--rule);padding-bottom:16px}
+.kicker{font:500 9.5px/1 var(--mono);letter-spacing:.2em;color:var(--ink-3);text-transform:uppercase}
+h1{font:800 27px/1.1 var(--disp);letter-spacing:-.01em;margin:8px 0 0}
+header a.back{font:600 13px var(--body);color:var(--key-ink);background:var(--key);padding:10px 14px;border-radius:2px;text-decoration:none}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0 6px;position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:2;border-bottom:1px solid var(--rule)}
+.chip{font:500 12px var(--body);padding:7px 11px;border:1px solid var(--rule-2);border-radius:20px;background:none;color:var(--ink-2);cursor:pointer}
+.chip[aria-pressed=true]{background:var(--key);border-color:var(--key);color:var(--key-ink);font-weight:600}
+.bar input{flex:1;min-width:160px;background:var(--panel);color:var(--ink);border:1px solid var(--rule-2);border-radius:2px;padding:8px 10px;font:14px var(--body)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:14px 0 4px;font-size:12.5px}
+nav.toc a{color:var(--ink-2);text-decoration:none;border-bottom:1px dotted var(--rule-2)}
+section{margin-top:28px}
+section h2{font:800 19px/1.2 var(--disp);letter-spacing:-.005em;margin:0 0 4px;display:flex;align-items:baseline;gap:10px}
+section h2 small{font:500 10px var(--mono);color:var(--ink-3);letter-spacing:.1em}
+.sub{font-size:12px;color:var(--ink-3);margin:0 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:12px 13px 11px;display:flex;flex-direction:column;gap:6px}
+.card.tw{border-color:#4a5a2e}
+.card .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.card b{font:500 14.5px/1.35 var(--body)}
+.card .brand{font:500 10px var(--mono);letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase;margin-top:2px}
+.card .price{font:800 17px/1.15 var(--disp);white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.card .price small{display:block;font:500 9px var(--mono);color:var(--ink-3);letter-spacing:.1em;margin-top:3px}
+.card .price.na{color:var(--ink-3);font-size:12px}
+.card .note{font-size:12px;color:var(--ink-2);line-height:1.5}
+.card .paint{height:34px;border-radius:3px;border:1px solid var(--rule-2)}
+.fins{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11px;color:var(--ink-2)}
+.fins span{display:inline-flex;align-items:center;gap:5px}
+.fins i{width:14px;height:14px;border-radius:50%;border:1px solid var(--rule-2);flex:none}
+.card .part{font:500 10.5px var(--mono);color:var(--ink-3)}
+.card .acts{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+.card .acts a{font:600 12px var(--body);padding:6px 10px;border-radius:2px;text-decoration:none;border:1px solid var(--rule-2);color:var(--ink-2)}
+.card .acts a.apply{background:var(--key-dim);border-color:var(--key-dim);color:var(--key)}
+.tag{font:500 9px var(--mono);letter-spacing:.1em;padding:2px 6px;border-radius:2px;background:var(--panel-2);color:var(--ink-2)}
+.tag.tw{background:#2e3a1c;color:#c7d98a}
+.tag.unc{background:#2a2113;color:#e0b070}
+.tag.ok{background:#3a3814;color:var(--key)}
+.tag.dim{background:none;border:1px solid var(--rule-2);color:var(--ink-3)}
+.empty{color:var(--ink-3);font-size:13px;padding:10px 0}
+footer{margin-top:40px;font:500 10.5px/1.7 var(--mono);color:var(--ink-3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><div class="kicker">SUZUKI · JB74W · 改裝零件目錄</div><h1>Jimny JB74 零件與價格</h1></div>
+    <a class="back" href="app.html">← 回 3D 配置器</a>
+  </header>
+  <div class="bar" id="bar">
+    <button class="chip" data-f="all" aria-pressed="true">全部</button>
+    <button class="chip" data-f="tw" aria-pressed="false">台灣有售（台幣價）</button>
+    <button class="chip" data-f="jp" aria-pressed="false">日本</button>
+    <button class="chip" data-f="other" aria-pressed="false">澳洲／歐美</button>
+    <button class="chip" data-f="photo" aria-pressed="false">已依實照校正</button>
+    <input id="q" type="search" placeholder="搜尋品牌、型號、關鍵字…">
+  </div>
+  <nav class="toc" id="toc"></nav>
+  <section id="demo"><h2>日本改裝大廠官方示範車<small id="demoN"></small></h2>
+    <p class="sub">各廠自己官網或展會頁上的 JB74 示範車，逐項對到本目錄：✓ 是目錄裡已有、可以直接套用的零件，其餘是目錄還沒收的。車色多數廠商沒寫。資料來源 docs/jb74-demo-cars.json（2026-09-25）。</p>
+    <div class="grid" id="demoGrid"><div class="empty">載入中…</div></div></section>
+  <div id="cats"></div>
+  <footer id="foot"></footer>
+</div>
+<script type="module">
+import { COLORS, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS,
+  ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, OTHERS, KITS, HOODS, SPARE_COVERS, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS,
+  LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FACES, FENDERS, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, TENTS, CAMP_EXTRAS } from './parts.js';
+import { priceLabel, FX_NOTE } from './fx.js';
+
+// key = the configurator's state key, so "套用" can deep-link into app.html
+const CATS = [
+  ['車身顏色', 'color', COLORS.map(c => ({ ...c, id: c.code, label: `${c.name}　${c.code}`,
+    cur: c.tw || c.wrap ? 'TWD' : 'JPY', price: null, noPrice: true,
+    brand: c.tw === true ? '台灣在售' : c.tw === '雙色' ? '台灣僅雙色（黃黑／藍黑）' : c.wrap ? '改色膜，非原廠色' : '日規專屬，台灣未導入' })),
+    '台灣官方從未公布車色代碼，此處代碼為日規對應款；色值取自台灣官網與型錄取樣（docs/jb74-colors-tw.json）'],
+  ['懸吊舉升', 'lift', LIFTS, '依吋數分組；超過 50mm 需橫樑下降座，3 吋以上需 Caster 修正'],
+  ['輪框', 'wheel', WHEELS, '只收各廠 JB74（Sierra）那一列的尺寸，不收 JB64 的 +20／+22；每款只列原廠有賣的顏色（色塊外圈是第二色，例如切削輪唇）。資料來源 docs/jb74-wheels-jp.json、docs/jb74-wheels-tw.json（2026-09-27）'],
+  ['輪胎尺寸', 'tyre', TYRES, '外徑決定舉升需求'],
+  ['輪胎型號（胎紋）', 'tread', TYRE_MODELS, '白字＝原廠有 OWL／RWL 版本'],
+  ['全車套件', 'kit', KITS.filter(k => k.id !== 'none'), 'DAMD 的整套外觀件：選一款就同時換掉水箱罩與前後保桿。台灣無總代理，授權經銷商為台中 Fujii74、新北 JP Racing、台南 JT Garage'],
+  ['引擎蓋', 'hood', HOODS, ''],
+  ['備胎蓋', 'spareCoverKit', SPARE_COVERS, ''],
+  ['換臉套件', 'face', FACES, '水箱罩、頭燈與前保桿整組換掉；選了就不再另選前保桿與水箱護罩'],
+  ['寬體葉子板', 'fender', FENDERS, '比 Sierra 原廠爆龜再往外擴；歐美品牌查到的都只適用舊款窄體 JB23／JB43'],
+  ['車頂尾翼', 'spoiler', SPOILERS, ''],
+  ['擋泥板（套件）', 'mudFlap', MUD_FLAPS, ''],
+  ['側飾條', 'sideMould', SIDE_MOULDINGS, ''],
+  ['車頂帳', 'tent', TENTS, 'JB74 車頂載重 30kg（含車頂架），市面上所有車頂帳本身都超過'],
+  ['車尾／車側帳', 'campExtra', CAMP_EXTRAS, ''],
+  ['前保桿', 'frontBumper', FRONT_BUMPERS, ''],
+  ['後保桿', 'rearBumper', REAR_BUMPERS, ''],
+  ['水箱護罩', 'grille', GRILLES, ''],
+  ['車身腰線貼', 'stripe', STRIPES, '裁切貼不是烤漆；主色沒變就不必辦變更登記'],
+  ['外掛防滾籠', 'cage', CAGES, '整台車的外輪廓會變，雙色車與有雨槽飾條的車裝不上'],
+  ['車頂架', 'roofRack', ROOF_RACKS, ''],
+  ['車邊帳', 'awning', AWNINGS, '台灣左駕：左側＝駕駛側；一般裝副駕（右）側或依露營習慣'],
+  ['側踏／岩石滑桿', 'sideStep', SIDE_STEPS, ''],
+  ['後爬梯', 'ladder', LADDERS, ''],
+  ['拿掉備胎', 'spareDelete', SPARE_DELETES, '備胎與原廠備胎架拆掉，背門上的螺絲孔用蓋子或飾板封起來；空出來的背門可以裝下面四類'],
+  ['背門護板', 'tgPanel', TG_PANELS, '需先拿掉備胎'],
+  ['背門書包', 'tgBag', TG_BAGS, '需先拿掉備胎'],
+  ['背門框架', 'tgFrame', TG_FRAMES, '需先拿掉備胎'],
+  ['拖車座', 'hitch', HITCHES, '二輪車架插在拖車座的方孔（receiver）裡'],
+  ['二輪車架', 'carrier', CARRIERS, '腳踏車／機車架；配置器上的車是示意，尺寸取自原廠規格'],
+  ['呼吸管', 'snorkel', SNORKELS, 'JB74 1.5L 進氣在右側'],
+  ['排氣管', 'exhaust', EXHAUSTS, 'JB74 原廠從右側出；多數系統從外面只看得到管口，真正改變側面輪廓的是側出與橫置砲管那幾套'],
+  ['車頂燈條', 'lightBar', LIGHT_BARS, '車頂動態載重 30kg，扣掉車頂架後留給燈的不多'],
+  ['車頂圓燈', 'roofLights', ROOF_LIGHTS, 'KC 的「微笑燈」是黑底黃的 logo 燈罩，不是另一種燈'],
+  ['車頭燈條', 'grilleLight', GRILLE_LIGHTS, 'STEDI 沒有 Jimny 的格柵內支架；Rally Bar 是裝在水箱罩「前方」，真正裝在格柵後方的是 Bushranger'],
+  ['滅火器', 'extinguisher', EXTINGUISHERS, '沒有任何廠商做 JB74 尾梯專用架；鐵窗 MOLLE 板載重只有 2–5kg'],
+  ['後照鏡', 'mirrors', MIRRORS, ''],
+  ['其他配件', null, OTHERS, '以配置器的開關對應（側裙、鐵窗、燈具、備胎配件）'],
+];
+const region = (it) => it.cur === 'TWD' ? 'tw' : it.cur === 'JPY' ? 'jp' : (it.cur ? 'other' : 'none');
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+let filter = 'all', query = '';
+function card(it, key) {
+  const r = region(it), p = priceLabel(it);
+  const skip = it.id === 'none' || it.id === 'stock' || (it.price === 0 && !it.note);
+  if (skip) return '';
+  const modelled = key !== null || it.key;
+  const tags = [it.photo ? '<span class="tag ok">已依實照校正</span>' : modelled ? '<span class="tag">3D 已建模</span>' : '<span class="tag dim">僅列表</span>',
+    r === 'tw' ? '<span class="tag tw">台灣有售</span>' : '', it.mit === true ? '<span class="tag tw">台灣製</span>' : it.mit === 'unclear' ? '<span class="tag unc">產地未標</span>' : '', it.uncertain ? '<span class="tag unc">價格／規格待查證</span>' : '',
+    it.owl ? '<span class="tag">有白字版</span>' : '', it.inch ? `<span class="tag">${esc(it.inch)}</span>` : ''].join('');
+  const apply = key ? `<a class="apply" href="app.html?${key}=${encodeURIComponent(it.id)}${key === 'tread' ? '&owl=' + !!it.owl : ''}">套用到配置器</a>`
+    : it.key ? `<a class="apply" href="app.html?${it.key}=${it.key === 'wheel' ? 'maxx' : it.key === 'ladder' ? 'fr' : 'true'}">套用到配置器</a>` : '';
+  return `<div class="card ${r === 'tw' ? 'tw' : ''}">
+    <div class="top"><div><b>${esc(it.label)}</b><div class="brand">${esc(it.brand ?? '')}</div></div>
+      ${it.noPrice ? '' : `<div class="price ${it.price ? '' : 'na'}">${p.main}<small>${esc(p.sub)}</small></div>`}</div>
+    ${it.hex != null ? `<div class="paint" style="background:#${it.hex.toString(16).padStart(6, '0')}"></div>` : ''}
+    ${it.finishes ? `<div class="fins">${it.finishes.map(f => { const h = (x) => '#' + x.toString(16).padStart(6, '0');
+      return `<span><i style="background:${f.hex2 == null ? h(f.hex) : `radial-gradient(circle, ${h(f.hex)} 0 50%, ${h(f.hex2)} 55%)`}"></i>${esc(f.name)}</span>`; }).join('')}</div>` : ''}
+    <div>${tags}</div>
+    ${it.note ? `<div class="note">${esc(it.note)}</div>` : ''}
+    ${it.part ? `<div class="part">P/N ${esc(it.part)}</div>` : ''}
+    <div class="acts">${it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener">產品頁 ↗</a>` : ''}${(it.refs ?? []).map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noopener" title="${esc(u)}">參考 ${i + 1} ↗</a>`).join('')}${apply}</div>
+  </div>`;
+}
+function matches(it) {
+  if (filter === 'photo') { if (!it.photo) return false; }
+  else if (filter !== 'all' && region(it) !== filter) return false;
+  if (!query) return true;
+  const hay = [it.label, it.brand, it.note, it.part, it.model, it.id].join(' ').toLowerCase();
+  return query.toLowerCase().split(/\s+/).every((w) => hay.includes(w));
+}
+function render() {
+  let total = 0;
+  document.getElementById('cats').innerHTML = CATS.map(([name, key, list, sub]) => {
+    const items = list.filter(matches);
+    const html = items.map((it) => card(it, key)).join('');
+    const n = items.filter((it) => it.id !== 'none' && it.id !== 'stock').length; total += n;
+    return `<section id="c-${key ?? 'others'}"><h2>${name}<small>${n} 項</small></h2>${sub ? `<p class="sub">${esc(sub)}</p>` : ''}
+      <div class="grid">${html || '<div class="empty">此篩選下沒有項目</div>'}</div></section>`;
+  }).join('');
+  document.getElementById('toc').innerHTML = CATS.map(([name, key]) => `<a href="#c-${key ?? 'others'}">${name}</a>`).join('');
+  document.getElementById('foot').innerHTML = `共 ${total} 項。價格先列廠商或通路的原幣標價，下方小字是台幣概估。${FX_NOTE} 原始標價為各廠商／通路頁面所示（日本含稅、澳洲含 GST），運費與關稅另計；標「待查證」者為估值。資料日期 2026-09-21。<br>本站為個人非營利專案，與 Suzuki 及各改裝品牌無任何關聯；所有資訊皆整理自公開網路資料，規格、價格可能已變動，請以官方為準。商標屬各自所有者。如有不妥請至 <a href="https://github.com/carloxthebot/jimny/issues" target="_blank" rel="noopener">GitHub</a> 告知，將儘速修正或移除。— @Carlos`;
+}
+document.getElementById('bar').addEventListener('click', (e) => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  filter = b.dataset.f;
+  document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c === b));
+  render();
+});
+document.getElementById('q').addEventListener('input', (e) => { query = e.target.value.trim(); render(); });
+render();
+
+/* Official demo cars, matched against the catalogue. A "套用" link carries
+   only the parts the catalogue actually has, so it opens the closest build
+   the configurator can show -- and the card says what is missing. */
+const LISTS = Object.fromEntries(CATS.filter(c => c[1]).map(c => [c[1], c[2]]));
+const SLOT = { spareCover: 'spareCoverKit' };
+const has = (key, id) => id && id !== 'missing' && (LISTS[key] ?? []).some(x => x.id === id);
+fetch('docs/jb74-demo-cars.json').then(r => r.json()).then(d => {
+  const cars = d.demoCars.filter(c => /JB74/.test(c.chassis));
+  document.getElementById('demoN').textContent = `${cars.length} 台`;
+  document.getElementById('demoGrid').innerHTML = cars.map(c => {
+    const rows = [], q = new URLSearchParams();
+    const line = (label, key, id, text) => { const ok = has(key, id); if (ok) q.set(key, id); rows.push(`<li class="${ok ? 'ok' : 'no'}">${esc(label)}：${esc(text || '官網未寫')}</li>`); };
+    if (c.color?.code && LISTS.color?.some(x => x.id === c.color.code)) { q.set('color', c.color.code); if (c.color.twoTone) q.set('twoTone', 'true'); }
+    line('懸吊', 'lift', c.lift?.id, [c.lift?.product, c.lift?.mm ? `${c.lift.mm}mm` : ''].filter(Boolean).join(' '));
+    line('輪框', 'wheel', c.wheel?.id, [c.wheel?.brand, c.wheel?.model, c.wheel?.size].filter(Boolean).join(' '));
+    line('輪胎', 'tyre', c.tyre?.sizeId, [c.tyre?.brand, c.tyre?.model, c.tyre?.size].filter(Boolean).join(' '));
+    if (has('tread', c.tyre?.modelId)) q.set('tread', c.tyre.modelId);
+    for (const p of c.parts ?? []) {
+      const key = SLOT[p.slot] ?? p.slot;
+      line({ frontBumper: '前保桿', rearBumper: '後保桿', grille: '水箱罩', fender: '葉子板', hood: '引擎蓋', spoiler: '尾翼', exhaust: '排氣管',
+        sideStep: '側踏', roofRack: '車頂架', face: '換臉', mirrors: '後照鏡', spareCoverKit: '備胎蓋' }[key] ?? '其他', key, p.id, p.product);
+    }
+    const n = [...q.keys()].filter(k => k !== 'twoTone').length;
+    return `<div class="card demo"><div class="top"><div><b>${esc(c.name)}</b><div class="brand">${esc(c.maker)}</div></div></div>
+      ${c.silhouette ? `<div class="sil">${esc(c.silhouette)}</div>` : ''}
+      <ul>${rows.join('')}</ul>
+      ${c.note ? `<div class="note">${esc(c.note)}</div>` : ''}
+      <div class="acts"><a href="${esc(c.url)}" target="_blank" rel="noopener">示範車頁 ↗</a>${n ? `<a class="apply" href="app.html?${q}">套用目錄已有的 ${n} 項</a>` : ''}</div></div>`;
+  }).join('');
+}).catch(() => { document.getElementById('demoGrid').innerHTML = '<div class="empty">示範車資料載入失敗</div>'; });
+</script>
+</body>
+</html>

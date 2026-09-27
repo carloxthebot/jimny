@@ -1,0 +1,505 @@
+// Rig the downloaded Jimny so the configurator can drive it.
+//
+// The model arrives as 4,873 separate meshes with Portuguese names and no
+// hierarchy worth the name — everything is a sibling. Three things have to be
+// recovered before any of it is controllable:
+//
+//   1. SCALE.    The file is in arbitrary units. The car is 3550mm long, so the
+//                longest bound gives the conversion and every later number can
+//                be written in millimetres like the rest of the project.
+//   2. WHEELS.   Meshes whose name contains roda1..roda4 are the four corners;
+//                roda_1_1 is the tailgate spare. They get pulled into their own
+//                groups so tyre diameter can scale them and lift can drop them.
+//   3. PAINT.    Carro_Pintura is the body colour. It is shared by many meshes,
+//                so it gets cloned once and swapped in — mutating the original
+//                would also tint anything else that happens to reference it.
+//
+// Lift is applied by moving the WHEELS DOWN rather than the body up. Same
+// visual result, but it leaves the body at the origin so accessory positions
+// stay in one frame of reference.
+
+export const MODEL_SCALE_TARGET = 3550;   // mm, JB74 overall length
+
+/** Real PBR finishes (Poly Haven, CC0) shared by the car's trim and the parts.
+ *  Box-projected part UVs repeat every 100 mm, so repeat = 100 / real size. */
+let FINISHES = null;
+export function loadFinishes(THREE, base = 'model/pbr/') {
+  if (FINISHES) return FINISHES;
+  const ld = new THREE.TextureLoader();
+  const set = (id, mm, k) => {
+    const t = (m) => { const x = ld.load(`${base}${id}_${m}.jpg`); x.wrapS = x.wrapT = THREE.RepeatWrapping; x.repeat.set(100 / mm, 100 / mm); x.anisotropy = 4; return x; };
+    return { nor: t('nor_gl'), rough: t('rough'), k };
+  };
+  FINISHES = {
+    powder: set('leather_white', 300, 0.55),      // fine grain: powder coat, textured plastic
+    rubber: set('rubber_tiles', 2000, 0.6),
+    canvas: set('rough_linen', 270, 0.8),
+    pvc: set('scuba_suede', 285, 0.5),
+  };
+  return FINISHES;
+}
+
+/** Tileable grain for textured plastic and powder coat. `size` is the feature
+ *  size in texture pixels; the map repeats every ~10 cm of surface. */
+export function noiseBump(THREE, size = 6, repeat = 10) {
+  const N = 256, c = document.createElement('canvas'); c.width = c.height = N;
+  const ctx = c.getContext('2d'), img = ctx.createImageData(N, N), d = img.data;
+  const cells = Math.max(2, Math.round(N / size)), grid = new Float32Array(cells * cells);
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < grid.length; i++) grid[i] = rnd();
+  const at = (x, y) => grid[((y % cells) + cells) % cells * cells + ((x % cells) + cells) % cells];
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const gx = x / size, gy = y / size, x0 = Math.floor(gx), y0 = Math.floor(gy);
+    const tx = gx - x0, ty = gy - y0, sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+    const v = (at(x0, y0) * (1 - sx) + at(x0 + 1, y0) * sx) * (1 - sy) + (at(x0, y0 + 1) * (1 - sx) + at(x0 + 1, y0 + 1) * sx) * sy;
+    const g = Math.round(90 + v * 80 + (rnd() - 0.5) * 24);
+    const i = (y * N + x) * 4; d[i] = d[i + 1] = d[i + 2] = g; d[i + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat, repeat);
+  return t;
+}
+
+export function rigJimny(THREE, gltfScene) {
+  const root = new THREE.Group();
+  root.name = 'jimny-rig';
+
+  const raw = gltfScene;
+  const bb0 = new THREE.Box3().setFromObject(raw);
+  const size0 = bb0.getSize(new THREE.Vector3());
+  const longest = Math.max(size0.x, size0.y, size0.z);
+  const mmPerUnit = MODEL_SCALE_TARGET / longest;
+  const s = mmPerUnit * 0.001;              // model units -> metres
+
+  raw.scale.setScalar(s);
+  raw.updateMatrixWorld(true);
+
+  // re-measure in metres and sit the car on the floor, centred
+  const bb = new THREE.Box3().setFromObject(raw);
+  const c = bb.getCenter(new THREE.Vector3());
+  raw.position.x -= c.x;
+  raw.position.z -= c.z;
+  raw.position.y -= bb.min.y;
+  raw.updateMatrixWorld(true);
+
+  const BODY = new THREE.Group(); BODY.name = 'body';
+  const WHEELS = new THREE.Group(); WHEELS.name = 'wheels';
+  root.add(BODY, WHEELS);
+  BODY.add(raw);
+
+  // ---- find the wheels ---------------------------------------------------
+  const corners = { roda1: [], roda2: [], roda3: [], roda4: [] };
+  const spare = [];
+  raw.traverse((o) => {
+    if (!o.isMesh) return;
+    // GLTFLoader sanitises node names (whitespace -> '_'), so the file's
+    // "roda_1_2 roda1" arrives as "roda_1_2_roda1". A \b after the digit never
+    // matches before '_' — that silently found zero wheels, left them inside
+    // the body, and made every lift and tyre change float the whole car.
+    const n = o.name || '';
+    if (/roda_1_1(?!\d)/.test(n)) { spare.push(o); return; }
+    // the model also carries a painted hard cover over the spare (a 440 mm disc
+    // and ring at the tail); it goes with the spare so a built wheel shows its rim
+    {
+      const bb = new THREE.Box3().setFromObject(o), sz = bb.getSize(new THREE.Vector3()), c = bb.getCenter(new THREE.Vector3());
+      if (Math.abs(c.x) < 0.06 && c.z < -1.55 && sz.x > 0.40 && sz.y > 0.40 && sz.z < 0.2) { spare.push(o); return; }
+    }
+    const m = n.match(/roda([1-4])(?!\d)/);
+    if (m) corners['roda' + m[1]].push(o);
+  });
+
+  // Pull each corner into its own group, pivoted on the wheel centre, so the
+  // wheel can be placed on the ground independently of the body.
+  const wheelGroups = [];
+  root.updateMatrixWorld(true);
+  for (const key of Object.keys(corners)) {
+    const meshes = corners[key];
+    if (!meshes.length) continue;
+    const g = new THREE.Group(); g.name = key;
+    const box = new THREE.Box3();
+    for (const m of meshes) box.expandByObject(m);
+    const centre = box.getCenter(new THREE.Vector3());
+    g.position.copy(centre);
+    WHEELS.add(g);
+    g.updateMatrixWorld(true);
+    // attach() keeps each mesh's world transform while reparenting
+    for (const m of meshes) g.attach(m);
+    const sz = box.getSize(new THREE.Vector3());
+    g.userData.baseDia = Math.max(sz.y, sz.z);     // metres
+    g.userData.baseCentre = centre.clone();
+    wheelGroups.push(g);
+  }
+
+  // The model already carries a tailgate-mounted spare. Earlier this code
+  // reparented it to scale with the road tyres, and the transform maths threw
+  // it off the car. It is left exactly where the artist put it; only its
+  // measured position is exported, so a spare-wheel bag can be placed on it.
+  let spareBox = null;
+  if (spare.length) {
+    spareBox = new THREE.Box3();
+    for (const m of spare) spareBox.expandByObject(m);
+  }
+
+  // ---- paint: clone so the swatch cannot bleed into other materials -----
+  const painted = [];
+  raw.traverse((o) => {
+    if (o.isMesh && /pintura/i.test(o.material?.name || '')) painted.push(o);
+  });
+  // The stock tow hooks (one front, two rear: thin plates low under the
+  // bumpers) were modelled with the body paint and came out orange or
+  // purple under a two-tone car. They are black steel.
+  const hookMat = new THREE.MeshStandardMaterial({ name: 'TowHook', color: 0x1d1f21, roughness: 0.5, metalness: 0.6 });
+  for (let i = painted.length - 1; i >= 0; i--) {
+    const b = new THREE.Box3().setFromObject(painted[i]);
+    if ((b.max.y + b.min.y) / 2 < 0.5 && (b.max.x - b.min.x) < 0.03) { painted[i].material = hookMat; painted.splice(i, 1); }
+  }
+  let paintMat = null;
+  if (painted.length) {
+    // car paint is a colour coat under clear lacquer; the clearcoat layer is
+    // what gives the sharp reflection on top of a soft base
+    paintMat = new THREE.MeshPhysicalMaterial({ name: 'BodyPaint', color: 0x6a6866, roughness: 0.42, metalness: 0.15,
+      clearcoat: 1.0, clearcoatRoughness: 0.06 });
+    for (const m of painted) m.material = paintMat;
+  }
+  // ---- split paint: a second colour below a line round the car. Beyond's
+  // demo cars get most of their character this way -- ivory over orange,
+  // grey over purple -- with the arch flares painted the lower colour so the
+  // black plastic disappears. It is done in the shader on WORLD height, so
+  // anything wearing the body paint (painted bumpers, wide fenders, and the
+  // stock flares when they are painted) follows the same line.
+  const split = { y: { value: 1e9 }, lower: { value: new THREE.Color(0x6a6866) }, on: { value: 0 } };
+  if (paintMat) {
+    paintMat.onBeforeCompile = (sh) => {
+      sh.uniforms.uSplitY = split.y; sh.uniforms.uLower = split.lower; sh.uniforms.uSplitOn = split.on;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vWY;')
+        .replace('#include <project_vertex>', '#include <project_vertex>\nvWY = (modelMatrix * vec4(transformed, 1.0)).y;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>',
+        '#include <common>\nvarying float vWY;\nuniform float uSplitY;\nuniform vec3 uLower;\nuniform float uSplitOn;')
+        .replace('#include <color_fragment>', `#include <color_fragment>
+          if (uSplitOn > 0.5) {
+            float e = max(fwidth(vWY), 1e-4);
+            diffuseColor.rgb = mix(uLower, diffuseColor.rgb, smoothstep(uSplitY - e, uSplitY + e, vWY));
+          }`);
+    };
+    paintMat.customProgramCacheKey = () => 'bodypaint-split';
+  }
+
+  // ---- roof, for two-tone: painted meshes in the top fifth of the car ----
+  const roofMeshes = [];
+  const full = new THREE.Box3().setFromObject(raw);
+  const roofLine = full.min.y + (full.max.y - full.min.y) * 0.78;
+  for (const m of painted) {
+    const b = new THREE.Box3().setFromObject(m);
+    if (b.min.y > roofLine) roofMeshes.push(m);
+  }
+  let roofMat = null;
+  if (roofMeshes.length && paintMat) {
+    roofMat = paintMat.clone();
+    roofMat.name = 'RoofPaint';
+  }
+
+  // ---- anchors, MEASURED ------------------------------------------------
+  // Accessories were previously positioned from hand-guessed constants copied
+  // off an earlier hand-built model. On this mesh those numbers put the roof
+  // rack in mid-air and drove the snorkel through the floor. Everything below
+  // is measured off the actual geometry instead, in millimetres.
+  const M = 1000;                                  // metres -> mm
+  const paintedBox = new THREE.Box3();
+  for (const m of painted) paintedBox.expandByObject(m);
+
+  // roof: the top of the painted shell, ignoring the aerial
+  let roofY = -Infinity, roofXHalf = 0, roofZMin = Infinity, roofZMax = -Infinity;
+  for (const m of painted) {
+    const b = new THREE.Box3().setFromObject(m);
+    if (b.max.y > paintedBox.min.y + (paintedBox.max.y - paintedBox.min.y) * 0.80) {
+      const w = Math.max(Math.abs(b.min.x), Math.abs(b.max.x));
+      if (b.max.x - b.min.x > 0.4) {              // a real roof panel, not a trim strip
+        roofY = Math.max(roofY, b.max.y);
+        roofXHalf = Math.max(roofXHalf, w);
+        roofZMin = Math.min(roofZMin, b.min.z);
+        roofZMax = Math.max(roofZMax, b.max.z);
+      }
+    }
+  }
+  if (!isFinite(roofY)) { roofY = paintedBox.max.y; roofXHalf = paintedBox.max.x; }
+
+  // body sides at door height (half-way up the painted shell)
+  const midY = (paintedBox.min.y + paintedBox.max.y) / 2;
+  let sideXHalf = 0;
+  for (const m of painted) {
+    const b = new THREE.Box3().setFromObject(m);
+    if (b.min.y < midY && b.max.y > midY)
+      sideXHalf = Math.max(sideXHalf, Math.abs(b.min.x), Math.abs(b.max.x));
+  }
+  if (!sideXHalf) sideXHalf = paintedBox.max.x;
+
+  const wheelZ = wheelGroups.map((g) => g.position.z);
+  const frontAxleZ = Math.max(...wheelZ), rearAxleZ = Math.min(...wheelZ);
+
+  const anchors = {
+    bodyW: sideXHalf * 2 * M,
+    halfW: sideXHalf * M,
+    roofY: roofY * M,
+    roofZFront: roofZMax * M,
+    roofZRear: roofZMin * M,
+    roofHalfW: roofXHalf * M,
+    noseZ: paintedBox.max.z * M,
+    tailZ: paintedBox.min.z * M,
+    sillY: paintedBox.min.y * M,
+    beltY: (paintedBox.min.y + (paintedBox.max.y - paintedBox.min.y) * 0.56) * M,
+    frontAxleZ: frontAxleZ * M,
+    rearAxleZ: rearAxleZ * M,
+    spare: spareBox ? {
+      x: (spareBox.min.x + spareBox.max.x) / 2 * M,
+      y: (spareBox.min.y + spareBox.max.y) / 2 * M,
+      z: (spareBox.min.z + spareBox.max.z) / 2 * M,
+      dia: Math.max(spareBox.max.y - spareBox.min.y, spareBox.max.x - spareBox.min.x) * M,
+    } : null,
+  };
+  anchors.glassY = anchors.beltY + (anchors.roofY - anchors.beltY) * 0.45;
+  anchors.glassH = (anchors.roofY - anchors.beltY) * 0.62;
+  anchors.grilleY = anchors.beltY - (anchors.beltY - anchors.sillY) * 0.30;
+  anchors.bumperY = anchors.sillY + (anchors.beltY - anchors.sillY) * 0.22;
+  anchors.beltline = anchors.beltY;          // accessories use this name
+
+  // ---- trim: give the exported greys their real finishes ------------------
+  // The OBJ export flattened every material to a mid grey, so the bumper,
+  // grille surround and flares read as primer, the Suzuki "S" as dull plastic
+  // and the headlamps as empty black holes. JB74 facts: textured black bumper,
+  // grille and arches; chrome badge; chrome reflector bowls behind clear lenses.
+  // Runs AFTER the anchors so re-painting the roof panel cannot move the rack.
+  const fin = loadFinishes(THREE);
+  const TRIM = {
+    black: new THREE.MeshStandardMaterial({ name: 'TrimBlack', color: 0x202224, roughness: 0.9, metalness: 0,
+      normalMap: fin.powder.nor, normalScale: new THREE.Vector2(0.5, 0.5) }),
+    glass: new THREE.MeshPhysicalMaterial({ name: 'Glass', color: 0x0b0f12, roughness: 0.04, metalness: 0,
+      transparent: true, opacity: 0.6 }),
+    satin: new THREE.MeshStandardMaterial({ name: 'TrimSatin', color: 0x161719, roughness: 0.5, metalness: 0.1 }),
+    chrome: new THREE.MeshStandardMaterial({ name: 'Chrome', color: 0xe2e5e8, roughness: 0.14, metalness: 1 }),
+    // lamp lenses were 40% black glass, which hid the chrome bowl and reflector
+    // the model already has behind them; clear glass lets those show
+    lens: new THREE.MeshStandardMaterial({ name: 'LampLens', color: 0xffffff, roughness: 0.05, metalness: 0,
+      transparent: true, opacity: 0.12, depthWrite: false }),
+  };
+  TRIM.blackFlat = TRIM.black.clone(); TRIM.blackFlat.normalMap = null; TRIM.blackFlat.name = 'TrimBlackFlat';
+  const byName = {
+    Carro_Plastico: TRIM.black,          // flares, mirrors, sills, lower grille mesh
+    Carro_Interno_1: TRIM.satin,         // grille surround (+ cabin trim)
+    Carro_Metal_Preto_1: TRIM.black,     // bumper, grille slats
+    Carro_Metal_Farol: TRIM.chrome,      // badge, lamp rings
+  };
+  const lampZ = frontAxleZ + 0.3;         // lenses ahead of this are head/fog lamps
+  raw.traverse((o) => {
+    if (!o.isMesh || Array.isArray(o.material)) return;
+    const name = o.material.name || '';
+    if (name === 'Carro_Metal_Preto_1') {
+      // the roof skin shares the bumper's material but is body-coloured on a JB74
+      const b = new THREE.Box3().setFromObject(o);
+      if (b.min.y > roofLine && b.max.x - b.min.x > 0.4 && paintMat) {
+        o.material = paintMat; painted.push(o); roofMeshes.push(o); return;
+      }
+    }
+    if (name === 'Carro_Vidros') {
+      const b = new THREE.Box3().setFromObject(o);
+      if (b.min.z > lampZ && b.max.y < roofLine * 0.75) o.material = TRIM.lens;
+      else o.material = TRIM.glass;
+      return;
+    }
+    if (byName[name]) {
+      // bump maps need texture coordinates; the export only has them on some meshes
+      o.material = byName[name] === TRIM.black && !o.geometry.attributes.uv ? TRIM.blackFlat : byName[name];
+    }
+  });
+  // the roof skin only joins roofMeshes here, so two-tone had no roof to paint
+  if (!roofMat && roofMeshes.length && paintMat) {
+    roofMat = paintMat.clone();
+    roofMat.name = 'RoofPaint';
+  }
+
+  // ---- stock front bumper and grille, so aftermarket ones can replace them
+  // Bumper: everything black ahead of the axle and below the bonnet line,
+  // plus the fog lamps set into it. Grille: the satin surround panel, its
+  // slats and inserts, the signal bezels and the badge. Headlamp units stay.
+  const stockBumper = [], stockGrille = [], stockRear = [], stockMirrors = [], stockFlares = [], stockRearLamps = [],
+    stockQuarter = [], stockHeadlamps = [], spareCarrier = [];
+  raw.traverse((o) => {
+    if (!o.isMesh || Array.isArray(o.material)) return;
+    const b = new THREE.Box3().setFromObject(o);
+    const c = b.getCenter(new THREE.Vector3()).multiplyScalar(1000);
+    const n = o.material.name;
+    // the tailgate spare carrier: a chrome bracket 402 x 190 standing off the
+    // tailgate at y 793-982 plus its centre stud (probed 2026-09-27); a spare
+    // delete takes both off and leaves the tailgate's mounting pad bare
+    if (c.z < -1530 && Math.abs(c.x) < 60 && c.y > 780 && c.y < 1000 && n === 'Chrome') { spareCarrier.push(o); return; }
+    // rear bumper: the one big satin shell under the tailgate; the tail lamps set into it stay
+    if (c.z < -1400 && c.y < 650 && n === 'TrimSatin' && (b.max.x - b.min.x) > 1.0) { stockRear.push(o); return; }
+    // tail lamp units in the stock bumper: hidden only by bumpers that bring their own lamps
+    if (c.z < -1540 && c.y > 440 && c.y < 600 && Math.abs(c.x) > 330 && Math.abs(c.x) < 700 && /Chrome|Vidro|Reflet|Reflec|Glass|LampLens/.test(n)) { stockRearLamps.push(o); return; }
+    // wheel-arch flares: the four big black arch shells (replaced by aftermarket flares)
+    if (Math.abs(c.x) > 650 && c.y > 500 && c.y < 750 && (b.max.z - b.min.z) > 0.8 && /^TrimBlack/.test(n)) { stockFlares.push(o); return; }
+    // door mirrors: the glass and its two housing shells outboard of the door skin
+    if (Math.abs(c.x) > 780 && c.y > 1050 && c.y < 1300 && c.z > 350 && c.z < 550 && /Espelhos|^TrimBlack/.test(n)) { stockMirrors.push(o); return; }
+    // rear quarter glass: a gullwing window replaces it, so with one fitted
+    // the pane has to go or the open window hangs in front of its own glass
+    if (Math.abs(c.x) > 600 && c.y > 1050 && c.y < 1550 && c.z < -600 && c.z > -1400 && /Glass|Vidro/.test(n)) { stockQuarter.push(o); return; }
+    if (c.z < 1500) return;
+    // headlamp units (lens, bowl, ring, reflector): round, centred about
+    // x +-550, y 855. Only a face kit takes these away.
+    if (c.z > 1540 && Math.abs(c.x) > 400 && Math.abs(c.x) < 700 && c.y > 740 && c.y < 990 &&
+      (b.max.x - b.min.x) < 0.3 && !/BodyPaint/.test(n)) { stockHeadlamps.push(o); return; }
+    // (TrimBlackFlat is the same finish on meshes without UVs)
+    if (c.y < 720 && c.z > 1550 && (/^TrimBlack/.test(n) || (c.y < 650 && /Chrome|LampLens|Carro_Ref/.test(n))))
+      stockBumper.push(o);
+    else if (c.y >= 740 && c.y < 1000 && (n === 'TrimSatin' || (/^TrimBlack/.test(n) && c.z > 1560) ||
+      (n === 'Chrome' && Math.abs(c.x) < 100)))
+      stockGrille.push(o);
+  });
+
+  const dims = {
+    mmPerUnit,
+    lengthMM: (full.max.z - full.min.z) * M,
+    widthMM: (full.max.x - full.min.x) * M,
+    heightMM: (full.max.y - full.min.y) * M,
+  };
+
+  root.userData = {
+    BODY, WHEELS, wheelGroups, spareBox, spare, anchors, stockBumper, stockGrille, stockRear, stockMirrors, stockFlares, stockRearLamps, stockQuarter, stockHeadlamps, spareCarrier,
+    paintMat, roofMat, roofMeshes, painted, dims, split, splitMM: null, flareMats: null,
+    baseTyreDia: wheelGroups[0]?.userData.baseDia ?? 0.693,
+  };
+  return root;
+}
+
+/** Apply a configuration to a rigged model. Pure geometry — no UI here. */
+export function applyConfig(THREE, rig, cfg) {
+  const U = rig.userData;
+  const mm = 0.001;
+
+  if (U.paintMat && cfg.bodyColor != null) U.paintMat.color.setHex(cfg.bodyColor);
+  if (U.paintMat) U.paintMat.metalness = cfg.bodyMetal ?? 0.15;   // metallic silvers need more than the default
+  for (const m of U.stockBumper) m.visible = !cfg.hideBumper;
+  for (const m of U.stockGrille) m.visible = !cfg.hideGrille;
+  for (const m of U.stockRear) m.visible = !cfg.hideRear;
+  // a stock rear bar repainted body colour (DAMD little G. STANDARD's option)
+  for (const m of U.stockRear) { m.userData.ownMat ??= m.material; m.material = cfg.paintRear && U.paintMat ? U.paintMat : m.userData.ownMat; }
+  for (const m of U.stockMirrors) m.visible = !cfg.hideMirrors;
+  for (const m of U.stockFlares) m.visible = !cfg.hideFlares;
+  // painted flares wear the body paint, so below the split they take the
+  // lower colour; unpainted they go back to the black resin they came in
+  if (!U.flareMats) U.flareMats = U.stockFlares.map(m => m.material);
+  U.stockFlares.forEach((m, i) => { m.material = cfg.paintFlares && U.paintMat ? U.paintMat : U.flareMats[i]; });
+  U.splitMM = cfg.splitColor != null ? (cfg.splitY ?? 1010) : null;
+  U.split.on.value = U.splitMM != null ? 1 : 0;
+  if (U.splitMM != null) U.split.lower.value.setHex(cfg.splitColor);
+  for (const m of U.stockRearLamps) m.visible = !cfg.hideRearLamps;
+  for (const m of U.stockQuarter) m.visible = !cfg.hideQuarterGlass;
+  for (const m of U.stockHeadlamps) m.visible = !cfg.hideHeadlamps;
+  for (const m of U.spareCarrier ?? []) m.visible = !cfg.spareDelete;
+  // a tinted cover over the headlamp lenses (Beyond's yellow acrylic)
+  if (!U.lampCover) U.lampCover = new THREE.MeshStandardMaterial({ name: 'LampCover', color: 0xf3c21c, roughness: 0.08,
+    metalness: 0, transparent: true, opacity: 0.62, depthWrite: false });
+  if (cfg.lampTint != null) U.lampCover.color.setHex(cfg.lampTint);
+  for (const m of U.stockHeadlamps) {
+    m.userData.lensMat ??= m.material;
+    if (m.userData.lensMat?.name !== 'LampLens') continue;
+    m.material = cfg.lampTint != null ? U.lampCover : m.userData.lensMat;
+  }
+  if (U.roofMat) {
+    const twoTone = !!cfg.twoTone;
+    U.roofMat.color.setHex(twoTone ? (cfg.roofColor ?? 0x1e2326) : (cfg.bodyColor ?? 0x6a6866));
+    for (const m of U.roofMeshes) m.material = twoTone ? U.roofMat : U.paintMat;
+  }
+
+  // Wheels. The model's own are hidden and a built wheel takes each place, so
+  // the rim you chose is the rim you see, and fitting a taller tyre grows the
+  // SIDEWALL instead of scaling a 15" rim into a 17" one.
+  //
+  // Heights, ground at y = 0:
+  //   wheel centre = tyre radius                (the tyre is always on the ground)
+  //   body         = rest + lift + half the tyre's growth
+  // An earlier version also pushed the wheels DOWN by the lift while raising
+  // the body, applying it twice and leaving the tyres hanging in mid-air.
+  const targetDia = (cfg.tyreDia ?? 693) * mm;
+
+  if (cfg.buildWheel) {
+    const spec = {
+      rimDia: cfg.rimDia ?? 15, tyreDia: cfg.tyreDia ?? 693,
+      width: cfg.tyreWidth ?? 195, style: cfg.wheelStyle ?? 'stock',
+      tread: cfg.tread ?? 'at', rimColor: cfg.rimColor ?? 0xc8ccd0, rimColor2: cfg.rimColor2 ?? null,
+      sheen: cfg.rimSheen ?? 'satin', sheen2: cfg.rimSheen2 ?? null,
+    };
+    const key = JSON.stringify(spec);
+    // Nothing about the wheels moved (a bumper, a colour, a rack): leave the
+    // five on the car alone. Rebuilding them on every change was most of the
+    // time a click took -- each tyre is a freshly meshed, re-normalled solid.
+    const whole = `${key}|${cfg.spacer ?? 0}|${!!cfg.spareDelete}|${targetDia}`;
+    if (U.wheelKey === whole && U.builtWheels?.length) {
+      U.BODY.position.y = (cfg.lift ?? 0) * mm + (targetDia - U.baseTyreDia) / 2;
+      return;
+    }
+    U.wheelKey = whole;
+    // One wheel is built per design and size, and the five on the car are
+    // clones of it sharing its geometry and materials. A few recent designs
+    // are kept, so flicking back and forth between two wheels is instant.
+    U.wheelCache ??= new Map();
+    let proto = U.wheelCache.get(key);
+    if (proto) U.wheelCache.delete(key);
+    else {
+      proto = cfg.buildWheel(spec);
+      proto.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    }
+    U.wheelCache.set(key, proto);
+    if (U.wheelCache.size > 6) {
+      const [oldKey, old] = U.wheelCache.entries().next().value;
+      U.wheelCache.delete(oldKey);
+      // only the tyre is the build's own; the rim shares the parts file's geometry
+      old.traverse((o) => { if (o.isMesh && o.name === 'tyre') { o.geometry.dispose(); o.material.dispose(); } });
+    }
+    for (const w of U.builtWheels ?? []) w.parent?.remove(w);
+    U.builtWheels = [];
+    for (const g of U.wheelGroups) {
+      g.visible = false;                       // reference geometry only
+      const w = proto.clone(true);
+      const side = Math.sign(g.position.x) || 1;
+      // turn, don't mirror: a mirrored wheel reads its sidewall lettering backwards
+      w.rotation.y = side < 0 ? Math.PI : 0;
+      w.position.set(g.position.x + side * (cfg.spacer ?? 0) * mm, targetDia / 2, g.position.z);
+      U.WHEELS.add(w);
+      U.builtWheels.push(w);
+    }
+    // the tailgate spare matches the road wheels: the model's own is hidden
+    // and a built one hung in its place, face to the rear
+    U.spareShift = null;
+    if (U.spareBox) for (const m of U.spare) m.visible = false;
+    // spare delete: no wheel on the tailgate at all
+    if (U.spareBox && !cfg.spareDelete) {
+      const w = proto.clone(true);
+      const c = U.spareBox.getCenter(new THREE.Vector3());
+      const spareDia = U.spareBox.max.y - U.spareBox.min.y;
+      w.rotation.y = Math.PI / 2;                // axle along Z, rim face towards -Z (rearward)
+      // a wider tyre grows REARWARD (-Z) so its inner face stays on the carrier and
+      // the carrier plate stays behind the rim face instead of poking through it
+      w.position.set(c.x, c.y + (targetDia - spareDia) * 0.25, c.z - ((cfg.tyreWidth ?? 195) * 0.92 * mm / 2 - (U.spareBox.max.z - U.spareBox.min.z) / 2) - 0.03);
+      // how far the spare moved from where the model had it: anything hung
+      // on the spare (bag, hard cover) has to move with it
+      U.spareShift = w.position.clone().sub(c);
+      U.BODY.add(w);
+      U.builtWheels.push(w);
+    }
+  } else {
+    for (const g of U.wheelGroups) { g.visible = true; g.position.y = targetDia / 2; }
+  }
+
+  U.BODY.position.y = (cfg.lift ?? 0) * mm + (targetDia - U.baseTyreDia) / 2;
+}
+
+/** The split line is in world height, so it rides up with the body every
+ *  frame while the lift eases in. */
+export function updateSplit(rig) {
+  const U = rig?.userData;
+  if (!U || U.splitMM == null) return;
+  U.BODY.updateMatrixWorld(true);
+  U.split.y.value = U.BODY.position.clone().set(0, U.splitMM / 1000, 0).applyMatrix4(U.BODY.matrixWorld).y;
+}
