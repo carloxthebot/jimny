@@ -17,7 +17,7 @@
      browser does not learn they exist until three.js has downloaded, parsed
      and run, which on a phone is seconds of an idle connection. -->
 <link rel="preload" as="fetch" type="model/gltf-binary" href="model/jimny-hq.glb" crossorigin>
-<link rel="preload" as="fetch" type="model/gltf-binary" href="model/rims.glb?v=202609281410" crossorigin>
+<link rel="preload" as="fetch" type="model/gltf-binary" href="model/rims.glb?v=202609281506" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
@@ -456,6 +456,7 @@ body.tray-open .tray{transform:translate(-50%,0);opacity:1;visibility:visible;tr
   backdrop-filter:blur(8px);transition:opacity .2s}
 .credit a{color:#e6edee}
 body.tray-open .credit{opacity:0;pointer-events:none}
+.credit .ai{font-weight:600}
 
 /* ── the build sheet (改裝單) ──────────────────────────────────────────── */
 .bill{position:absolute;right:calc(var(--gut) + var(--sar));bottom:calc(14px + var(--sab) + var(--dockH) + 10px);width:min(470px,calc(100vw - 2*var(--gut)));
@@ -882,12 +883,13 @@ body.tray-open .credit{opacity:0;pointer-events:none}
 
     <div class="credit">3D 模型 “2023 Suzuki Jimny Sierra” by tonielpro520,
       <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a><br>
+      <b class="ai">資訊跟價格皆由 AI 搜尋公開網路，詳情請洽官網或各通路。</b><br>
       <span class="disc">個人非營利專案，與 Suzuki 及各改裝品牌無關聯；資訊整理自公開網路資料，以官方為準。<br>
       商標屬各自所有者。</span>如有不妥請<a href="https://github.com/carloxthebot/jimny/issues" target="_blank" rel="noopener">告知</a><span class="disc">，將儘速修正或移除</span>。— @Carlos</div>
 
     <!-- 改裝單: every non-stock choice, its price and where to buy it -->
     <section class="bill glass" id="bill" hidden aria-label="改裝單">
-      <div class="bill-h"><div><h2>改裝單</h2><small>JIMNY JB 74 · 概估，以店家報價為準</small></div>
+      <div class="bill-h"><div><h2>改裝單</h2><small>資訊跟價格皆由 AI 搜尋公開網路，詳情請洽官網或各通路</small></div>
         <button class="tray-x" id="billX" type="button" aria-label="關閉改裝單">✕</button></div>
       <div class="bill-b">
         <div class="bill-sum">
@@ -935,15 +937,15 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { rigJimny, applyConfig, updateSplit } from './rig.js?v=202609281410';
-import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609281410';
-import { buildAccessory, loadParts, getPart, allParts } from './accessories.js?v=202609281410';
-import { openAwning, roofTent, campExtra } from './camp.js?v=202609281410';
-import { buildWheel, loadTreadMasks } from './wheels.js?v=202609281410';
-import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609281410';
+import { rigJimny, applyConfig, updateSplit } from './rig.js?v=202609281506';
+import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609281506';
+import { buildAccessory, loadParts, getPart, allParts } from './accessories.js?v=202609281506';
+import { openAwning, roofTent, campExtra } from './camp.js?v=202609281506';
+import { buildWheel, loadTreadMasks } from './wheels.js?v=202609281506';
+import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609281506';
 // Written by stamp.sh on each deploy; shown in the HUD so a stale cached copy
 // is obvious at a glance.
-const BUILD = '202609281410';
+const BUILD = '202609281506';
 
 const cv = document.getElementById('cv');
 // The backdrop is CSS behind a transparent canvas: a background texture in
@@ -1423,7 +1425,9 @@ function applyView() {
   cam.updateProjectionMatrix();
 }
 function applyCam() {
-  orbit.el = Math.max(-.15, Math.min(1.1, orbit.el));
+  // never below the floor: the hangar floor is one-sided, and from under it
+  // the car hung in black with the set showing through
+  orbit.el = Math.max(.01, Math.min(1.1, orbit.el));
   orbit.dist = Math.max(4.5, Math.min(22, orbit.dist));
   const d = orbit.dist * VIEW.k;
   cam.position.set(Math.cos(orbit.el) * Math.sin(orbit.az) * d,
@@ -1800,9 +1804,17 @@ function roofLamp(key, base, rack, paint) {
   rack?.traverse((o) => { if (/^lampMount/.test(o.name)) anchor.push(o); if (/^lampSpan/.test(o.name)) span.push(o); });
   const own = () => buildAccessory(key, base, paint);
   if (!anchor.length) return own();
-  const n = buildAccessory(key, base ? `${base}_rack` : 'rack', paint);
-  if (!n) return own();
   const a = anchor[0].position, half = Math.abs(span[0].position.x - a.x);
+  // Roof lamps belong at the roof's front edge. They go on the rack only
+  // when the rack's front rail has reached that edge too; a rack set back
+  // on the roof leaves them on their own front-edge mount.
+  const front = own();
+  if (front) {
+    const zFront = new THREE.Box3().setFromObject(front).getCenter(new THREE.Vector3()).z;
+    if (a.z + rack.position.z < zFront - 0.08) return front;
+  }
+  const n = buildAccessory(key, base ? `${base}_rack` : 'rack', paint);
+  if (!n) return front ?? own();
   const kids = (re) => n.children.filter((c) => re.test(c.name));
   const brk = kids(/^brk[LR]/), units = kids(/^unit[LR]/);
   if (key === 'lightBar' || units.length === 0) {

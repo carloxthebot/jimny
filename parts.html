@@ -177,7 +177,7 @@ function render() {
       <div class="grid">${html || '<div class="empty">此篩選下沒有項目</div>'}</div></section>`;
   }).join('');
   document.getElementById('toc').innerHTML = CATS.map(([name, key]) => `<a href="#c-${key ?? 'others'}">${name}</a>`).join('');
-  document.getElementById('foot').innerHTML = `共 ${total} 項。價格先列廠商或通路的原幣標價，下方小字是台幣概估。${FX_NOTE} 原始標價為各廠商／通路頁面所示（日本含稅、澳洲含 GST），運費與關稅另計；標「待查證」者為估值。資料日期 2026-09-21。<br>本站為個人非營利專案，與 Suzuki 及各改裝品牌無任何關聯；所有資訊皆整理自公開網路資料，規格、價格可能已變動，請以官方為準。商標屬各自所有者。如有不妥請至 <a href="https://github.com/carloxthebot/jimny/issues" target="_blank" rel="noopener">GitHub</a> 告知，將儘速修正或移除。— @Carlos`;
+  document.getElementById('foot').innerHTML = `共 ${total} 項。價格先列廠商或通路的原幣標價，下方小字是台幣概估。${FX_NOTE} 原始標價為各廠商／通路頁面所示（日本含稅、澳洲含 GST），運費與關稅另計；標「待查證」者為估值。資料日期 2026-09-21。<br><b>資訊跟價格皆由 AI 搜尋公開網路，詳情請洽官網或各通路。</b><br>本站為個人非營利專案，與 Suzuki 及各改裝品牌無任何關聯；所有資訊皆整理自公開網路資料，規格、價格可能已變動，請以官方為準。商標屬各自所有者。如有不妥請至 <a href="https://github.com/carloxthebot/jimny/issues" target="_blank" rel="noopener">GitHub</a> 告知，將儘速修正或移除。— @Carlos`;
 }
 document.getElementById('bar').addEventListener('click', (e) => {
   const b = e.target.closest('.chip'); if (!b) return;
