@@ -17,7 +17,7 @@
      browser does not learn they exist until three.js has downloaded, parsed
      and run, which on a phone is seconds of an idle connection. -->
 <link rel="preload" as="fetch" type="model/gltf-binary" href="model/jimny-hq.glb" crossorigin>
-<link rel="preload" as="fetch" type="model/gltf-binary" href="model/rims.glb?v=202609281408" crossorigin>
+<link rel="preload" as="fetch" type="model/gltf-binary" href="model/rims.glb?v=202609281410" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
@@ -723,7 +723,7 @@ body.tray-open .credit{opacity:0;pointer-events:none}
       </div>
       <div class="body" id="body">
         <!-- 0 ── 整台風格 -->
-        <div class="pane" data-p="0" data-subs="all:全部|kit:廠商全車套件|style:我們搭的整台">
+        <div class="pane" data-p="0" data-subs="all:全部|kit:廠商全車套件|style:各式風格">
           <p class="lbl">從一台完整的車開始 <em id="styleCount"></em></p>
           <div class="styles rail" id="styles" data-f="all"></div>
           <p class="styleNote">風格只是起點：選完之後每一項都還能換。金額是照目錄現價把這組零件加起來的概估，<b>不含輪胎、工資與安裝</b>，標「洽詢」的是原廠沒公布價格的品項。</p>
@@ -935,15 +935,15 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { rigJimny, applyConfig, updateSplit } from './rig.js?v=202609281408';
-import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609281408';
-import { buildAccessory, loadParts, getPart, allParts } from './accessories.js?v=202609281408';
-import { openAwning, roofTent, campExtra } from './camp.js?v=202609281408';
-import { buildWheel, loadTreadMasks } from './wheels.js?v=202609281408';
-import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609281408';
+import { rigJimny, applyConfig, updateSplit } from './rig.js?v=202609281410';
+import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609281410';
+import { buildAccessory, loadParts, getPart, allParts } from './accessories.js?v=202609281410';
+import { openAwning, roofTent, campExtra } from './camp.js?v=202609281410';
+import { buildWheel, loadTreadMasks } from './wheels.js?v=202609281410';
+import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609281410';
 // Written by stamp.sh on each deploy; shown in the HUD so a stale cached copy
 // is obvious at a glance.
-const BUILD = '202609281408';
+const BUILD = '202609281410';
 
 const cv = document.getElementById('cv');
 // The backdrop is CSS behind a transparent canvas: a background texture in
@@ -2433,7 +2433,7 @@ function buildStyles() {
     }
     return `<button class="style${st.kitOf ? ' kit' : ''}" data-style="${st.id}" aria-pressed="${st.id === styleAt}">
       <img src="model/shots/style-${st.id}.webp?v=${BUILD}" alt="" loading="lazy" onerror="this.remove()">
-      ${st.brand ? `<i class="sb">${esc(st.brand)}</i>` : `<i class="sb">我們搭的</i>`}<b>${esc(st.label)}</b>
+      ${st.brand ? `<i class="sb">${esc(st.brand)}</i>` : `<i class="sb">各式風格</i>`}<b>${esc(st.label)}</b>
       <span class="ds">${esc(st.desc)}</span>
       <span class="pr">${esc(price)}</span></button>`;
   };
