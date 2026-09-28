@@ -723,6 +723,11 @@ export const FRONT_BUMPERS = [
     note: 'TANIGUCHI 官網確認 ¥77,000 稅込，鋼製粉體烤漆黑，管徑 48.6mm、壁厚 2.3mm，本體約 9kg，適用 JB64（XG 除外）／JB74／JC74。官網未公布品番。' },
   { id: 'toc_extreme', photo: true, url: 'https://tocbw.thebase.in/items/82110724', label: 'Extreme Bumper 74 前保桿', price: 54780, cur: 'JPY', brand: 'TOC BODYWORKS',
     note: 'TOC BODYWORKS 官方店確認「エクストリームバンパー74 フロント」¥54,780 稅込，適用 JB74 シエラ 與 JC74 ノマド，FRP 黑膠衣（ゲルコート）處理，出貨即需自行烤漆（官網另提供代烤漆加價選項）。官網明寫「LEDライトバー、スキッドプレートは含まれません」，且沒有內建 LED 燈條凹槽的說明。另有含 TOC スキッドプレート74 的兩件組 ¥82,280 與前後加護板的三件組 ¥137,060。目前為預購品，預計 2026 年 10 月 10 日起陸續出貨。' },
+  // ---- 澳洲
+  { id: 'arb_summit', photo: true, url: 'https://www.arb.com.au/product/3424050-arb-summit-bull-bar-with-textured-finish-suzuki-jimny',
+    label: 'Summit 牛欄前保桿＋WARN 8000 絞盤', price: 4185, cur: 'AUD', brand: 'ARB', part: '3424050 + WARN M8000', uncertain: true,
+    refs: ['https://www.arb.com.au/au/en/product-releases/new-range-for-mini-fourby'],
+    note: 'ARB 做過最小的 Summit 牛欄（Project JBOX 新聞稿），鋼製粗紋黑粉體；翼板與底盤護板 3.0mm、外管與中央管 Ø47.6×2.6mm，含 ARB Fog Light MkII 霧燈座、LED 方向／示寬燈、兩個 Hi-Lift 頂車點、底護板、駕駛燈孔，通過 ADR 與氣囊認證，可裝最大 8000lb 絞盤（安裝說明書 3789938）。保桿 AUD 2,220＋WARN M8000 絞盤 AUD 1,965（JBOX 裝的是 Warn Magnum 8,000lb，ARB 現售同級是 M8000），絞盤安裝套件 3500720 另計；裝絞盤時車牌改用折疊式車牌架。整支的寬、高、深與重量 ARB 未公布，照 JBOX 官方照片以大燈間距為尺畫。保桿中央掛的紅色軟式拖車扣是照片所見，ARB 現售的 ARB2018 是橘色，型號未確認' },
 ];
 
 export const REAR_BUMPERS = [
@@ -804,6 +809,9 @@ export const GRILLES = [
     note: 'APIO 的鋼製水箱罩，DAMD 頁面價格欄空白、導向 APIO 購買（未查到單價）。整片包住頭燈與外角琥珀圓燈，上下兩組 3×6 圓頭壓製橫槽，中央平帶貼 DAMD 美式立體字（橘面銀邊，¥7,480）。現行色半艷黑；銀色在 5 點套件已停售；コットンホワイト是 WHITE EDITION 限定' },
   { id: 'damd_little_b_silver', url: 'https://apio.jp/', refs: ['https://www.damd.co.jp/products/suzuki/jimny_sierra_little-b/'], label: 'little B. APIO ヴィンテージアイアングリル（銀）', price: null, cur: 'JPY', brand: 'APIO × DAMD', kit: 'little_b', uncertain: true,
     note: 'little B. 示範車裝的銀色版；官網寫 5 點套件的銀色已經終了，完整套件（含輪圈）仍列可選。單價未公布' },
+  { id: 'apio_vintage_iron', url: 'https://apio.jp/parts/3033-57.html', refs: ['https://apio.jp/completecar/delivery/ts3-58.html', 'https://www.suzuki.co.jp/accessory_car/jimny_sierra-accessory.html'],
+    label: 'ヴィンテージアイアングリル＋草寫字標', price: 55000, cur: 'JPY', brand: 'APIO', part: '3033-57B（半艷黑）／3033-57L（淺古銅）', uncertain: true,
+    note: '鋼製（スチール），約 2.8kg（含支架），原廠卡扣＋螺絲直上，JB64／JB74／JC74 通用，¥55,000 稅込；官網沒寫護罩本身尺寸。就是 little B. 用的那片罩：沖壓橫槽，中間一條平的橫肋可以貼字標或貼紙。草寫字標不附——APIO 寫明照片上的是「スズキ純正クラシックエンブレム（77860-84F51-ZG4）」，要向鈴木經銷店另購。TS3「湘南 Edition」交車頁寫「筆記体エンブレム付き」，沒寫字樣；鈴木 Sierra 原廠配件有一組仿舊款的「Jimny」字標（ハイボスカル，亮面仿鍍鉻，¥3,960），這裡畫成 Jimny 草寫鍍鉻字標，字樣與大小都是推定' },
   { id: 'damd_saudade', url: 'https://www.damd.co.jp/products/suzuki/jimny_sierra_saudade/', label: 'saudade 水箱護罩（Koito 方形頭燈）', price: 129800, cur: 'JPY', brand: 'DAMD', kit: 'saudade', hideHeadlamps: true, uncertain: true,
     note: '法國車語彙：車身色厚框、黑色內區，把圓頭燈換成 Koito 鹵素方形雙燈，外側直立 LED 條、中央三排百葉、上緣三色菱形 DAMD 徽章。只有未塗裝素地。頭燈是否含在 ¥129,800 單件內官網沒寫清楚（套件內容把兩者分列）；頭燈清洗器不能照原廠用，附假蓋' },
   { id: 'stock', label: '原廠水箱護罩', price: 0, brand: 'SUZUKI', note: '5 道直立柵欄，中央 S 標' },
@@ -815,7 +823,7 @@ export const GRILLES = [
   { id: 'urnieta_1970', photo: true, url: 'https://www.heekis.com/products/urnieta-1970-jimny-jb74-jc74-grille', label: '1970 水箱護罩', price: 8400, cur: 'TWD', brand: 'URNIETA',
     note: '工程圖 UN-JIMNY-FB-026：1337×241，中央開口 592×126 細網＋URNIETA 立體字與 UNT 小徽。1.6kg。沖壓金屬網＋極簡框，1.6kg；Heekis 代理' },
   { id: 'mrk_angry', photo: true, url: 'https://www.mrk.com.tw/product_ii.html?ID=1670', label: '憤怒鳥款水箱護罩', price: 5500, cur: 'TWD', brand: 'MRK', part: 'JB089',
-    note: '3 道粗橫條、外端斜切、卡扣安裝' },
+    note: 'JB74 專用，NT$5,500（安裝、運費、烤漆另計），對應原廠卡扣直上。材質官網沒寫（只寫「耐用材質」），尺寸也沒公布。消光黑一體式外框，上緣中間微微下凹；圓形大燈孔上方各有一道往中間斜下的「怒眉」，大燈外側一個小圓方向燈孔；中間七道圓底長槽像一排牙齒、越往外越短並往中間傾，後面襯銀色網。形狀照 MRK 商品照片畫' },
   { id: 'klc_sj', photo: true, url: 'https://www.klc-div.com/heritage/product/grille/facegrillesj.html', photo: true, label: 'Face Grille SJ 水箱護罩', price: 16000, cur: 'TWD', brand: 'KLC Heritage',
     note: 'FRP 素材 NT$16,000（藤井74）；日本 ABS 烤漆 ¥93,500。顯示為車身同色' },
   // ---- 日本
@@ -827,6 +835,8 @@ export const GRILLES = [
     note: '¥88,000 稅込，FRP 未塗裝，適用 JB64W／JB74W／JC74W。14 道細長縱格，圓頭燈被圓角方框框住，罩體很厚讓頭燈顯得內縮（官方：フェイスグリル自体にたっぷり厚みを持たせる）。KLC MATURE 示範車的配色：外框車身色、縱格與燈框槍灰' },
   { id: 'klc_forty', photo: true, url: 'https://www.klc-div.com/heritage/product/grille/facegrillforty/', label: 'Face Grille FORTY 水箱護罩', price: 93500, cur: 'JPY', brand: 'KLC Heritage',
     note: '大燈周圍肋條、中央網＋S 標' },
+  { id: 'klc_forty_chrome', url: 'https://www.klc-div.com/heritage/product/grille/facegrillforty/', refs: ['https://heritage-jimny.com/?pid=177988196'], label: 'Face Grille FORTY 水箱護罩（燈圈鍍鉻）', price: 93500, cur: 'JPY', brand: 'KLC Heritage', uncertain: true,
+    note: '同一片 FORTY（ABS 塗装済 ¥93,500），燈圈畫成鍍鉻。KLC 的塗裝選項內側只有白色或亮黑，沒有鍍鉻；鍍鉻燈圈是黑色鍍鉻西海岸這台的配色，要另外電鍍或貼鍍鉻膜，費用未知' },
   { id: 'apio_sj', photo: true, url: 'https://apio.jp/parts/3033-58g.html', label: 'SJ Grille 鋼板水箱護罩', price: 58300, cur: 'JPY', brand: 'APIO', part: '3033-58G',
     note: 'SJ30 直縫沖壓鋼板、槍灰、黑鋁網' },
   { id: 'apio_marker', photo: true, url: 'https://apio.jp/parts/3033-59.html', label: 'Marker Vintage Iron 水箱護罩', price: 75900, cur: 'JPY', brand: 'APIO', part: '3033-59B（半光黑）／3033-59L（淺古銅）',
@@ -887,6 +897,8 @@ export const MIRRORS = [
     refs: ['https://shopee.tw/product/7996649/53462197780'], note: '台灣蝦皮 GOAT Wild explorer NT$17,800。URNIETA 為中國東莞斯塔克工業品牌（中文名歐尼塔），非日系；只支援 JB74／JC74，JB64 官方列為不相容。官方工程圖 UN-JIMNY-FB-014：總高 411mm、總寬 237mm。圓角矩形鏡座 187×231，單支圓管由門框上前角的關節繞出、沿鏡座內側往下再回到下關節，鏡座以四螺栓夾塊固定在管上，外緣有 URNIETA 銘牌' },
   { id: 'damd', photo: true, url: 'http://www.damd.co.jp/products/suzuki/jimny_sierra_little-g', refs: ['https://easycars.jp/product/damd-truck-side-mirror-for-jimny-jb64-jb74/'], label: 'Truck Mirror 卡車式後照鏡', price: 75900, cur: 'JPY', brand: 'DAMD', photo: true,
     note: 'DAMD 日本官網建議售價：消光黑 ¥69,000 稅抜／¥75,900 稅込、鍍鉻 ¥74,000 稅抜／¥81,400 稅込；U 型管臂＋直式卡車鏡殼，含加熱但喪失電動收折與電動角度調整（官網原文：自動收折、收折開關、角度調整開關均無法使用）。僅適用 JB64／JB74，不可裝 JC74（NOMADE）' },
+  { id: 'suzuki_chrome', cover: true, url: 'https://www.suzuki.co.jp/accessory_car/sierra/sierra.pdf', label: 'ドアミラーカバー（鍍鉻）', price: 24970, cur: 'JPY', brand: 'SUZUKI 原廠配件', part: '99122-77R00（JL，無方向燈鏡）／99122-77R11（JC，LED 側方向燈鏡）', uncertain: true,
+    note: 'Sierra 原廠配件型錄（2025-07）：クロームメッキ左右一組，拆掉原廠外殼換上（標準装備品を取り外して装着します），所以形狀就是原廠鏡殼。JC 用 99122-77R11 ¥24,970（本體 ¥20,570＋參考工資 ¥4,400）；JL 用 99122-77R00 的價格在 PDF 裡欄位錯亂，看起來同價，未確認。材質型錄沒寫。JB64 用同樣兩個料號' },
 ];
 
 // Roof racks, awnings, side steps and ladders are modelled parts named
@@ -960,27 +972,47 @@ export const CAMP_EXTRAS = [
 ];
 
 /**
- * ARB BASE Rack accessories -- they clip into the dovetail rails of the `arb`
+ * ARB BASE Rack accessories -- they clamp onto the dovetail of the `arb`
  * rack only, so the page offers them only while that rack is fitted.
  * `key` is the state flag, `part` the model node (arbAcc_<part>). ARB
- * publish prices but next to no weights (docs/jb74-arb-rack-accessories.json);
- * what they HOLD is not included -- cans, bottle, boards and jack are extra.
+ * publish prices but next to no sizes or weights
+ * (docs/jb74-arb-rack-accessories.json, rechecked 2026-09-28 against the
+ * fitting instructions); what they HOLD is not included -- cans, bottle,
+ * boards, jack and shovel are extra. `group: 'rail'` entries are
+ * alternatives: ARB sell no front 3/4 + trade rail combination, the full
+ * surround is its own part (1780080).
  */
 export const ARB_RACK_ACC = [
-  { key: 'arbDeflector', part: 'deflector', label: '導風板 Deflector', price: 120, cur: 'USD', brand: 'ARB', pn: '17950020',
-    url: 'https://www.arbusa.com/', note: '一片壓型鋁板，跟貨架同寬，前緣上翹，卡在前橫樑下方，減風切聲。美國官網未稅價' },
-  { key: 'arbRailFront', part: 'railFront', label: '前 3/4 護欄', price: 376, cur: 'USD', brand: 'ARB', pn: '1780040',
-    url: 'https://www.arbusa.com/', note: '約 25mm 圓管、鑄鋁轉角，包住貨架前面四分之三、後段開口，高約 130mm（照片估）。美國官網未稅價' },
-  { key: 'arbRailSide', part: 'railSide', label: '側護欄（左右一對）', price: 584, cur: 'USD', brand: 'ARB', pn: '1780110 ×2',
-    url: 'https://www.arbusa.com/', note: '單根直管沿貨架長邊，一支 US$292，這裡算左右兩支。ARB 沒有 Jimny 寬度的整圈護欄，要整圈就是前 3/4 加側護欄' },
+  { key: 'arbDeflector', part: 'deflector', label: '導風板 Universal 51 吋', price: 134, cur: 'USD', brand: 'ARB', pn: '17900090',
+    url: 'https://store.arbusa.com/base-rack-universal-deflector-51-in-17900090/',
+    note: '2.0mm 壓型鋁板粉體烤漆，吊在貨架前緣下方，用 M8 螺柱板鎖在前樑底下，減風切聲。ARB 安裝說明書把 17900090 列給 1770020 這個尺寸；舊資料寫的 17950020 是 Jeep JL 專用款，這裡已改正。美國官網未稅價' },
+  { key: 'arbRailFront', part: 'railFront', group: 'rail', label: '前 3/4 護欄', price: 376, cur: 'USD', brand: 'ARB', pn: '1780040',
+    url: 'https://store.arbusa.com/base-rack-front-3-4-rail-61-x-51in-1780040/', uncertain: true,
+    note: '前橫欄加兩側到車長四分之三、後段開口（ARB：為後翻式車頂帳設計），鑄鋁轉角與立柱夾座卡在貨架外框燕尾槽、Torx M6／M8 鎖付。ARB 沒有公布護欄高度與斷面，照官方照片畫約離貨架面 130mm。美國官網未稅價' },
+  { key: 'arbRailSide', part: 'railSide', group: 'rail', label: '側護欄（左右一對）', price: 584, cur: 'USD', brand: 'ARB', pn: '1780110 ×2',
+    url: 'https://store.arbusa.com/base-rack-trade-rail-61in-long-1780110/', uncertain: true,
+    note: 'Trade Rail 61 吋，一支 US$292，這裡算左右兩支；每支三個鑄鋁立柱夾座、兩端端蓋。ARB 沒有前 3/4 加側護欄的組合，要整圈就選全圍護欄。高度照片估' },
+  { key: 'arbRailFull', part: 'railFull', group: 'rail', label: '全圍護欄 61×51 吋', price: 465, cur: 'USD', brand: 'ARB', pn: '1780080',
+    url: 'https://store.arbusa.com/base-rack-full-rail-61-x-51in-1780080/', uncertain: true,
+    note: '整圈護欄，鑄鋁四角、前後各兩支、左右各三支立柱夾座。這是 1545×1285 貨架用的全圍款（1780180 是 49 吋貨架用的）。有護欄時，車頂燈改鎖在護欄前橫欄上。高度照片估。美國官網未稅價' },
+  { key: 'arbLights', part: 'lights', label: '貨架燈組（燈條＋三顆輔助燈）', price: 1349.75, cur: 'USD', brand: 'ARB', pn: '1780500K2',
+    url: 'https://store.arbusa.com/base-rack-lighting-kit-1780500k2/',
+    note: 'Slimline 燈條 954×34×67mm、3.07kg、130W（ARB 說明書），用套件附的支架夾在前樑燕尾槽、立在貨架前面；三顆 71×56mm 輔助燈夾在後樑當工作燈。含兩組線束與開關。美國官網未稅價' },
   { key: 'arbJerry', part: 'jerry', label: '雙油桶架（橫放）', price: 208, cur: 'AUD', brand: 'ARB', pn: '1780350',
-    url: 'https://www.arb.com.au/', note: '兩個 20L 標準油桶並排橫躺在貨架後段，各一條棘輪帶。價格只含架子（澳洲官網含 GST），油桶另購；兩桶加滿約 40kg，已經超過 JB74 車頂 30kg 動態載重' },
+    url: 'https://www.arb.com.au/product/1780350-arb-base-rack-double-horizontal-jerry-can-mount', uncertain: true,
+    note: '粉體烤漆鋼架夾在兩根橫樑上（35mm 鋁夾座、鍛造吊環螺帽），兩個 20L 油桶一前一後平躺，棘輪帶從架子兩端的吊環跨過兩桶。架子外形尺寸官網未公布，油桶照 NATO 20L 常見尺寸 470×345×165mm 畫。價格只含架子（澳洲官網含 GST）；兩桶加滿約 40kg，已經超過 JB74 車頂 30kg 動態載重' },
   { key: 'arbGas', part: 'gas', label: '瓦斯桶架', price: 126, cur: 'AUD', brand: 'ARB', pn: '1780250',
-    url: 'https://www.arb.com.au/', note: '瓦斯桶橫躺在貨架前段，不鏽鋼扣夾兩端加一條綁帶。價格只含架子，桶另購' },
+    url: 'https://www.arb.com.au/product/1780250-arb-base-rack-gas-bottle-holder', uncertain: true,
+    note: '可調不鏽鋼托架兩座、凸輪扣綁帶、35mm 夾座加鍛造吊環；ARB：最大 9kg 瓦斯桶、總重 20kg。桶子橫躺在貨架前段，直徑約 310mm 是 9kg 桶的常見尺寸、不是 ARB 數字。價格只含架子，桶另購' },
   { key: 'arbBoards', part: 'boards', label: '脫困板固定座＋兩片 MAXTRAX', price: 54, cur: 'USD', brand: 'ARB', pn: '1780310',
-    url: 'https://www.arbusa.com/', note: '四支燕尾快拆柱壓住兩片疊放的脫困板，放貨架左側。價格只含固定座，MAXTRAX 另購（1160×330×60mm）' },
-  { key: 'arbJack', part: 'jack', label: 'Hi-Lift 千斤頂架', price: 155, cur: 'USD', brand: 'ARB', pn: '1780280',
-    url: 'https://www.arbusa.com/', note: '高階款兩點夾具，可上鎖；48 吋農用千斤頂前後向躺在貨架右半。價格只含架子，千斤頂另購' },
+    url: 'https://store.arbusa.com/base-rack-recovery-board-mounting-bracket-1780310/',
+    note: '四個 40mm 夾座加托板夾在橫樑上，脫困板用 MAXTRAX 自家的長版固定插銷（40mm 螺牙、轉 90 度鎖住、可穿掛鎖）壓住。MAXTRAX MKII 官方尺寸 1150×330×85mm、每片 3.4kg、兩片疊起來 95mm。價格只含固定座，MAXTRAX 與插銷另購' },
+  { key: 'arbJack', part: 'jack', label: 'Hi-Lift 千斤頂架（高階款）', price: 155, cur: 'USD', brand: 'ARB', pn: '1780280',
+    url: 'https://store.arbusa.com/base-rack-farm-jack-holder-1780280/',
+    note: '搖籃加夾扣兩點固定、可上掛鎖，兩個 100mm 夾座。畫的是 Hi-Lift HL-485 48 吋（原廠：全長 1289、寬 127、深 245mm、12.77kg），前後向躺在貨架右側，手把收在桿子旁。價格只含架子，千斤頂另購' },
+  { key: 'arbShovel', part: 'shovel', label: '鏟子架', price: 104, cur: 'AUD', brand: 'ARB', pn: '1780270',
+    url: 'https://www.arb.com.au/product/1780270-arb-base-rack-shovel-holder',
+    note: '兩支支架各用 60mm 夾座卡在貨架右側外緣燕尾槽，快開式握把夾（適用把手直徑 32–42mm）加不可拆的固定旋鈕、可上長鎖頭。鏟子掛在貨架外側、鏟面朝前。ARB 沒有指定鏟子，畫的是一般 D 型握把長柄鏟、另購。裝這個時，另一個「車頂架鏟子」選項不畫' },
 ];
 
 export const AWNINGS = [
@@ -1140,6 +1172,9 @@ export const GRILLE_LIGHTS = [
     price: 219, cur: 'AUD', note: '546mm 黃光條塞在下保桿開口，最常見的 DIY 解法' },
   { id: 'bushranger', label: 'Night Hawk 28 吋（格柵後）', brand: 'Bushranger', part: 'NHBGS450LB',
     price: 600, cur: 'AUD', note: '717mm 單排 21 顆 OSRAM；原廠文案明寫裝在下水箱罩「後方」，需修下護板' },
+  { id: 'arb_ar21_red', needsBumper: 'arb_summit', photo: true, url: 'https://www.arb.com.au/product/ar21sv2-arb-intensity-v2-7-inch-round-21-led-spot-driving-light',
+    label: 'Intensity V2 AR21 圓燈一對（紅色燈罩）', brand: 'ARB', part: 'AR21SV2 ×2', price: 1658, cur: 'AUD', uncertain: true,
+    note: '7 吋圓形 21 顆 LED 遠投燈，184×208×117mm、2.5kg、12mm 鎖點（ARB），一顆 AUD 829、這裡算一對。鎖在 Summit 牛欄上方的駕駛燈孔，照 Project JBOX 照片配紅色燈罩：ARB 說 Intensity 燈罩有透明、琥珀、藍、紅、全黑五色，但澳洲官網目前只列透明 AR10TC（一對 AUD 116）、琥珀、全黑，紅色料號查不到，價格未含燈罩' },
 ];
 
 // Tail pipes (docs/jb74-exhaust.json). What matters here is what shows from
@@ -1270,6 +1305,22 @@ export function validate(cfg, { tyre, lift, bodyLift, wheel }) {
   }
   if (cfg.awning && cfg.awning !== 'none' && cfg.roofRack === 'none')
     out.push({ level: 'error', msg: '車邊帳是鎖在車頂架側軌上的，目前沒有車頂架' });
+  const gl = GRILLE_LIGHTS.find(g => g.id === cfg.grilleLight);
+  if (gl?.needsBumper && (cfg.frontBumper !== gl.needsBumper || (cfg.face && cfg.face !== 'none')))
+    out.push({ level: 'error', msg: `${gl.label}鎖在 ${FRONT_BUMPERS.find(b => b.id === gl.needsBumper)?.label ?? gl.needsBumper} 的燈孔上，目前沒有裝這支保桿` });
+  // ── ARB BASE Rack accessories (docs/jb74-arb-rack-accessories.json)
+  if (cfg.roofRack === 'arb') {
+    const rails = ARB_RACK_ACC.filter(a => a.group === 'rail' && cfg[a.key]);
+    if (rails.length > 1)
+      out.push({ level: 'error', msg: `ARB 護欄只能選一種：${rails.map(a => a.label).join('、')}不能同時裝，要整圈就選全圍護欄 1780080` });
+    if (cfg.shovel && (cfg.arbJack || cfg.arbShovel))
+      out.push({ level: 'warn', msg: cfg.arbShovel ? '已經裝了 ARB 鏟子架，另一個「車頂架鏟子」不重複畫'
+        : '「車頂架鏟子」的位置被 Hi-Lift 千斤頂架佔走了，沒有畫；要帶鏟子請改用 ARB 鏟子架（1780270）' });
+    // published weights only: the jack (Hi-Lift), two MAXTRAX (MAXTRAX), the Slimline bar (ARB)
+    const kg = (cfg.arbJack ? 12.77 : 0) + (cfg.arbBoards ? 6.8 : 0) + (cfg.arbLights ? 3.07 : 0) + (cfg.arbJerry ? 40 : 0);
+    if (kg > 12)
+      out.push({ level: 'warn', msg: `JB74 車頂動態載重 30kg（含車頂架）；貨架上${[cfg.arbJack && 'Hi-Lift 12.77kg', cfg.arbBoards && 'MAXTRAX 兩片 6.8kg', cfg.arbLights && '燈條 3.07kg', cfg.arbJerry && '兩桶油約 40kg'].filter(Boolean).join('、')}，還沒算架子本身（經銷商轉載約 17kg，ARB 未公布）` });
+  }
   const tent = TENTS.find(t => t.id === cfg.tent);
   if (tent && tent.id !== 'none') {
     if (tent.noRack && cfg.roofRack !== 'none')
@@ -1438,6 +1489,8 @@ export const SPARE_COVERS = [
     note: '外蓋可向下翻開變成工作檯，兩顆卡扣＋兩支撐桿。3.4kg，JB64 也能裝。官網不標價' },
   { id: 'urnieta_1970', url: 'https://urnieta.com/product/1970-spare-tire-cover-kit-for-jimny-jb74-jc74-jb64/', label: '1970 備胎蓋', price: null, cur: 'TWD', brand: 'URNIETA', kit: 'urnieta_1970', uncertain: true,
     note: 'MOLLE 格帶面板／收納包雙模式。3.4kg，JB64 也能裝。官網不標價' },
+  { id: 'beyond_white', url: 'https://shop.beyond-jpn.com/products/bestc-w', refs: ['https://prtimes.jp/main/html/rd/p/000000044.000141928.html'], label: 'スペアタイヤカバー エレガントホワイト', price: 5500, cur: 'JPY', brand: 'Beyond JAPAN', part: 'bestc-w', uncertain: true,
+    note: 'ビニールレザー軟套，直接套上（かぶせるだけ），官網寫 JB64／JB74 Sierra／JC74 全等級。定價 ¥5,500（特價 ¥3,850，稅込與否頁面沒寫清楚）；附 BEYOND 貼紙，另有黑色 bestc-b。不是全白：面上黑白直條紋，中間一條白色橫帶印黑色襯線字 BEYOND JAPAN、上下各一道細黑線，白色滾邊。官網沒有尺寸，條紋數與寬度照商品照片估。Beyond 黃色示範車 CODE16（JB64）用的就是這件' },
 ];
 
 // ── Spare delete and the bare tailgate (docs/jb74-spare-delete.json,
@@ -1679,6 +1732,8 @@ export const STRIPES = [
     note: '米白 25＋深綠 32＋米白 25mm 緊貼成一條 82mm 的帶（照尾翼上的貼紙量），從擋風玻璃下緣沿中線跑過引擎蓋、翻下引擎蓋前緣；裝了 little Δ 臉會再沿水箱罩上緣往下接到燈座，裝了 DAMD 尾翼會再跨過翼面。車頂從前緣跑到後緣，避開玻璃與尾門。DAMD 寫明這只是示範車的貼紙（センターマークデカール）、套件不含，市面也沒有 Jimny 專用的縱向中線商品，要請貼膜行照這個式樣裁' },
   { id: 'toy4', photo: true, label: '四色橘帶（Toy Factory 式樣）', price: null, cur: 'JPY', brand: 'Toy Factory', uncertain: true,
     note: '淺橘細線＋鮭橘漸層帶＋實色橘＋寬近黑，四條橫跨門把，整組往車尾抬 2.3 度。原版前端四條會一起轉 90 度繞過前葉子板立面，轉角是同心圓角；這裡只畫車側那一段' },
+  { id: 'woodgrain', label: '木紋側板貼（woodie 式樣）', price: null, cur: 'TWD', brand: '貼膜行裁切', uncertain: true, refs: ['https://prtimes.jp/main/html/rd/p/000000044.000141928.html'],
+    note: '木紋膜貼滿車門與後側圍下半、上下各一道米色細框，高約 245mm，從後輪弧前一路到前輪弧後，壓在門把、鑰匙孔、前葉子板方向燈與油箱蓋下方，全部避開。外型照 Beyond 黃色示範車 CODE16 的木紋側貼（那台是 JB64）；Beyond 官方商店沒有賣這件，也沒找到 JB74 專用的木紋側貼商品，所以尺寸是本頁定的，要請貼膜行照樣裁' },
 ];
 
 /**
@@ -1707,6 +1762,11 @@ export const STYLES = [
   { id: 'au_offroad', label: '澳洲越野', sw: ['#63645f', '#1d2224', '#d0621f'],
     desc: '最高最寬的一台：2 吋懸吊＋2 吋車身舉升、31 吋胎配爆龜、絞盤前桿與呼吸管，車頂載架上一排探照燈與 270 度車邊帳。灰色車身讓整圈黑色裝備變成輪廓，照 SHOWA GARAGE 灰色戶外示範車的路線。',
     set: { color: 'ZVL', lift: 'combo100', wheel: 'wildboar', tyre: 't31', tread: 'bfg_km3', rimFinish: 'G', frontBumper: 'wmd_winch', rearBumper: 'hamer_mx208', grille: 'showa_hex', snorkel: 'safari', roofRack: 'arb', arbDeflector: true, arbBoards: true, awning: 'arb_touring_25', awningSide: 'left', sideStep: 'ironman', ladder: 'tube', roofLights: 'kc_pro6', windowGuards: true, guardCan: 'right', shovel: true, extinguisher: 'ladder', flares: true } },
+
+  { id: 'au_jbox', label: '澳洲原廠越野 JBOX', sw: ['#cbd232', '#1d2224', '#c1121c'],
+    desc: 'ARB 與 Suzuki 澳洲 2019 年的 Project JBOX：Kinetic 黃車身配黑車頂，所有加裝鋼件都是黑的——ARB 最小的一支 Summit 牛欄帶 WARN 8000 絞盤、欄上一對紅燈罩圓燈、中央紅色軟拖車扣、ARB 岩石滑桿、有管狀側欄的 BASE 平台架，OME 懸吊配黑輪框與泥地胎。黃、黑、紅三色，就是 Suzuki 自家的黃色示範車。ARB 新聞稿說 JBOX 上全是原型件；輪框與輪胎的型號官方沒寫，這裡用黑色五輻與 M/T 胎代替。',
+    set: { color: 'ZZB', twoTone: true, lift: 'omr40', wheel: 'bradley', rimFinish: 'MBK', tyre: 't225r16', tread: 'toyo_mt', owl: false,
+      frontBumper: 'arb_summit', grilleLight: 'arb_ar21_red', roofRack: 'arb', arbRailSide: true, sideStep: 'arb' } },
 
   { id: 'city', label: '都會輕改', sw: ['#0f74a8', '#3a3d42', '#1b1d1f'],
     desc: '往下走的乾淨路線：KLC TURTLES 彈簧放低約 5 公分，純藍車身，輪弧飾板烤成車身色、只留拱口一圈槍灰邊；Grand Wagoneer 式 #GD 縱格罩把圓燈框進方形燈座，16×8J 深碟黑鐵圈配 215/65R16 公路胎。整台幾乎看不到黑色塑膠，車頂空的。照 KLC Heritage 的 JB74W 示範車 MATURE（示範車是白邊胎，本頁還畫不出白邊；純藍是日規色）。',
@@ -1750,7 +1810,18 @@ export const STYLES = [
 
   { id: 'lc40', label: 'LC40 紅白', sw: ['#c81b22', '#f0f0ec', '#16191c'],
     desc: '紅色改色膜車身配 KLC Forty 圓眼水箱罩——外框跟車身同紅、燈圈白——白色 RS Watanabe 八輻圈包白字泥地胎，黑色雙管前桿。Land Cruiser 40 的紅白配色，車身紅是 3M 膜不是原廠色。',
-    set: { color: '2080-G13', lift: 'jaos40', wheel: 'watanabe_f8', rimFinish: 'WH', tyre: 't225r16', tread: 'toyo_mt', owl: true, grille: 'klc_forty', frontBumper: 'taniguchi_double', rearBumper: 'showa_iron_rear', sideStep: 'wildgoose_fold' } }
+    set: { color: '2080-G13', lift: 'jaos40', wheel: 'watanabe_f8', rimFinish: 'WH', tyre: 't225r16', tread: 'toyo_mt', owl: true, grille: 'klc_forty', frontBumper: 'taniguchi_double', rearBumper: 'showa_iron_rear', sideStep: 'wildgoose_fold' } },
+
+  { id: 'yellow_vintage', label: '黃色復古鐵件', sw: ['#cbd232', '#16191c', '#8c5a31'],
+    desc: '原廠螢光黃黑頂，換 APIO ヴィンテージアイアングリル鋼板復古罩、中間橫肋貼鈴木原廠的 Jimny 草寫鍍鉻字標，側面一片米框木紋側板貼；白色 WILDBOAR SR+ 鋼圈風輪框配 Geolandar X-AT 215/70R16，APIO 小升高。照 APIO 官網 TS3「湘南 Edition」交車實例（頁面寫明キネティックイエロー黑頂、「筆記体エンブレム付き」的罩；輪框顏色頁面沒寫，這裡用白）；木紋側貼是本頁加的，照 Beyond CODE16 的路線。',
+    set: { color: 'ZZB', twoTone: true, lift: 'apio20', grille: 'apio_vintage_iron', stripe: 'woodgrain', wheel: 'wildboar_srplus', rimFinish: 'W',
+      tyre: 't215r16', tread: 'yk_xat', owl: false } },
+
+  { id: 'black_chrome', label: '黑色鍍鉻西海岸', sw: ['#16191c', '#d0d3d6', '#f2f2ee'],
+    desc: '全黑車身配一身反光：Beyond Liberte 鏡面不鏽鋼前後保桿、鈴木原廠鍍鉻後照鏡蓋、KLC FORTY 圓眼罩配鍍鉻燈圈（KLC 只有白或亮黑內圈，鍍鉻是本頁配色）、鍍鉻 SUPER MOON 月亮盤、白字 Open Country R/T，尾門掛 Beyond 白色備胎套。黑底讓每一塊鉻件都跳出來。外型參考 Beyond 示範車 CODE16 與 Lion Heart／RiSE 的鍍鉻車——兩台都是 JB64 而且是黃車，這裡換成 JB74 版零件、改成黑色，是外型參考不是實車複製。',
+    set: { color: 'ZJ3', twoTone: false, frontBumper: 'beyond_liberte_mirror', rearBumper: 'beyond_rear_mirror', grille: 'klc_forty_chrome',
+      mirrors: 'suzuki_chrome', spareCoverKit: 'beyond_white',
+      wheel: 'super_moon', rimFinish: 'smch', tyre: 't215r65', tread: 'toyo_rt', owl: true } }
 
 ];
 

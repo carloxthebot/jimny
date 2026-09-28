@@ -323,7 +323,7 @@ export function rigJimny(THREE, gltfScene) {
   // plus the fog lamps set into it. Grille: the satin surround panel, its
   // slats and inserts, the signal bezels and the badge. Headlamp units stay.
   const stockBumper = [], stockGrille = [], stockRear = [], stockMirrors = [], stockFlares = [], stockRearLamps = [],
-    stockQuarter = [], stockHeadlamps = [], spareCarrier = [];
+    stockQuarter = [], stockHeadlamps = [], spareCarrier = [], stockAntenna = [];
   raw.traverse((o) => {
     if (!o.isMesh || Array.isArray(o.material)) return;
     const b = new THREE.Box3().setFromObject(o);
@@ -344,6 +344,10 @@ export function rigJimny(THREE, gltfScene) {
     // rear quarter glass: a gullwing window replaces it, so with one fitted
     // the pane has to go or the open window hangs in front of its own glass
     if (Math.abs(c.x) > 600 && c.y > 1050 && c.y < 1550 && c.z < -600 && c.z > -1400 && /Glass|Vidro/.test(n)) { stockQuarter.push(o); return; }
+    // the roof antenna mast: a rod under 30 mm across leaning back off the
+    // rear of the roof (x -520, y 1622-1842, z -1271..-1481 in this model).
+    // A rack slid back over it means the mast has to come off (app.html)
+    if (c.z < -1200 && c.y > 1650 && (b.max.x - b.min.x) < 0.03 && (b.max.y - b.min.y) > 0.05) { stockAntenna.push(o); return; }
     if (c.z < 1500) return;
     // headlamp units (lens, bowl, ring, reflector): round, centred about
     // x +-550, y 855. Only a face kit takes these away.
@@ -365,7 +369,7 @@ export function rigJimny(THREE, gltfScene) {
   };
 
   root.userData = {
-    BODY, WHEELS, wheelGroups, spareBox, spare, anchors, stockBumper, stockGrille, stockRear, stockMirrors, stockFlares, stockRearLamps, stockQuarter, stockHeadlamps, spareCarrier,
+    BODY, WHEELS, wheelGroups, spareBox, spare, anchors, stockBumper, stockGrille, stockRear, stockMirrors, stockFlares, stockRearLamps, stockQuarter, stockHeadlamps, spareCarrier, stockAntenna,
     paintMat, roofMat, roofMeshes, painted, dims, split, splitMM: null, flareMats: null,
     baseTyreDia: wheelGroups[0]?.userData.baseDia ?? 0.693,
   };

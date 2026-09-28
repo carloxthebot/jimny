@@ -9,7 +9,7 @@
      browser does not learn they exist until three.js has downloaded, parsed
      and run, which on a phone is seconds of an idle connection. -->
 <link rel="preload" as="fetch" type="model/gltf-binary" href="model/jimny-hq.glb" crossorigin>
-<link rel="preload" as="fetch" type="model/gltf-binary" href="model/rims.glb?v=202609280051" crossorigin>
+<link rel="preload" as="fetch" type="model/gltf-binary" href="model/rims.glb?v=202609280747" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
@@ -736,15 +736,15 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { rigJimny, applyConfig, updateSplit } from './rig.js?v=202609280051';
-import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609280051';
-import { buildAccessory, loadParts, getPart, allParts } from './accessories.js?v=202609280051';
-import { openAwning, roofTent, campExtra } from './camp.js?v=202609280051';
-import { buildWheel, loadTreadMasks } from './wheels.js?v=202609280051';
-import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609280051';
+import { rigJimny, applyConfig, updateSplit } from './rig.js?v=202609280747';
+import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609280747';
+import { buildAccessory, loadParts, getPart, allParts } from './accessories.js?v=202609280747';
+import { openAwning, roofTent, campExtra } from './camp.js?v=202609280747';
+import { buildWheel, loadTreadMasks } from './wheels.js?v=202609280747';
+import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609280747';
 // Written by stamp.sh on each deploy; shown in the HUD so a stale cached copy
 // is obvious at a glance.
-const BUILD = '202609280051';
+const BUILD = '202609280747';
 
 const cv = document.getElementById('cv');
 // The backdrop is CSS behind a transparent canvas: a background texture in
@@ -755,7 +755,9 @@ const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: t
 renderer.setClearColor(0x000000, 0);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+// Neutral, not ACES: ACES washed Kinetic Yellow (#D0D735 on Suzuki's own chip)
+// out to a pastel #D2D466; Neutral keeps the paint colours on their chips.
+renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = 1.05;
 // Render on demand. A car standing still is drawn once, not sixty times a
 // second: every frame is a shadow pass, the scene, an ambient-occlusion pass
 // and the outline pass at up to 2x pixel ratio, and drawing it continuously
@@ -784,7 +786,7 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = 1.0;
 new RGBELoader().load(`model/env.hdr?v=${BUILD}`, (hdr) => {
   STUDIO.env = pmrem.fromEquirectangular(hdr).texture;
-  if (stageAt === 'studio') { scene.environment = STUDIO.env; scene.environmentIntensity = STUDIO.intensity; invalidate(); }
+  if (stageAt === 'studio') { scene.environment = STUDIO.env; scene.environmentIntensity = STUDIO.intensity; syncChrome(); invalidate(); }
   hdr.dispose();
 });
 scene.add(new THREE.HemisphereLight(0xdfe8ef, 0x2b3a40, 0.55));
@@ -895,6 +897,9 @@ async function setStage(name) {
     floor.material.opacity = 0.42; if (POOL) POOL.visible = false;
     renderer.toneMappingExposure = 1.05;
   }
+  // the first call runs while the module is still being evaluated, before
+  // the car (and the chrome registry below) exist; update() covers that one
+  try { syncChrome(); } catch {}
   invalidate();
 }
 document.getElementById('stagePick').onclick = (e) => { const b = e.target.closest('[data-stage]'); if (b && !b.disabled) setStage(b.dataset.stage); };
@@ -1166,6 +1171,22 @@ function loadBody(tries = 0) {
   // (renderer.compileAsync is not the answer: without KHR_parallel_shader_compile
   // it blocks anyway, and it compiles every material in the scene, not the
   // handful this view actually shows.)
+  // The parts (bumpers, grilles, racks) come in second, still behind the
+  // overlay: lifting it with only the body loaded showed a bare nose for a
+  // few seconds before the style's parts popped on, which looked broken.
+  // Sequential, not parallel, for the phone-memory reason above.
+  $('bootmsg').textContent = '組裝零件…';
+  try { await loadAccessories(); } catch {}
+  buildStyles();
+  // A first-time reader gets the style step; anyone who has been here before
+  // gets the car, because making them dismiss the same screen every visit is
+  // how a helpful first step turns into a toll gate.
+  let seen = null;
+  try { seen = localStorage.getItem('jimny.style'); } catch {}
+  // The first thing anyone sees is a built car, not a stock one: a returning
+  // reader gets the style they last chose, a new one the two-tone showcase.
+  if (!preset) loadStyle(ALL_STYLES.some(x => x.id === seen) ? seen : HERO_STYLE, false);
+  else update();
   await yieldFrame(); await yieldFrame();
   // Open on a high three-quarter and swing down to the working view while
   // the light comes up, rather than cutting to a finished picture. Started
@@ -1180,16 +1201,6 @@ function loadBody(tries = 0) {
   }
   $('boot').classList.add('gone');
   setTimeout(() => { $('boot').style.display = 'none'; }, 480);
-  loadAccessories();
-  buildStyles();
-  // A first-time reader gets the style step; anyone who has been here before
-  // gets the car, because making them dismiss the same screen every visit is
-  // how a helpful first step turns into a toll gate.
-  let seen = null;
-  try { seen = localStorage.getItem('jimny.style'); } catch {}
-  // The first thing anyone sees is a built car, not a stock one: a returning
-  // reader gets the style they last chose, a new one the two-tone showcase.
-  if (!preset) loadStyle(ALL_STYLES.some(x => x.id === seen) ? seen : HERO_STYLE, false);
   if (preset) { document.body.classList.add('sheet'); goStep(stepOf([...q.keys()][0])); }
   else if (seen) goStep(1);
   else goStep(0);
@@ -1224,6 +1235,34 @@ function finishMat(finish) {
     : new THREE.MeshPhysicalMaterial({ name: 'FinishIvory', color: 0xe9e1cc, roughness: 0.38, metalness: 0.05, clearcoat: 0.6, clearcoatRoughness: 0.2 });
 }
 const rackPaintMat = () => RACK_PAINT_MAT ??= new THREE.MeshPhysicalMaterial({ name: 'RackPaint', roughness: 0.4, metalness: 0.05, clearcoat: 0.5, clearcoatRoughness: 0.25 });
+/* Chrome and mirror-polished stainless. A metal only shows what it reflects,
+ * and both stages give it little: the studio HDR is an even light box, so
+ * bright chrome read as flat pale grey, and outdoors it reflects the dusk
+ * sky and the asphalt, so SUPER MOON discs and Liberte bars read as dull
+ * bronze. Each polished metal (metalness >= 0.85, roughness <= 0.2, which
+ * catches ChromeTrim, Stainless, FinishMirror, the chrome wheel finish and
+ * the stock badge) therefore carries the stage's own environment with a
+ * stronger reflection (a material envMap is the only way three r165 lets one
+ * material's reflection differ from scene.environmentIntensity) and a
+ * slightly tighter roughness. ACES rolls the highlights off, so the sun
+ * glint does not clip to a white blob. The brightness follows the scene's
+ * own intensity every frame, so the intro fade-in still applies. */
+const CHROME_BOOST = { studio: 1.3, outdoor: 2.1 };
+const CHROME_MATS = new Set();
+function isPolished(m) {
+  return m && (m.isMeshStandardMaterial || m.isMeshPhysicalMaterial) && m.metalness >= 0.85 && m.roughness <= 0.2 && !m.map;
+}
+function syncChrome() {
+  rig?.traverse((o) => {
+    if (!o.isMesh) return;
+    for (const m of Array.isArray(o.material) ? o.material : [o.material])
+      if (!CHROME_MATS.has(m) && isPolished(m)) { m.roughness = Math.min(m.roughness, 0.08); CHROME_MATS.add(m); }
+  });
+  for (const m of CHROME_MATS) {
+    if (m.envMap !== scene.environment) { m.envMap = scene.environment; m.needsUpdate = true; }
+    m.envMapIntensity = CHROME_BOOST[stageAt] * scene.environmentIntensity;
+  }
+}
 function finishOf(node, finish) {
   if (!node || !finish) return node;
   const mat = finishMat(finish);
@@ -1255,6 +1294,17 @@ const BUILT = {};                       // family -> the node currently on the c
  * at the windscreen header well clear of that basket.
  */
 function roofLamp(key, base, rack, paint) {
+  // KC Pro6 on an ARB rack hangs off the front of the front rail -- or of a
+  // guard rail's front cross rail -- instead of standing on top of it
+  // (owner: 太高). Those rails carry a `lampFront` point.
+  if (key === 'roofLights' && base === 'kc_pro6') {
+    let front = null;
+    rack?.traverse((o) => { if (/^lampFront/.test(o.name)) front = o; });
+    if (front) {
+      const n = buildAccessory(key, `${base}_${rack === BUILT.roofRack ? 'frontRail' : 'front'}`, paint);
+      if (n) { n.position.set(front.position.x, front.position.y, front.position.z + rack.position.z); return n; }
+    }
+  }
   const anchor = [], span = [];
   rack?.traverse((o) => { if (/^lampMount/.test(o.name)) anchor.push(o); if (/^lampSpan/.test(o.name)) span.push(o); });
   const own = () => buildAccessory(key, base, paint);
@@ -1285,6 +1335,23 @@ function roofLamp(key, base, rack, paint) {
   return n;
 }
 
+/**
+ * A ladder that hooks the rack (the owner's tube ladder) keeps hold of it
+ * when the rack is slid: its level run (`reach*`, straight along z from the
+ * top of the rise) stretches or shrinks by the shift and the hooks (`hook*`)
+ * move with the rail. Ladders with no such children are left alone.
+ */
+function ladderReach(n, dz) {
+  for (const c of n.children) {
+    if (/^reach/.test(c.name) && c.geometry) {
+      c.geometry.computeBoundingBox();
+      const b = c.geometry.boundingBox, L = b.max.z - b.min.z;
+      const k = Math.max(0.02, (L + dz) / L);
+      c.scale.z = k; c.position.z = b.min.z * (1 - k);
+    } else if (/^hook/.test(c.name)) c.position.z += dz;
+  }
+}
+
 function update() {
   const lift = find(LIFTS, S.lift), bl = { body: lift.body ?? 0, label: '' };
   const wh = find(WHEELS, S.wheel), ty = find(TYRES, S.tyre);
@@ -1308,7 +1375,7 @@ function update() {
     splitColor: find(SPLIT_PAINTS, S.split).hex ?? null, splitY: SPLIT_Y, paintFlares: S.paintFlares,
     lampTint: find(LAMP_COVERS, S.lampCover).tint ?? null, hideRear: S.rearBumper !== 'stock' && !find(REAR_BUMPERS, S.rearBumper).paintStock,
     paintRear: !!find(REAR_BUMPERS, S.rearBumper).paintStock,
-    hideMirrors: S.mirrors !== 'stock', hideFlares: !!find(FENDERS, S.fender).replacesStock, hideRearLamps: !!find(REAR_BUMPERS, S.rearBumper).ownLamps,
+    hideMirrors: S.mirrors !== 'stock' && !find(MIRRORS, S.mirrors).cover, hideFlares: !!find(FENDERS, S.fender).replacesStock, hideRearLamps: !!find(REAR_BUMPERS, S.rearBumper).ownLamps,
     hideQuarterGlass: S.gullwing, spareDelete: S.spareDelete !== 'none',
     buildWheel: (o) => buildWheel(THREE, { ...o, rimNode: getPart('rim_' + o.style) }),
   });
@@ -1328,11 +1395,17 @@ function update() {
   };
   const settling = [];
   const spareOff = S.spareDelete !== 'none';
+  // (on the ARB rack the plain shovel gives way to ARB's shovel holder, and
+  // to the Hi-Lift holder that takes its place along the right rail)
+  const arbShovelSpot = S.roofRack === 'arb' && (S.arbShovel || S.arbJack);
   for (const k of ['windowGuards', 'spareBag', 'spareCover', 'flares', 'decals', 'shovel', 'sideSkirt'])
-    if (S[k] && !(spareOff && (k === 'spareBag' || k === 'spareCover'))) add(buildAccessory(k, undefined, paint), k);
+    if (S[k] && !(spareOff && (k === 'spareBag' || k === 'spareCover')) && !(k === 'shovel' && arbShovelSpot))
+      add(buildAccessory(k, undefined, paint), k);
   if (S.grilleLight !== 'none') add(buildAccessory('grilleLight', S.grilleLight, paint), 'grilleLight');
   add(buildAccessory('exhaust', S.exhaust, paint), 'exhaust');
-  if (S.extinguisher !== 'none') add(buildAccessory('extinguisher', S.extinguisher, paint), 'extinguisher');
+  // (the owner's tube ladder carries its own bottle; the 'ladder' one is placed for the JST hoop)
+  if (S.extinguisher !== 'none' && !(S.extinguisher === 'ladder' && S.ladder === 'tube'))
+    add(buildAccessory('extinguisher', S.extinguisher, paint), 'extinguisher');
   // the snorkel takes the right-hand pillar, so pods go left only when one is fitted
   if (S.pillarPods) add(buildAccessory('pillarPods', S.snorkel !== 'none' ? 'left' : undefined, paint), 'pillarPods');
   // the can, the axe and the board each pick their own side of the car, and
@@ -1403,25 +1476,45 @@ function update() {
     $('sum4').textContent = n ? `${n} 項` : '無';
   }
   // ARB's clip-on accessories: only on the ARB rack, and they ride with it
+  // (with a KC bar hung on the bare front rail, the Slimline moves under the
+  // rack on ARB's under-rack mount: both cannot share the rail's front face)
+  const arbGuard = S.arbRailFull || S.arbRailFront;
   if (S.roofRack === 'arb') for (const a of ARB_RACK_ACC)
-    if (S[a.key]) add(buildAccessory('arbAcc', a.part, paint), a.key);
+    if (S[a.key]) add(buildAccessory('arbAcc', a.part === 'lights' && S.roofLights === 'kc_pro6' && !arbGuard ? 'lightsUnder' : a.part, paint), a.key);
   // The rack slides fore and aft on its gutter feet, and everything that
   // rides on it (shovel, awning, the lamps on its front rail) goes with it.
   const rz = S.roofRack !== 'none' ? S.rackShift / 1000 : 0;
   for (const k of ['roofRack', 'shovel', 'awning', 'awningOpen', ...(find(TENTS, S.tent).noRack ? [] : ['tent']), ...ARB_RACK_ACC.map(a => a.key)]) if (BUILT[k]) BUILT[k].position.z += rz;
+  if (rz && BUILT.ladder) ladderReach(BUILT.ladder, rz);
+  // The stock mast leans back off the rear of the roof, right under where a
+  // rack's rear rail sits: ARB say their rack clears it by about 30 mm, but
+  // on this model the centred rack's rear rail runs through it, so with a
+  // rack less than 30 mm clear of it the mast is shown taken off (and the
+  // position readout says so) rather than drawn through the rail.
+  let mastOff = false;
+  { const ant = rig.userData.stockAntenna ?? [];
+    if (ant.length && BUILT.roofRack) {
+      rig.updateMatrixWorld(true);
+      const rb = new THREE.Box3().setFromObject(BUILT.roofRack).expandByScalar(0.03), ab = new THREE.Box3();
+      for (const m of ant) ab.expandByObject(m);
+      mastOff = rb.intersectsBox(ab);
+    }
+    for (const m of ant) m.visible = !mastOff; }
   // Roof lamps: clamped on the rack's front rail when there is a rack, on
   // their own body mount when there is not (see build_parts.py ROOF LIGHTS).
   // The IPF bar and the IPF pair of spots are the unsuffixed groups.
   for (const key of ['lightBar', 'roofLights']) {
     if (S[key] === 'none') continue;
     const base = S[key] === (key === 'lightBar' ? 'ipf' : 'round') ? undefined : S[key];
-    const n = roofLamp(key, base, BUILT.roofRack, paint);
+    // an ARB guard rail carries the lamps on its front cross rail instead
+    const n = roofLamp(key, base, BUILT.arbRailFull ?? BUILT.arbRailFront ?? BUILT.roofRack, paint);
     if (n) add(n, key);
   }
   for (const n of settling) settleIn(n);
   $('arbAcc').hidden = S.roofRack !== 'arb';
   $('rackMove').hidden = S.roofRack === 'none';
-  $('rackPos').textContent = !S.rackShift ? '置中' : `往車${S.rackShift > 0 ? '頭' : '尾'} ${Math.abs(S.rackShift)}mm`;
+  $('rackPos').textContent = (!S.rackShift ? '置中' : `往車${S.rackShift > 0 ? '頭' : '尾'} ${Math.abs(S.rackShift)}mm`)
+    + (mastOff ? '（要拆天線桿）' : '');
   $('rackNudge').querySelectorAll('button').forEach(b =>
     b.disabled = Math.abs(S.rackShift + (+b.dataset.d) * RACK_STEP) > RACK_MAX);
 
@@ -1461,6 +1554,7 @@ function update() {
   $('hCol').textContent = col.name;
   $('hVer').textContent = accessoriesIn ? `版本 ${BUILD}` : `版本 ${BUILD} · 配件載入中…`;
   prevS = { ...S };
+  syncChrome();
   invalidate();
   renderFlags(validate(S, { tyre: ty, lift, bodyLift: bl, wheel: wh }));
 }
@@ -1701,7 +1795,8 @@ function aimFor(k) {
     case 'guardCan': case 'guardAxe': case 'guardBoard': return [sideAz(S[k]), 0.26, 7.8];
     case 'extinguisher': return S.extinguisher === 'ladder' ? [2.55, 0.2, 7.8] : [sideAz(S.extinguisher), 0.26, 7.8];
     case 'exhaust': return /trailmaster|_ds|kakimoto_kr_ds/.test(S.exhaust) ? [LEFT_AZ, 0.05, 7.6] : [2.5, 0.06, 7.6];
-    default: return null;
+    // ARB rack accessories are all on the tray: look down on it
+    default: return /^arb[A-Z]/.test(k) ? [0.95, 0.62, 9.6] : null;
   }
 }
 function aimAt(keys) {
@@ -2690,13 +2785,17 @@ $('tgAwnOpen').onclick = () => { S.awningOpen = !S.awningOpen; syncCamp(); updat
 $('tgRoom').onclick = () => { S.awningRoom = !S.awningRoom; syncCamp(); update(); };
 $('arbToggles').onclick = e => {
   const b = e.target.closest('[data-k]'); if (!b) return;
-  S[b.dataset.k] = !S[b.dataset.k]; syncToggles(); update();
+  const k = b.dataset.k, g = ARB_RACK_ACC.find(a => a.key === k)?.group;
+  S[k] = !S[k];
+  // guard rails are alternatives (ARB sell no 3/4 + trade rail combination)
+  if (S[k] && g) for (const a of ARB_RACK_ACC) if (a.group === g && a.key !== k) S[a.key] = false;
+  syncToggles(); update();
 };
 $('arbToggles').addEventListener('pointerover', (e) => {
   if (!matchMedia('(hover: hover)').matches) return;
   const b = e.target.closest('[data-k]'); if (!b) return;
   const a = ARB_RACK_ACC.find(x => x.key === b.dataset.k);
-  if (a) hoverCard({ ...a, id: a.key, part: a.pn }, b, null);
+  if (a) hoverCard({ ...a, id: a.key, part: a.pn }, b, shotFor('arbAcc', { id: a.key }));
 });
 $('arbToggles').addEventListener('pointerleave', () => hideCard());
 $('lightToggles').onclick = e => {
@@ -2793,6 +2892,7 @@ resize(); setPeek(); applyCam();
   frameDirty--;
   if (shadowDirty) { renderer.shadowMap.needsUpdate = true; shadowDirty = false; }
   updateSplit(rig);
+  for (const m of CHROME_MATS) m.envMapIntensity = CHROME_BOOST[stageAt] * scene.environmentIntensity;
   if (composer) composer.render(); else renderer.render(scene, cam);
 })();
 new ResizeObserver(resize).observe(cv.parentElement);
