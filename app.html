@@ -17,7 +17,7 @@
      browser does not learn they exist until three.js has downloaded, parsed
      and run, which on a phone is seconds of an idle connection. -->
 <link rel="preload" as="fetch" type="model/gltf-binary" href="model/jimny-hq.glb" crossorigin>
-<link rel="preload" as="fetch" type="model/gltf-binary" href="model/rims.glb?v=202609280915" crossorigin>
+<link rel="preload" as="fetch" type="model/gltf-binary" href="model/rims.glb?v=202609281109" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
@@ -925,15 +925,15 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { rigJimny, applyConfig, updateSplit } from './rig.js?v=202609280915';
-import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609280915';
-import { buildAccessory, loadParts, getPart, allParts } from './accessories.js?v=202609280915';
-import { openAwning, roofTent, campExtra } from './camp.js?v=202609280915';
-import { buildWheel, loadTreadMasks } from './wheels.js?v=202609280915';
-import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609280915';
+import { rigJimny, applyConfig, updateSplit } from './rig.js?v=202609281109';
+import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609281109';
+import { buildAccessory, loadParts, getPart, allParts } from './accessories.js?v=202609281109';
+import { openAwning, roofTent, campExtra } from './camp.js?v=202609281109';
+import { buildWheel, loadTreadMasks } from './wheels.js?v=202609281109';
+import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609281109';
 // Written by stamp.sh on each deploy; shown in the HUD so a stale cached copy
 // is obvious at a glance.
-const BUILD = '202609280915';
+const BUILD = '202609281109';
 
 const cv = document.getElementById('cv');
 // The backdrop is CSS behind a transparent canvas: a background texture in
@@ -1025,7 +1025,9 @@ function ambient(t) {
 // `h` is the height the panorama was shot from (it sets the size of the
 // floor), `r` how far out the flat ground runs before it bends up into the
 // walls or the horizon.
-const GARAGE = { file: 'env_autoshop_2k.hdr', h: 1.7, r: 22, intensity: 2.0, key: 2.0, rim: 0.3,
+// r 11, not 22: the hall's walls stand ~10 m out; at 22 they were projected
+// onto the flat floor and smeared, so the machines behind the car warped.
+const GARAGE = { file: 'env_autoshop_2k.hdr', h: 1.7, r: 11, intensity: 2.0, key: 2.0, rim: 0.3,
   shadow: 0.5, exposure: 1.1, overhead: true, rot: Math.PI / 2, gain: 1.15, env: null, sky: null, loading: null, sun: null };
 const OUTDOOR = { file: 'env_goegap_2k.hdr', h: 1.8, r: 160, intensity: 1.0, key: 2.6, rim: 0.25,
   shadow: 0.5, exposure: 0.95, overhead: false, rot: 0, gain: 1, env: null, sky: null, loading: null, sun: null };
