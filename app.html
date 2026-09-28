@@ -4,86 +4,72 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0c1214">
-<title>Jimny JB74 改裝配置</title>
+<title>Jimny JB 74 · 3D 改裝配置</title>
+<meta name="description" content="Jimny JB 74：Suzuki Jimny Sierra JB74 的 3D 改裝配置。懸吊、輪框輪胎、保桿、車頂架與燈具都照原廠資料建模，車高與價格即時算。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Jimny JB 74">
+<meta property="og:title" content="Jimny JB 74 · 3D 改裝配置">
+<meta property="og:description" content="Suzuki Jimny Sierra JB74 的 3D 改裝配置：選風格、升高、輪框輪胎與外觀件，看總車高、停車與零件預估。">
+<meta property="og:url" content="https://carloxthebot.github.io/jimny/app.html">
+<meta property="og:image" content="https://carloxthebot.github.io/jimny/model/shots/style-cal_twotone.webp">
+<meta name="twitter:card" content="summary_large_image">
 <!-- The two files the first frame cannot do without. Without these the
      browser does not learn they exist until three.js has downloaded, parsed
      and run, which on a phone is seconds of an idle connection. -->
 <link rel="preload" as="fetch" type="model/gltf-binary" href="model/jimny-hq.glb" crossorigin>
-<link rel="preload" as="fetch" type="model/gltf-binary" href="model/rims.glb?v=202609280747" crossorigin>
+<link rel="preload" as="fetch" type="model/gltf-binary" href="model/rims.glb?v=202609280915" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
-/* Night-trail palette: the car is the only bright thing on screen, so paint
-   and chrome carry the page and the UI stays out of the way. Committed to one
-   dark world on purpose -- a light variant would fight the 3D backdrop. */
+/* Instrument-cluster layout: the car owns the whole screen, and the UI is a
+   set of dark glass pieces laid over it -- gauges along the top, a view
+   compass, a category dock along the bottom and a tray that slides up out of
+   the dock. Nothing is a column beside the car: on a phone the tray stops at
+   about 45% of the height, so the car stays in view while you pick. */
 :root{
-  --bg:#0c1214; --sur:#131b1e; --sur2:#1a2428; --sur3:#222f34;
-  --line:#223034; --line2:#33454c;
-  /* --ink3 was #61747b, which is 3.5:1 on the panel and too faint for the
-     labels that tell you what a control IS. Both muted greys come up. */
-  --ink:#eff4f3; --ink2:#a9babd; --ink3:#83969c;
-  --acc:#ffb24a; --acc-ink:#11181a; --acc-soft:#2b2317; --acc-line:#6a4d1d;
+  --bg:#0b1012;
+  --glass:rgba(12,18,20,.76); --glass2:rgba(22,31,35,.84); --glass3:rgba(36,48,53,.92);
+  --edge:rgba(255,255,255,.085); --edge2:rgba(255,255,255,.16);
+  /* the old names, still read by the controls inside the tray */
+  --sur:rgba(255,255,255,.045); --sur2:rgba(255,255,255,.085); --sur3:rgba(255,255,255,.13);
+  --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.14);
+  --ink:#f1f5f4; --ink2:#b0bec1; --ink3:#8b9da2;
+  --acc:#f0a030; --acc-ink:#161008; --acc-soft:rgba(240,160,48,.15); --acc-line:rgba(240,160,48,.55);
   --ok:#62cd90; --warn:#f0b64a; --bad:#ff7d66;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --num:"Barlow Condensed","Archivo",sans-serif;
   --disp:"Archivo","Noto Sans TC","PingFang TC",sans-serif;
   --body:"Noto Sans TC","PingFang TC",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  --sheet:214px;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px);
+  --gut:20px; --dockH:72px; --trayH:min(44vh,360px);
+  --blur:blur(16px) saturate(1.25);
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 /* An in-app browser (LINE, Facebook) closes itself on a downward swipe, and
    what it watches for is the overscroll bounce at the end of a scroll. Nothing
-   on this page may chain its scroll to the document, or a flick down inside
-   the sheet takes the whole browser with it. */
+   on this page may chain its scroll to the document. */
 html,body{height:100%;margin:0;overscroll-behavior:none}
-body{background:var(--bg);color:var(--ink);font:16px/1.62 var(--body);
-  -webkit-font-smoothing:antialiased;overflow:hidden;padding-bottom:env(safe-area-inset-bottom)}
-.app{display:grid;grid-template-columns:1fr 372px;height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit}
+select:focus-visible,button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.app{position:relative;height:100%;overflow:hidden}
+@media(max-width:860px){html,body{height:100dvh}}
 
 /* ── stage ────────────────────────────────────────────────────────────── */
-.stage{position:relative;overflow:hidden;touch-action:none;
+.stage{position:absolute;inset:0;overflow:hidden;touch-action:none;
   background:radial-gradient(88% 70% at 50% 106%,#2d3e44 0%,#182227 44%,#0b1113 100%)}
 #cv{display:block;width:100%;height:100%}
-/* Two stages. The dark room made a grey car on a grey floor with nothing to
-   reflect -- it looked like a CAD viewport. The studio is bright, the way a
-   maker photographs a car; the outdoor stage is a real place. The overlay
-   text flips to dark on the studio and gets a shadow on the photograph. */
 .stage.studio{background:radial-gradient(90% 80% at 50% 38%,#fbfbfa 0%,#e9ecec 46%,#c3c9cb 100%)}
-.stage.studio .badge .mk,.stage.studio .hud,.stage.studio .credit,.stage.studio .credit a{color:#56666c}
-.stage.studio .badge .md,.stage.studio .hud b,.stage.studio .hud .stats i{color:#141b1e}
-.stage.studio .hud .stats{color:#3d4a4f}.stage.studio .hud .ver{color:#7d8a8f}
-.stage.outdoor .badge,.stage.outdoor .hud,.stage.outdoor .credit{text-shadow:0 1px 3px #000c,0 0 14px #0008}
-.stage.outdoor .badge .mk,.stage.outdoor .hud{color:#dfe6e8}
-.stage.outdoor .credit,.stage.outdoor .credit a,.stage.outdoor .hud .stats,.stage.outdoor .hud .ver{color:#d3dcdf}
-.stage.outdoor .hud b,.stage.outdoor .hud .stats i{color:#fff}
-.stagepick{position:absolute;top:56px;right:20px;display:flex;gap:1px;background:var(--line2);
-  border:1px solid var(--line2);border-radius:3px;overflow:hidden}
-.stagepick button{font:500 12px/1 var(--body);padding:8px 11px;border:0;cursor:pointer;background:#0f181bcc;color:var(--ink2);backdrop-filter:blur(6px)}
-.stagepick button[aria-pressed=true]{background:#eef2f1;color:#11181a;font-weight:700}
-.stagepick button[disabled]{opacity:.6;cursor:progress}
-.badge{position:absolute;top:18px;left:22px;pointer-events:none}
-.badge .mk{font:500 9.5px/1 var(--mono);letter-spacing:.28em;color:#6f8188}
-.badge .md{font:800 25px/1.05 var(--disp);letter-spacing:-.01em;color:#dfe8e9;margin-top:5px}
-.views{position:absolute;top:16px;right:20px;display:flex;gap:1px;background:var(--line2);
-  border:1px solid var(--line2);border-radius:3px;overflow:hidden}
-.views button{font:500 12px/1 var(--body);padding:8px 11px;border:0;cursor:pointer;
-  background:#0f181bcc;color:var(--ink2);backdrop-filter:blur(6px)}
-.views button[aria-pressed=true]{background:var(--acc);color:var(--acc-ink);font-weight:700}
-/* The lift, tyre diameter and ground clearance live over the 3D rather than
-   in the panel: they describe what you are looking at, and on a phone the
-   panel's height is better spent on the list you are choosing from. */
-.hud{position:absolute;left:22px;bottom:18px;display:grid;gap:3px;
-  font:500 11.5px/1.6 var(--mono);color:#7b8d93;pointer-events:none;letter-spacing:.03em}
-.hud b{color:#dfe8e9;font-weight:500}
-.hud .stats{color:#93a5aa}
-.hud .stats i{font-style:normal;color:#eef4f3;font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
-.hud .ver{color:#56676d;font-size:10.5px}
+
 /* The car draws itself in as the model arrives: the outline's dash offset is
    the load progress, so the wait shows you what you are waiting for. */
-/* fixed, not absolute: .stage clips its children, and a clipped subtree takes
-   the wait indicator's animation off the compositor -- which is the one place
-   it must not be, because assembling the car blocks the main thread. */
+/* fixed, not absolute: a clipped subtree takes the wait indicator's
+   animation off the compositor -- which is the one place it must not be,
+   because assembling the car blocks the main thread. */
 #boot{position:fixed;inset:0;display:grid;place-content:center;justify-items:center;gap:18px;
-  background:#0b1113;z-index:5;font:500 13px var(--mono);color:#6d8087;text-align:center;
+  background:#0b1113;z-index:50;font:500 13px var(--mono);color:#6d8087;text-align:center;
   padding:20px;letter-spacing:.14em;transition:opacity .45s ease}
 #boot.gone{opacity:0;pointer-events:none}
 #bootcar{width:min(300px,62vw);height:auto;overflow:visible}
@@ -99,373 +85,540 @@ body{background:var(--bg);color:var(--ink);font:16px/1.62 var(--body);
    something the compositor can run on its own: a transform animation keeps
    moving while JS is busy, where a JS-driven or dash-offset one just freezes. */
 /* shown from the first frame, never faded in: Chrome does not composite an
-   animation inside an opacity:0 subtree, so hiding it until 組裝中 is exactly
-   what made it freeze when the main thread got busy. */
+   animation inside an opacity:0 subtree. */
 #bootbar{width:min(280px,58vw);height:3px;border-radius:3px;background:#1a2427}
 #bootbar[hidden]{display:none}
 #bootmsg .err{display:inline-block;margin-top:6px;font-size:11.5px;color:#8b6a52;letter-spacing:.04em}
 #bootretry{font:600 13px var(--body);color:var(--acc-ink);background:var(--acc);border:0;
   padding:10px 18px;border-radius:4px;cursor:pointer;letter-spacing:.06em}
 #bootretry[hidden]{display:none}
-/* the bar travels exactly its own track, so nothing has to clip it -- a
-   rounded overflow:hidden parent takes the animation off the compositor,
-   and then it stops dead the moment the main thread is busy, which is the
-   one moment it has to keep moving */
+/* the bar travels exactly its own track, so nothing has to clip it */
 #bootbar i{display:block;width:38%;height:100%;border-radius:3px;background:var(--acc);
   will-change:transform;animation:bootsweep 1.05s ease-in-out infinite alternate}
 @keyframes bootsweep{from{transform:translateX(0)}to{transform:translateX(163%)}}
 @media (prefers-reduced-motion:reduce){#bootbar i{animation:none;width:100%}}
-.credit{position:absolute;right:20px;bottom:14px;font:500 10.5px/1.55 var(--mono);color:#5e7076;
-  text-align:right;max-width:46%}
-.credit a{color:#7b8d93}
 
-/* ── panel ────────────────────────────────────────────────────────────── */
-.panel{position:relative;background:var(--bg);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
-.sheetx{display:none}
-.head{padding:18px 20px 15px;border-bottom:1px solid var(--line);flex:none}
-.head .kicker{display:flex;justify-content:space-between;gap:10px;align-items:baseline;
-  font:500 11px/1 var(--mono);letter-spacing:.16em;color:var(--ink2);text-transform:uppercase}
-.head .kicker a{color:var(--acc);text-decoration:none;letter-spacing:.06em}
-.head h1{font:800 23px/1.1 var(--disp);letter-spacing:-.01em;margin:9px 0 0}
-/* Total height is the number people actually ask about -- it decides whether
-   the car still fits the mechanical parking most Taiwanese buildings use --
-   so it gets its own row and is measured off the built model, not guessed. */
-.hero{display:flex;align-items:center;gap:12px;margin-top:14px;padding:11px 13px;
-  background:var(--sur);border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:4px}
-.hero .h-l span{display:block;font:600 11.5px/1 var(--body);letter-spacing:.1em;color:var(--ink2)}
-.hero .h-l b{display:block;font:800 33px/1 var(--disp);margin-top:5px;font-variant-numeric:tabular-nums;color:var(--acc)}
-.hero .h-l i{font-style:normal}
+/* ── the overlay: every control, laid over the car ─────────────────────── */
+/* (.panel is also the class the shot tools hide before they render a card) */
+.panel{position:absolute;inset:0;z-index:3;pointer-events:none}
+.panel > *{pointer-events:auto}
+.glass{background:var(--glass);border:1px solid var(--edge);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  box-shadow:0 10px 34px rgba(0,0,0,.28)}
+
+/* brand mark: a five-slot grille, the one thing only a Jimny has */
+.mark{position:absolute;top:calc(14px + var(--sat));left:calc(var(--gut) + var(--sal));display:flex;align-items:center;gap:10px;
+  color:var(--ink);text-decoration:none;padding:7px 12px 7px 9px;border-radius:12px}
+.mark svg{width:34px;height:22px;flex:none}
+.mark b{display:block;font:700 19px/1 var(--num);letter-spacing:.04em;text-transform:none}
+.mark b span{color:var(--acc)}
+.mark small{display:block;font:500 9.5px/1 var(--mono);letter-spacing:.08em;color:var(--ink3);margin-top:4px}
+
+/* gauge strip: the numbers people actually ask about */
+.gauge{position:absolute;top:calc(14px + var(--sat));left:50%;transform:translateX(-50%);display:flex;align-items:stretch;
+  border-radius:14px;padding:0;min-height:58px;max-width:calc(100vw - 560px)}
+.gauge > div{display:grid;align-content:center;gap:3px;padding:8px 16px;border-left:1px solid var(--edge);min-width:0}
+.gauge > div:first-child{border-left:0}
+.g-k{font:600 10px/1 var(--mono);letter-spacing:.14em;color:var(--ink3);white-space:nowrap}
+.g-h b{font:700 34px/1 var(--num);color:var(--acc);font-variant-numeric:tabular-nums;letter-spacing:.01em;white-space:nowrap}
+.g-h b i{font-style:normal}
+.g-h small{font:500 13px/1 var(--mono);color:var(--ink3);margin-left:3px}
+.g-d i{font-style:normal;font:500 12px/1.35 var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-d em{font-style:normal;font:500 12px/1.35 var(--body);color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-d em.tight{color:var(--warn)} .g-d em.over{color:var(--bad)}
 /* when a change pushes the car out of a parking class, say so with a blink */
 @keyframes parkWarn{0%,100%{opacity:1}22%,66%{opacity:.25}}
-.hero .h-r em.blink{animation:parkWarn .9s ease 2}
-.hero .h-l small{font:400 13px/1 var(--mono);color:var(--ink3);font-weight:400}
-.hero .h-r{margin-left:auto;text-align:right;display:grid;gap:4px}
-.hero .h-r i{font-style:normal;font:500 12.5px/1.35 var(--mono);color:var(--ink)}
-.hero .h-r em{font-style:normal;font:500 12px/1.4 var(--body);color:var(--ink2)}
-.hero .h-r em.tight{color:var(--warn)}
-.hero .h-r em.over{color:var(--bad)}
+#rPark.blink{animation:parkWarn .9s ease 2}
+.g-s{display:none!important}   /* lift / tyre / clearance: in the build sheet now */
+.pchip{display:none;justify-self:start;font:700 11px/1 var(--body);letter-spacing:.02em;padding:4px 8px;border-radius:99px;
+  background:rgba(98,205,144,.16);color:var(--ok);border:1px solid rgba(98,205,144,.4);white-space:nowrap}
+.pchip.tight{background:rgba(240,182,74,.16);color:var(--warn);border-color:rgba(240,182,74,.5)}
+.pchip.over{background:rgba(255,125,102,.16);color:var(--bad);border-color:rgba(255,125,102,.5)}
+.pchip.blink{animation:parkWarn .9s ease 2}
+.vbtn{display:none}
+.g-s i{font-style:normal;font:600 17px/1 var(--num);color:var(--ink);font-variant-numeric:tabular-nums}
+.g-s span{display:block}
+.g-p b{font:700 22px/1 var(--num);color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+.g-p em{font-style:normal;font:500 11px/1.2 var(--mono);color:var(--ink3);white-space:nowrap}
+.g-f{justify-content:center;position:relative}
+.g-f:empty{display:none}
 
-.steps{display:flex;gap:1px;background:var(--line);border-bottom:1px solid var(--line);flex:none}
-.steps button{flex:1;background:var(--bg);border:0;cursor:pointer;padding:11px 6px 10px;
-  color:var(--ink3);font:inherit;display:grid;gap:3px;justify-items:center;position:relative}
-.steps button b{font:700 15px/1.2 var(--disp);letter-spacing:.01em;color:var(--ink)}
-.steps button i{font-style:normal;font:500 10.5px/1.3 var(--mono);letter-spacing:.01em;color:var(--ink2);
-  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.steps button[aria-selected=true]{background:var(--sur)}
-.steps button[aria-selected=true] b{color:var(--acc)}
-.steps button[aria-selected=true]::after{content:"";position:absolute;inset:auto 0 0 0;height:2px;background:var(--acc)}
-
-.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;touch-action:pan-y;overscroll-behavior:contain}
-.pane{display:none;padding:4px 20px 8px}
-.pane.on{display:block;animation:paneIn .3s cubic-bezier(.22,.78,.24,1) both}
-/* which way the step moved, so the content comes from the side you swiped */
-.pane.on.back{animation-name:paneInBack}
-@keyframes paneIn{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:none}}
-@keyframes paneInBack{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:none}}
-/* the groups inside arrive just behind it, a beat apart */
-.pane.on > .grp{animation:grpIn .34s cubic-bezier(.22,.78,.24,1) both}
-.pane.on > .grp:nth-child(2){animation-delay:.045s}
-.pane.on > .grp:nth-child(3){animation-delay:.09s}
-.pane.on > .grp:nth-child(4){animation-delay:.135s}
-@keyframes grpIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.grp{padding:16px 0 4px;border-bottom:1px solid var(--line)}
-.grp:last-child{border-bottom:0}
-.lbl{display:flex;align-items:baseline;gap:8px;font:600 12px/1.3 var(--body);letter-spacing:.06em;
-  color:var(--ink);margin:0 0 10px}
-.lbl em{font-style:normal;margin-left:auto;font:500 11px/1.3 var(--mono);letter-spacing:.02em;color:var(--ink3)}
-.hint{font-size:12.5px;color:var(--ink2);line-height:1.55;margin:7px 0 0}
-
-select{width:100%;background:var(--sur);color:var(--ink);border:1px solid var(--line2);border-radius:3px;
-  padding:12px 32px 12px 13px;font:15.5px var(--body);appearance:none;cursor:pointer;
-  background-image:linear-gradient(45deg,transparent 50%,var(--ink3) 50%),linear-gradient(135deg,var(--ink3) 50%,transparent 50%);
-  background-position:right 15px top 20px,right 10px top 20px;background-size:5px 5px;background-repeat:no-repeat}
-select:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
-
-/* segmented control — the lift's "how high" step */
-.seg{display:flex;gap:1px;background:var(--line2);border:1px solid var(--line2);border-radius:3px;overflow:hidden}
-.seg button{flex:1 0 auto;min-width:0;background:var(--sur);border:0;cursor:pointer;padding:9px 4px;
-  font:inherit;color:var(--ink2);display:grid;gap:3px;justify-items:center}
-.seg button b{font:700 14.5px/1 var(--disp)}
-.seg button i{font-style:normal;font:500 10px/1 var(--mono);color:var(--ink2);white-space:nowrap}
-.seg button[aria-pressed=true]{background:var(--acc);color:var(--acc-ink)}
-.seg button[aria-pressed=true] i{color:var(--acc-ink);opacity:.72}
-
-/* product rows */
-.cards{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden}
-.card{background:var(--sur);border:0;width:100%;text-align:left;cursor:pointer;font:inherit;color:var(--ink);
-  display:grid;grid-template-columns:1fr auto;gap:3px 12px;padding:11px 13px;align-items:baseline}
-.card:hover{background:var(--sur2)}
-.card[aria-pressed=true]{background:var(--acc-soft);box-shadow:inset 3px 0 0 var(--acc)}
-.card .nm{font:500 14.5px/1.4 var(--body)}
-.card .brand{display:block;font:500 10.5px/1.5 var(--mono);letter-spacing:.1em;color:var(--ink2);text-transform:uppercase}
-.card .pr{font:700 15.5px/1.2 var(--disp);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
-.card .pr em{display:block;font:400 11px/1.5 var(--mono);font-style:normal;color:var(--ink2)}
-.card .inc{grid-column:1/-1;display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
-.tag{font:500 10.5px/1 var(--mono);padding:4px 6px;border:1px solid var(--line2);border-radius:2px;
-  color:var(--ink2);white-space:nowrap}
-.tag.on{border-color:var(--acc-line);color:var(--acc);background:var(--acc-soft)}
-.tag.no{opacity:.32;text-decoration:line-through}
-.tag.flare{border-color:#6a4a1d;color:var(--warn)}
-
-/* wheel thumbnails, one per catalogue wheel: node tools/partshots.mjs wheel */
-.chips{display:flex;gap:5px;flex-wrap:wrap}
-.chip{border:1px solid var(--line2);background:none;color:var(--ink);border-radius:99px;
-  padding:7px 12px;font:500 12.5px/1 var(--body);cursor:pointer}
-.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.wgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
-.wcard{background:var(--sur);border:1px solid var(--line);border-radius:4px;padding:7px 7px 9px;
-  cursor:pointer;font:inherit;color:var(--ink);text-align:left;display:grid;gap:5px;min-width:0}
-.wcard:hover{background:var(--sur2)}
-.wcard[aria-pressed=true]{border-color:var(--acc);background:var(--acc-soft)}
-.wcard img{width:100%;aspect-ratio:1;object-fit:contain;display:block;background:radial-gradient(60% 60% at 50% 45%,#222f34,#131b1e);border-radius:3px}
-.wcard .wn{font:500 12.5px/1.3 var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wcard .wm{font:500 10.5px/1.4 var(--mono);color:var(--ink2);letter-spacing:.02em}
-.wcard .wm b{color:var(--warn);font-weight:600}
-
-.swatches{display:flex;gap:7px;flex-wrap:wrap}
-.sw{width:32px;height:32px;border-radius:50%;border:2px solid transparent;outline:1px solid var(--line2);
-  cursor:pointer;padding:0}
-.sw[aria-pressed=true]{border-color:var(--acc);outline-color:var(--acc)}
-.sw.jp{outline-style:dashed;outline-color:var(--ink3)}
-
-/* tyre ladder — the bar is outer diameter, the right column is whether it fits */
-.ladder{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden}
-.trow{background:var(--sur);border:0;font:inherit;color:var(--ink);cursor:pointer;text-align:left;
-  display:grid;grid-template-columns:96px 1fr 86px;gap:10px;align-items:center;padding:9px 12px}
-.trow:hover{background:var(--sur2)}
-.trow[aria-pressed=true]{background:var(--acc-soft);box-shadow:inset 3px 0 0 var(--acc)}
-.trow .sz{font:500 13.5px/1.25 var(--body)}
-.trow .sz em{display:block;font:400 10.5px/1.5 var(--mono);font-style:normal;color:var(--ink2)}
-.bar{height:8px;background:var(--sur3);border-radius:99px;position:relative;overflow:hidden}
-.bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#4a6068,var(--acc));display:block}
-.fit{font:500 11px/1.4 var(--mono);text-align:right}
-.fit.ok{color:var(--ok)} .fit.warn{color:var(--warn)} .fit.bad{color:var(--bad)}
-
-.tabs{display:flex;gap:1px;background:var(--line2);border:1px solid var(--line2);border-radius:3px;overflow:hidden}
-.tabs button{flex:1;background:var(--sur);border:0;cursor:pointer;padding:9px 4px;font:inherit;color:var(--ink2);
-  display:grid;gap:2px;justify-items:center}
-.tabs button b{font:700 14px/1 var(--disp)}
-.tabs button i{font-style:normal;font-size:11.5px;color:var(--ink2)}
-.tabs button[aria-pressed=true]{background:var(--acc);color:var(--acc-ink)}
-.tabs button[aria-pressed=true] i{color:var(--acc-ink);opacity:.75}
-.treads{display:grid;gap:6px;margin-top:9px}
-.tr{background:var(--sur);border:1px solid var(--line);border-radius:3px;padding:8px 10px;cursor:pointer;
-  font:inherit;color:var(--ink);text-align:left;display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center}
-.tr:hover{background:var(--sur2)}
-.tr[aria-pressed=true]{border-color:var(--acc);background:var(--acc-soft)}
-.tr[disabled]{opacity:.4;cursor:not-allowed}
-.tr canvas{width:30px;height:46px;border-radius:2px;display:block}
-.tr .tb{display:block;font:500 10.5px/1.45 var(--mono);color:var(--ink2);letter-spacing:.1em}
-.tr .tn{display:block;font:500 13.5px/1.35 var(--body)}
-
-/* What is fitted right now. It sat under the list of options, looked exactly
-   like one of them, and you had to scroll past every choice to reach it --
-   so it read as another thing you could pick. It belongs at the top, above
-   the choices, and it must not look like a card. */
-.live{margin:0 0 11px;padding:0 0 0 11px;border-left:2px solid var(--acc);display:grid;gap:3px}
-.live::before{content:"現在";font:600 10px/1 var(--mono);letter-spacing:.18em;color:var(--acc)}
-.live b{font:600 13.5px/1.4 var(--body);color:var(--ink)}
-.live p{margin:0;font:500 12px/1.6 var(--body);color:var(--ink2)}
-.live:empty{display:none}
-
-.toggles{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden}
-.tg{display:flex;align-items:center;justify-content:space-between;gap:9px;background:var(--sur);border:0;
-  padding:11px 12px;color:var(--ink);cursor:pointer;font:inherit;text-align:left;width:100%}
-.tg:hover{background:var(--sur2)}
-.tg[aria-pressed=true]{background:var(--acc-soft)}
-.tg .nm{font-size:14px;min-width:0}
-.tg .nm i{display:block;font-style:normal;font-size:12px;color:var(--ink2);margin-top:2px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tg[aria-pressed=true] .nm{color:var(--acc)}
-.tg .st{font:500 11px/1 var(--mono);letter-spacing:.08em;color:var(--ink2);flex:none}
-.tg[aria-pressed=true] .st{color:var(--acc)}
-.tg[disabled]{opacity:.45;cursor:not-allowed}
-.tg.solo{border:1px solid var(--line);border-radius:3px;margin-top:9px}
-/* one row per thing that hangs off a guard: name on the left, which side on
-   the right, because "which side" is the whole decision */
-.sides{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden}
-.side-row{display:flex;align-items:center;gap:10px;background:var(--sur);padding:9px 12px}
-.side-row .nm{flex:1;min-width:0;font-size:14px}
-.side-row .nm i{display:block;font-style:normal;font-size:12px;color:var(--ink2);margin-top:2px}
-.side-row .pick{display:flex;gap:1px;background:var(--line2);border:1px solid var(--line2);border-radius:3px;overflow:hidden;flex:none}
-.side-row .pick button{background:var(--sur2);border:0;cursor:pointer;color:var(--ink2);
-  font:500 12px/1 var(--mono);padding:8px 10px;letter-spacing:.06em}
-.side-row .pick button[aria-pressed=true]{background:var(--acc);color:var(--acc-ink);font-weight:600}
-.sides.off{opacity:.45;pointer-events:none}
-
-/* The advisories and the buttons are pinned below the list, so every pixel
-   they take is a pixel of parts the reader cannot see. Three stacked
-   full-width buttons plus two open advisory cards were about a third of a
-   phone screen -- so the advisories collapse to one line that says how many
-   there are, and the buttons sit on a single row. */
-/* Style cards. They are the first thing anyone sees, so they carry the one
-   thing a list of part names cannot: what the car ends up looking like. */
-.styles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.stylehead{grid-column:1/-1;margin:10px 0 0;font:700 13px/1.3 var(--body);color:var(--ink)}
-.stylehead:first-child{margin-top:0}
-.stylehead em{font-style:normal;font:400 11px var(--body);color:var(--ink2);margin-left:8px}
-.style .sb{font-style:normal;font:500 10px/1 var(--mono);letter-spacing:.1em;color:var(--acc);text-transform:uppercase}
-.style{text-align:left;background:var(--sur);border:1px solid var(--line);border-radius:4px;overflow:hidden;
-  padding:12px 13px 11px;cursor:pointer;display:grid;gap:5px;align-content:start;
-  color:var(--ink);font:inherit;-webkit-tap-highlight-color:transparent}
-.style:hover{border-color:var(--line2)}
-.style[aria-pressed=true]{border-color:var(--acc);background:#1c1810}
-.style b{font:700 15px/1.2 var(--disp);letter-spacing:.01em}
-.style[aria-pressed=true] b{color:var(--acc)}
-/* the card shows the car, because three colour chips cannot tell anyone what
-   a style looks like and the whole point of the step is choosing by eye */
-.style img{width:calc(100% + 26px);margin:-12px -13px 2px;aspect-ratio:4/3;object-fit:cover;border-radius:4px 4px 0 0;display:block;
-  background:#e9ecec}
-.style .ds{font-size:12px;line-height:1.55;color:var(--ink2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.style .pr{font:500 11px/1 var(--mono);color:var(--ink3);letter-spacing:.02em;margin-top:2px}
-.style[aria-pressed=true] .pr{color:var(--acc-ink);background:var(--acc);border-radius:2px;
-  padding:5px 7px;justify-self:start}
-.styleNote{font-size:12px;line-height:1.7;color:var(--ink3);margin:14px 0 0}
-.styleNote b{color:var(--ink2)}
-@media(max-width:860px){
-  .styles{grid-template-columns:1fr 1fr;gap:7px}
-  .style{padding:10px 11px}
-  .style b{font-size:14px}
-  .style .ds{font-size:11.5px;line-height:1.6}
-  .style .pr{font-size:10px}
-}
-.flags{padding:9px 20px 0;display:grid;gap:6px;flex:none}
-.flags:empty{padding:0}
-.flagbar{display:flex;align-items:center;gap:9px;width:100%;padding:9px 12px;border-radius:3px;
-  background:var(--sur);border:1px solid var(--line);border-left:2px solid var(--line2);
-  color:var(--ink2);font:500 12.5px var(--body);cursor:pointer;text-align:left}
-.flagbar.warn{border-left-color:var(--warn)}
-.flagbar.error{border-left-color:var(--bad)}
-.flagbar i{font-style:normal;font:600 10.5px/1 var(--mono);letter-spacing:.1em}
+/* advisories: one chip that says how many, opening into the list */
+.flags{position:relative;display:grid;align-content:center}
+.flags:empty{display:none}
+.flagbar{display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:99px;border:1px solid var(--edge2);
+  background:rgba(255,255,255,.05);color:var(--ink2);font:500 12px var(--body);cursor:pointer;white-space:nowrap}
+.flagbar.warn{border-color:rgba(240,182,74,.55);background:rgba(240,182,74,.1)}
+.flagbar.error{border-color:rgba(255,125,102,.6);background:rgba(255,125,102,.12)}
+.flagbar i{font-style:normal;font:600 11px/1 var(--mono);letter-spacing:.06em}
 .flagbar i.bad{color:#ffc9bc} .flagbar i.wrn{color:#f3ddb4}
-.flagbar em{margin-left:auto;font-style:normal;font-size:10px;color:var(--ink2);transition:transform .16s}
+.flagbar em{font-style:normal;font-size:10px;transition:transform .16s}
 .flags.open .flagbar em{transform:rotate(180deg)}
-.flags:not(.open) .flag{display:none}
-.flag{padding:10px 12px;border-radius:3px;font-size:13px;line-height:1.55;border-left:2px solid;background:var(--sur)}
+.flaglist{position:absolute;top:calc(100% + 12px);right:-8px;width:min(380px,calc(100vw - 24px));max-height:52vh;overflow:auto;
+  overscroll-behavior:contain;display:none;gap:6px;padding:8px;border-radius:12px;z-index:6}
+.flags.open .flaglist{display:grid}
+.flag{padding:9px 11px;border-radius:8px;font-size:13px;line-height:1.55;border-left:2px solid;background:rgba(255,255,255,.04)}
 .flag.error{border-color:var(--bad);color:#ffc9bc}
 .flag.warn{border-color:var(--warn);color:#f3ddb4}
 .flag.info{border-color:var(--line2);color:var(--ink2)}
 .flag b{font:600 10.5px/1.7 var(--mono);letter-spacing:.1em;display:block}
-/* links, not buttons: three filled rectangles down here were louder than the
-   parts they sit under and took the room those parts needed */
-.acts{padding:9px 20px calc(12px + env(safe-area-inset-bottom));display:flex;gap:18px;
-  align-items:center;flex:none;border-top:1px solid var(--line);margin-top:10px}
-.acts button{background:none;border:0;padding:4px 0;cursor:pointer;white-space:nowrap;
-  font:500 13px var(--body);color:var(--ink2);
-  text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line2)}
-.acts button:hover{color:var(--ink);text-decoration-color:var(--ink2)}
-.acts .solid{margin-left:auto;color:var(--acc);font-weight:600;text-decoration-color:var(--acc)}
-.acts .solid:hover{color:var(--acc);text-decoration-color:var(--acc)}
-#out{margin:0 20px 20px;background:var(--sur);border:1px solid var(--line);border-radius:3px;padding:13px;
-  font:12.5px/1.7 var(--mono);color:var(--ink2);white-space:pre-wrap;display:none}
-#out.on{display:block}
 
-/* ── phone: the panel becomes a sheet so the car keeps the whole screen ── */
-.grab{display:none}
-@media(max-width:860px){
-  :root{--sheet:198px}
-  /* Safari's toolbar overlays a 100% viewport, which cut the step row off the
-     bottom of the sheet's peek; dvh tracks the bar as it hides and shows */
-  html,body{height:100dvh}
-  .app{grid-template-columns:1fr;grid-template-rows:100%}
-  .stage{grid-area:1/1;align-items:start}
-  /* the sheet covers the bottom of the screen, so the car is framed in what
-     is left above it rather than in the middle of a viewport it cannot use */
-  #cv{height:calc(100% - var(--sheet) + 54px)}
-  .badge{display:none}
-  .views{top:12px;right:12px}
-  .views button{padding:8px 10px;font-size:11.5px}
-  .credit{max-width:42%;bottom:calc(var(--sheet) + 8px);font-size:9px}
-  .hud{max-width:64%;bottom:calc(var(--sheet) + 8px);font-size:9.5px;line-height:1.55;gap:2px}
-  .hud .stats i{font-size:13px}
-  .credit{max-width:34%;font-size:9.5px}
-  .credit .disc{display:none}
-  .panel{grid-area:1/1;align-self:end;z-index:3;height:87dvh;border-left:0;overscroll-behavior:none;
-    border-top:1px solid var(--line2);border-radius:14px 14px 0 0;
-    background:#0c1214f2;backdrop-filter:blur(14px);
-    box-shadow:0 -18px 40px #00000066;
-    /* percentages are of the panel's own height, so the peek is exact whatever
-       the browser decides a vh is worth this frame */
-    transform:translateY(calc(100% - var(--sheet)));transition:transform .3s cubic-bezier(.32,.72,0,1)}
-  body.sheet .panel{transform:translateY(0)}
-  .grab{display:block;flex:none;width:100%;border:0;background:none;padding:10px 0 4px;cursor:grab;touch-action:none}
-  /* both axes are handled in JS here, so nothing is left for the browser --
-     a vertical gesture it never sees is one it cannot turn into a dismiss */
-  .head{touch-action:none;cursor:pointer}
-  .grab span{display:block;width:38px;height:4px;border-radius:99px;background:var(--line2);margin:0 auto}
-  .grab::after{content:'';display:block;width:8px;height:8px;margin:6px auto 0;
-    border-right:1.6px solid var(--ink2);border-bottom:1.6px solid var(--ink2);
-    transform:rotate(-135deg);transition:transform .28s;opacity:.75}
-  body.sheet .grab::after{opacity:0}
-  /* Closing is a BUTTON, never a downward swipe: a swipe down is the gesture
-     LINE's and Facebook's in-app browsers use to shut themselves, and losing
-     the whole browser is a much worse outcome than one extra tap. */
-  .sheetx{position:absolute;top:7px;right:10px;z-index:4;width:36px;height:36px;
-    place-items:center;border:0;border-radius:99px;cursor:pointer;
-    background:#1a262a99;color:var(--ink2);font:400 16px/1 var(--body);
-    -webkit-tap-highlight-color:transparent}
-  body.sheet .sheetx{display:grid}
-  body.sheet .head .kicker{padding-right:40px}
-  body.sheet .sheetx:active{background:#22323799;color:var(--ink)}
-  .head{padding-top:6px}
-  .head h1{display:none}
-  /* Once the sheet is open the numbers have done their job; they shrink to a
-     strip so the list you are actually choosing from gets the height. The
-     peek keeps the big readout, because that is all the peek is for. */
-  body.sheet .head{padding:2px 16px 8px}
-  body.sheet .hero{margin-top:8px;padding:7px 11px}
-  body.sheet .hero .h-l span{font-size:8px}
-  body.sheet .hero .h-l b{font-size:23px;margin-top:2px}
-  body.sheet .hero .h-r i{font-size:11px}
-  body.sheet .hero .h-r em{font-size:10.5px}
-  body.sheet .steps button{padding:8px 3px 7px}
-  .steps button b{font-size:13.5px}
-  .steps button i{font-size:9.5px}
-  .acts{gap:15px;margin-top:6px;padding:8px 16px calc(9px + env(safe-area-inset-bottom))}
-  .acts button{font-size:12.5px}
-  .flags{padding:8px 16px 0}
-  .flagbar{padding:8px 11px;font-size:12px}
-  #out{margin:0 16px 14px;font-size:12px}
-  .wgrid{grid-template-columns:repeat(3,1fr)}
-}
+/* ── view compass: where the camera stands, seen from above ────────────── */
+.viewer{position:absolute;top:calc(14px + var(--sat));right:calc(var(--gut) + var(--sar));display:grid;justify-items:center;gap:10px}
+.compass{position:relative;width:96px;height:96px;border-radius:50%;touch-action:none;cursor:grab}
+.compass:active{cursor:grabbing}
+.compass svg.dial{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.compass .ring{fill:none;stroke:var(--edge2);stroke-width:1}
+.compass .tick{stroke:var(--ink3);stroke-width:1;opacity:.6}
+.compass .cbody{fill:rgba(255,255,255,.12);stroke:var(--ink2);stroke-width:1.1}
+.compass .glass-l{fill:none;stroke:var(--ink2);stroke-width:1;opacity:.7}
+.compass .cone{fill:url(#coneG);}
+.compass .cam{fill:var(--acc);stroke:var(--acc-ink);stroke-width:1}
+.compass .snap{position:absolute;left:50%;top:50%;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;
+  border:1px solid var(--edge2);background:var(--glass3);color:var(--ink2);cursor:pointer;padding:0;display:grid;place-items:center;
+  transform:translate(var(--x),var(--y))}
+.compass .snap svg{width:13px;height:13px}
+.compass .snap:hover,.compass .snap.on{color:var(--acc-ink);background:var(--acc);border-color:var(--acc)}
+.compass .snap.top{--x:0px;--y:0px;width:26px;height:26px;margin:-13px 0 0 -13px;background:rgba(18,26,29,.9)}
+/* tooltips carry the wording; the buttons carry only icons */
+[data-tip]{position:relative}
+[data-tip]:hover::after,[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;right:calc(100% + 8px);top:50%;transform:translateY(-50%);
+  white-space:nowrap;font:500 12px/1 var(--body);letter-spacing:.04em;color:var(--ink);background:rgba(10,15,17,.94);
+  border:1px solid var(--edge2);padding:6px 9px;border-radius:6px;pointer-events:none;z-index:9}
+@media(hover:none){[data-tip]:hover::after{display:none}}
+
+/* stage switch: two icons in one capsule. The label is drawn from data-label
+   so setStage's own text swaps ('載入中…', '戶外') never reach the screen. */
+.stagepick{display:flex;border-radius:99px;padding:3px;gap:2px}
+.stagepick button{display:flex;align-items:center;gap:5px;border:0;border-radius:99px;cursor:pointer;background:none;
+  color:var(--ink2);padding:6px 10px 6px 8px;font-size:0;line-height:0}
+.stagepick button::before{content:"";width:15px;height:15px;background:currentColor;
+  -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+.stagepick button::after{content:attr(data-label);font:500 12px/1 var(--body)}
+.stagepick button[aria-pressed=true]{background:var(--acc);color:var(--acc-ink)}
+.stagepick button[aria-pressed=true]::after{font-weight:700}
+.stagepick button[disabled]{cursor:progress;opacity:.75}
+.stagepick button[disabled]::after{content:"載入中…"}
+.stagepick [data-stage=studio]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'%3E%3Cpath d='M1.5 7 8 2.5 14.5 7v7h-13z'/%3E%3Cpath d='M4 14V9h8v5M4 11.5h8'/%3E%3C/svg%3E")}
+.stagepick [data-stage=outdoor]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'%3E%3Cpath d='M1 13.5 5.5 6l3 4.5 2-3 4.5 6z'/%3E%3Ccircle cx='12' cy='3.5' r='1.6'/%3E%3C/svg%3E")}
+
+/* ── first visit: a hand shows the gesture once, then never again ──────── */
+.coach{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:10px;
+  pointer-events:none!important;transition:opacity .35s}
+.coach.out{opacity:0}
+.coach .trk{position:relative;width:170px;height:64px}
+.coach .arc{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.coach .arc path{fill:none;stroke:rgba(255,255,255,.6);stroke-width:2;stroke-dasharray:4 6;stroke-linecap:round}
+.coach .hand{position:absolute;left:50%;top:18px;width:44px;height:52px;margin-left:-22px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.45));
+  animation:coachDrag 2s cubic-bezier(.45,.05,.4,.95) 2 both}
+.coach .hand .dot{animation:coachTap 2s ease 2 both}
+.coach p{margin:0;font:500 12.5px/1 var(--body);letter-spacing:.08em;color:#fff;background:rgba(10,15,17,.7);padding:8px 12px;border-radius:99px;
+  backdrop-filter:blur(8px)}
+@keyframes coachDrag{0%{transform:translateX(0)}20%{transform:translateX(0)}55%{transform:translateX(-58px)}80%,100%{transform:translateX(52px)}}
+@keyframes coachTap{0%,12%{opacity:0;r:0}20%{opacity:.9;r:9px}85%{opacity:.9}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.coach .hand,.coach .hand .dot{animation:none}}
+
+/* ── dock: six categories and the build sheet ──────────────────────────── */
+.dock{position:absolute;left:50%;bottom:calc(14px + var(--sab));transform:translateX(-50%);display:flex;align-items:stretch;gap:2px;
+  padding:5px;border-radius:18px;height:var(--dockH);z-index:4}
+.dock button{position:relative;border:0;background:none;cursor:pointer;border-radius:13px;min-width:96px;padding:6px 12px 5px;
+  display:grid;justify-items:center;align-content:center;gap:3px;color:var(--ink2);-webkit-tap-highlight-color:transparent}
+.dock button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.dock button b{font:600 12.5px/1 var(--body);letter-spacing:.04em;white-space:nowrap}
+.dock button i{font-style:normal;font:500 10px/1 var(--mono);color:var(--ink3);max-width:108px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dock button:hover{background:rgba(255,255,255,.06);color:var(--ink)}
+.dock button[aria-selected=true]{background:rgba(240,160,48,.16);color:var(--acc)}
+.dock button[aria-selected=true] i{color:var(--acc);opacity:.8}
+.dock .sep{width:1px;margin:8px 4px;background:var(--edge2)}
+.dock .billbtn{background:var(--acc);color:var(--acc-ink);min-width:104px}
+.dock .billbtn:hover{background:#f5b24f;color:var(--acc-ink)}
+.dock .billbtn i{color:var(--acc-ink);opacity:.75}
+.dock .billbtn[aria-expanded=true]{box-shadow:inset 0 0 0 2px #fff6}
+.dock .cnt{position:absolute;top:3px;right:14px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:#11181a;color:var(--acc);
+  font:700 11px/19px var(--num);letter-spacing:.02em}
+.dock .cnt:empty{display:none}
+@keyframes nudge{0%,100%{box-shadow:0 0 0 0 rgba(240,160,48,0)}50%{box-shadow:0 0 0 5px rgba(240,160,48,.25)}}
+.dock button.hint-me{animation:nudge 1.6s ease 3}
+
+/* ── tray: what the chosen category offers, slid up out of the dock ────── */
+.tray{position:absolute;left:50%;bottom:calc(14px + var(--sab) + var(--dockH) + 10px);width:min(1180px,calc(100vw - 2*var(--gut)));
+  height:var(--trayH);border-radius:18px;display:flex;flex-direction:column;overflow:hidden;
+  transform:translate(-50%,24px);opacity:0;visibility:hidden;transition:transform .3s cubic-bezier(.22,.78,.24,1),opacity .22s,visibility 0s .3s}
+body.tray-open .tray{transform:translate(-50%,0);opacity:1;visibility:visible;transition:transform .32s cubic-bezier(.22,.78,.24,1),opacity .2s,visibility 0s}
+.tray-h{display:flex;align-items:center;gap:12px;padding:10px 12px 8px 18px;border-bottom:1px solid var(--edge);flex:none;min-width:0}
+.tray-h h2{margin:0;font:700 15px/1 var(--body);letter-spacing:.06em;white-space:nowrap;flex:none}
+.tray-x{margin-left:auto;flex:none;width:32px;height:32px;border-radius:99px;border:1px solid var(--edge2);background:rgba(255,255,255,.05);
+  cursor:pointer;color:var(--ink2);font:400 14px/1 var(--body)}
+.tray-x:hover{color:var(--ink);background:rgba(255,255,255,.1)}
+/* the sub-group row: which family inside the category */
+.subs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;min-width:0;flex:1;overscroll-behavior:contain;padding:2px 0}
+.subs::-webkit-scrollbar{display:none}
+.subs button{flex:none;border:1px solid transparent;background:none;border-radius:99px;padding:6px 12px;cursor:pointer;
+  font:500 13px/1 var(--body);color:var(--ink2);white-space:nowrap;position:relative}
+.subs button:hover{color:var(--ink);background:rgba(255,255,255,.05)}
+.subs button[aria-selected=true]{color:var(--acc-ink);background:var(--acc);font-weight:700}
+.subs button.mod::after{content:"";position:absolute;top:3px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--acc)}
+.subs button[aria-selected=true].mod::after{background:var(--acc-ink)}
+.subs:empty{display:none}
+.body{flex:1;overflow-y:auto;min-height:0;touch-action:pan-x pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.pane{display:none;padding:10px 18px 14px}
+.pane.on{display:block;animation:paneIn .28s cubic-bezier(.22,.78,.24,1) both}
+@keyframes paneIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.sub{display:none}
+.sub.on{display:block}
+.lbl{display:flex;align-items:baseline;gap:8px;font:600 12.5px/1.3 var(--body);letter-spacing:.06em;color:var(--ink);margin:0 0 8px}
+.lbl em{font-style:normal;font:500 11px/1.3 var(--mono);letter-spacing:.02em;color:var(--ink3)}
+.hint{font-size:12px;color:var(--ink2);line-height:1.55;margin:8px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hint:empty{display:none}
+.hint:hover{-webkit-line-clamp:unset}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:10px}
+.row > .lbl{margin:0}
+
+/* what is fitted right now: one line above the choices */
+.live{margin:0 0 9px;display:flex;gap:8px;align-items:baseline;min-width:0}
+.live::before{content:"現在";flex:none;font:600 10px/1 var(--mono);letter-spacing:.16em;color:var(--acc);padding:3px 6px;border:1px solid var(--acc-line);border-radius:4px}
+.live b{flex:none;font:600 13px/1.4 var(--body);color:var(--ink);max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.live p{margin:0;font:500 12px/1.5 var(--body);color:var(--ink2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.live:has(b:empty){display:none}
+
+/* ── rails: every catalogue list scrolls sideways as cards ─────────────── */
+.rail{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;padding:2px 2px 10px;scroll-snap-type:x proximity;
+  overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+.rail > *{scroll-snap-align:start;flex:none}
+.rail::-webkit-scrollbar{height:6px}
+.rail::-webkit-scrollbar-thumb{background:var(--line2);border-radius:9px}
+.rh{display:flex;align-items:center;gap:6px 10px;margin:0 0 9px;min-width:0}
+.rh .lbl{margin:0;flex:none}
+.rh .q{margin-left:auto;flex:none}
+.fchips,.rh .chips{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;min-width:0;flex:0 1 auto}
+.fchips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line2);background:none;color:var(--ink2);border-radius:99px;
+  padding:5px 10px;font:500 12px/1 var(--body);cursor:pointer;white-space:nowrap}
+.chip:hover{color:var(--ink);border-color:var(--edge2)}
+.chip[aria-pressed=true]{background:var(--ink);color:#0b1012;border-color:var(--ink);font-weight:600}
+.chip em{font-style:normal;opacity:.6;margin-left:3px;font-family:var(--mono);font-size:10.5px}
+.chips{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.q{background:rgba(255,255,255,.05);border:1px solid var(--line2);border-radius:99px;color:var(--ink);padding:5px 11px;
+  font:13px var(--body);width:150px;min-width:0}
+.q::placeholder{color:var(--ink3)}
+
+.pcw{position:relative;flex:none}
+.pc{width:176px;display:grid;grid-template-rows:auto 1fr;border:1px solid var(--line);border-radius:12px;background:var(--sur);
+  padding:0;cursor:pointer;text-align:left;overflow:hidden;color:var(--ink);-webkit-tap-highlight-color:transparent;height:100%}
+.pc:hover{border-color:var(--edge2);background:var(--sur2)}
+.pc[aria-pressed=true]{border-color:var(--acc);background:var(--acc-soft);box-shadow:0 0 0 1px var(--acc)}
+.pc .ph{position:relative;aspect-ratio:16/10;background:radial-gradient(70% 70% at 50% 45%,#2a3a40,#141d20);display:grid;place-items:center;overflow:hidden}
+.pc .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.pc .ph0{font:700 22px/1 var(--num);color:var(--ink3);letter-spacing:.04em}
+.pc .pt{display:grid;gap:2px;padding:7px 9px 8px;align-content:start;min-width:0}
+.pc .pt i{font-style:normal;font:500 10px/1.3 var(--mono);letter-spacing:.08em;color:var(--ink3);text-transform:uppercase;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc .pt b{font:500 13px/1.35 var(--body);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pc .pt em{font-style:normal;font:700 13.5px/1.2 var(--num);letter-spacing:.02em;color:var(--ink);margin-top:2px;font-variant-numeric:tabular-nums}
+.pc .pt em small{font:500 10px/1 var(--mono);color:var(--ink3);margin-left:4px}
+.pc[aria-pressed=true] .pt em{color:var(--acc)}
+.pc.none .ph{background:rgba(255,255,255,.03)}
+.pc.none .ph0{font-size:28px}
+/* the details button: always on touch, on hover with a mouse */
+.pinfo{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:1px solid var(--edge2);cursor:pointer;
+  background:rgba(8,12,14,.72);color:#fff;font:italic 700 14px/1 Georgia,serif;display:grid;place-items:center;padding:0;
+  opacity:0;transition:opacity .15s;backdrop-filter:blur(6px)}
+.pcw:hover .pinfo,.pinfo:focus-visible{opacity:1}
+@media(hover:none){.pinfo{opacity:1}}
+
+/* wheel thumbnails, one per catalogue wheel: node tools/partshots.mjs wheel */
+.wgrid{display:flex}
+.wcard{width:138px;background:var(--sur);border:1px solid var(--line);border-radius:12px;padding:7px 7px 9px;
+  cursor:pointer;color:var(--ink);text-align:left;display:grid;gap:4px;min-width:0;height:100%;align-content:start}
+.wcard:hover{background:var(--sur2);border-color:var(--edge2)}
+.wcard[aria-pressed=true]{border-color:var(--acc);background:var(--acc-soft);box-shadow:0 0 0 1px var(--acc)}
+.wcard img{width:100%;aspect-ratio:1;object-fit:contain;display:block;background:radial-gradient(60% 60% at 50% 45%,#2a3a40,#131b1e);border-radius:8px}
+.wcard .wn{font:500 12.5px/1.3 var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wcard .wm{font:500 10.5px/1.4 var(--mono);color:var(--ink2);letter-spacing:.02em}
+.wcard .wm b{color:var(--warn);font-weight:600}
+.wcard .wp{font:700 13px/1 var(--num);letter-spacing:.02em}
+.wcard[aria-pressed=true] .wp{color:var(--acc)}
+
+/* colour chips: body paint, rim finishes, rack paint, split paint */
+.swatches{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sw{width:32px;height:32px;border-radius:50%;border:2px solid transparent;outline:1px solid var(--line2);
+  cursor:pointer;padding:0;flex:none}
+.sw[aria-pressed=true]{border-color:#0b1012;outline:2px solid var(--acc)}
+.sw.jp{outline-style:dashed;outline-color:var(--ink3)}
+.sw.none{background:repeating-linear-gradient(135deg,#2a3539 0 4px,#1a2326 4px 8px)}
+.swn{font:500 12px/1.3 var(--body);color:var(--ink2)}
+
+/* segmented control: the lift's "how high", the tread pattern */
+.seg,.tabs{display:flex;gap:2px;padding:3px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar,.tabs::-webkit-scrollbar{display:none}
+.seg button,.tabs button{flex:1 0 auto;min-width:64px;background:none;border:0;cursor:pointer;padding:7px 8px;border-radius:9px;
+  color:var(--ink2);display:grid;gap:3px;justify-items:center}
+.seg button b,.tabs button b{font:700 15px/1 var(--num);letter-spacing:.02em}
+.seg button i,.tabs button i{font-style:normal;font:500 10px/1 var(--mono);white-space:nowrap}
+.seg button:hover,.tabs button:hover{background:rgba(255,255,255,.05)}
+.seg button[aria-pressed=true],.tabs button[aria-pressed=true]{background:var(--acc);color:var(--acc-ink)}
+
+/* lift kits: text cards, no picture to show */
+.cards{margin-top:10px}
+.card{width:232px;height:100%;background:var(--sur);border:1px solid var(--line);border-radius:12px;text-align:left;cursor:pointer;color:var(--ink);
+  display:grid;grid-template-columns:1fr auto;gap:3px 10px;padding:10px 12px;align-content:start}
+.card:hover{background:var(--sur2);border-color:var(--edge2)}
+.card[aria-pressed=true]{background:var(--acc-soft);border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.card .nm{font:500 13.5px/1.4 var(--body)}
+.card .brand{display:block;font:500 10px/1.5 var(--mono);letter-spacing:.1em;color:var(--ink3);text-transform:uppercase}
+.card .pr{font:700 15px/1.2 var(--num);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.card .pr em{display:block;font:400 10.5px/1.5 var(--mono);font-style:normal;color:var(--ink2)}
+.card .inc{grid-column:1/-1;display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+.tag{font:500 10.5px/1 var(--mono);padding:4px 6px;border:1px solid var(--line2);border-radius:4px;color:var(--ink2);white-space:nowrap}
+.tag.on{border-color:var(--acc-line);color:var(--acc);background:var(--acc-soft)}
+.tag.no{opacity:.32;text-decoration:line-through}
+.tag.flare{border-color:#6a4a1d;color:var(--warn)}
+
+/* tyre sizes: the bar is outer diameter, the foot is whether it fits */
+.ladder{display:flex}
+.trow{width:132px;height:100%;background:var(--sur);border:1px solid var(--line);border-radius:12px;color:var(--ink);cursor:pointer;text-align:left;
+  display:grid;gap:8px;padding:10px 11px;align-content:start}
+.trow:hover{background:var(--sur2);border-color:var(--edge2)}
+.trow[aria-pressed=true]{background:var(--acc-soft);border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.trow .sz{font:600 14px/1.25 var(--num);letter-spacing:.02em}
+.trow .sz em{display:block;font:400 10.5px/1.5 var(--mono);font-style:normal;color:var(--ink2)}
+.bar{height:6px;background:var(--sur3);border-radius:99px;position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#4a6068,var(--acc));display:block}
+.fit{font:500 11px/1.4 var(--mono)}
+.fit.ok{color:var(--ok)} .fit.warn{color:var(--warn)} .fit.bad{color:var(--bad)}
+
+/* treads */
+.treads{margin-top:10px}
+.tr{width:200px;height:100%;background:var(--sur);border:1px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;
+  color:var(--ink);text-align:left;display:grid;grid-template-columns:30px 1fr;gap:4px 10px;align-items:center}
+.tr:hover{background:var(--sur2)}
+.tr[aria-pressed=true]{border-color:var(--acc);background:var(--acc-soft);box-shadow:0 0 0 1px var(--acc)}
+.tr[disabled]{opacity:.4;cursor:not-allowed}
+.tr canvas{width:30px;height:46px;border-radius:3px;display:block;grid-row:span 2}
+.tr .tb{display:block;font:500 10px/1.45 var(--mono);color:var(--ink2);letter-spacing:.1em}
+.tr .tn{display:block;font:500 13px/1.35 var(--body)}
+.tr .tag{justify-self:start}
+
+/* on/off switches, as pills that sit in a row */
+.toggles{display:flex;flex-wrap:wrap;gap:8px}
+.tg{display:flex;align-items:center;gap:10px;background:var(--sur);border:1px solid var(--line);border-radius:12px;
+  padding:9px 12px;color:var(--ink);cursor:pointer;text-align:left;max-width:100%}
+.tg:hover{background:var(--sur2)}
+.tg::before{content:"";flex:none;width:30px;height:18px;border-radius:99px;background:var(--sur3);
+  box-shadow:inset 0 0 0 1px var(--line2);transition:background .15s}
+.tg[aria-pressed=true]{border-color:var(--acc-line);background:var(--acc-soft)}
+.tg[aria-pressed=true]::before{background:var(--acc)}
+.tg .nm{font-size:13.5px;min-width:0;line-height:1.35}
+.tg .nm i{display:block;font-style:normal;font-size:11.5px;color:var(--ink2);margin-top:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px}
+.tg[aria-pressed=true] .nm{color:var(--acc)}
+.tg .st{font:500 11px/1 var(--mono);letter-spacing:.06em;color:var(--ink2);flex:none;margin-left:auto}
+.tg[aria-pressed=true] .st{color:var(--acc)}
+.tg[disabled],.tg:disabled{opacity:.42;cursor:not-allowed}
+.tg.solo{margin-top:10px}
+/* one row per thing that hangs off a guard: name on the left, which side on the right */
+.sides{display:grid;gap:6px}
+.side-row{display:flex;align-items:center;gap:10px;background:var(--sur);border:1px solid var(--line);border-radius:12px;padding:7px 8px 7px 12px}
+.side-row .nm{flex:1;min-width:0;font-size:13.5px}
+.side-row .nm i{display:block;font-style:normal;font-size:11.5px;color:var(--ink2);margin-top:1px}
+.side-row .pick{display:flex;gap:2px;padding:2px;border-radius:9px;background:rgba(255,255,255,.05);flex:none}
+.side-row .pick button{background:none;border:0;cursor:pointer;color:var(--ink2);border-radius:7px;
+  font:500 12px/1 var(--body);padding:7px 10px}
+.side-row .pick button[aria-pressed=true]{background:var(--acc);color:var(--acc-ink);font-weight:700}
+.side-row .pick button:disabled{opacity:.35;cursor:default}
+.sides.off{opacity:.45;pointer-events:none}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px 18px;margin-top:12px}
+
+/* Style cards: what the car ends up looking like */
+.styles .style{width:212px}
+.style{text-align:left;background:var(--sur);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  padding:0 0 10px;cursor:pointer;display:grid;gap:4px;align-content:start;height:100%;
+  color:var(--ink);-webkit-tap-highlight-color:transparent}
+.style:hover{border-color:var(--edge2)}
+.style[aria-pressed=true]{border-color:var(--acc);background:var(--acc-soft);box-shadow:0 0 0 1px var(--acc)}
+.style > *:not(img){margin:0 11px}
+.style img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#e9ecec;margin-bottom:4px}
+.style .sb{font-style:normal;font:500 10px/1 var(--mono);letter-spacing:.1em;color:var(--acc);text-transform:uppercase}
+.style b{font:700 14.5px/1.25 var(--body);letter-spacing:.01em}
+.style[aria-pressed=true] b{color:var(--acc)}
+.style .ds{font-size:11.5px;line-height:1.5;color:var(--ink2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.style .pr{font:500 10.5px/1.3 var(--mono);color:var(--ink3);letter-spacing:.02em;margin-top:2px}
+.style[aria-pressed=true] .pr{color:var(--acc)}
+.styles[data-f=kit] .style:not(.kit),.styles[data-f=style] .style.kit{display:none}
+.styleNote{font-size:11.5px;line-height:1.6;color:var(--ink3);margin:8px 0 0}
+.styleNote b{color:var(--ink2)}
+
+/* ── credit ────────────────────────────────────────────────────────────── */
+.credit{position:absolute;left:calc(var(--gut) + var(--sal));bottom:calc(14px + var(--sab));max-width:300px;
+  font:500 10px/1.5 var(--mono);color:#c9d3d6;padding:7px 10px;border-radius:10px;background:rgba(10,15,17,.55);
+  backdrop-filter:blur(8px);transition:opacity .2s}
+.credit a{color:#e6edee}
+body.tray-open .credit{opacity:0;pointer-events:none}
+
+/* ── the build sheet (改裝單) ──────────────────────────────────────────── */
+.bill{position:absolute;right:calc(var(--gut) + var(--sar));bottom:calc(14px + var(--sab) + var(--dockH) + 10px);width:min(470px,calc(100vw - 2*var(--gut)));
+  max-height:calc(100% - 120px - var(--dockH) - var(--sat) - var(--sab));border-radius:18px;display:flex;flex-direction:column;overflow:hidden;z-index:5;
+  background:rgba(12,18,20,.93);animation:billIn .26s cubic-bezier(.22,.78,.24,1) both}
+@keyframes billIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.bill-h{display:flex;align-items:center;gap:10px;padding:14px 14px 12px 18px;border-bottom:1px solid var(--edge);flex:none}
+.bill-h h2{margin:0;font:700 17px/1 var(--body);letter-spacing:.08em}
+.bill-h small{font:500 10px/1 var(--mono);color:var(--ink3);letter-spacing:.1em}
+.bill-b{overflow-y:auto;overscroll-behavior:contain;padding:12px 18px 6px;flex:1;min-height:0}
+.bill-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--edge);border:1px solid var(--edge);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.bill-sum div{background:rgba(12,18,20,.96);padding:9px 11px;display:grid;gap:3px}
+.bill-sum span{font:600 9.5px/1 var(--mono);letter-spacing:.12em;color:var(--ink3)}
+.bill-sum b{font:700 20px/1 var(--num);font-variant-numeric:tabular-nums}
+.bill-sum b small{font:500 11px var(--mono);color:var(--ink3);margin-left:2px}
+.bill-sum .wide{grid-column:1/-1}
+.bill-sum .wide b{font:500 13px/1.4 var(--body)}
+.bill-park{font:500 13px/1.5 var(--body);color:var(--ink2);margin:0 0 12px}
+.bill-park.tight{color:var(--warn)} .bill-park.over{color:var(--bad)}
+.bl{list-style:none;margin:0;padding:0;display:grid}
+.bl li{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:9px 0;border-top:1px solid var(--edge);align-items:baseline}
+.bl li:first-child{border-top:0}
+.bl .k{grid-column:1/-1;font:600 10px/1 var(--mono);letter-spacing:.12em;color:var(--ink3)}
+.bl .n{font:500 13.5px/1.4 var(--body);min-width:0}
+.bl .n i{font-style:normal;color:var(--ink2);font-size:12px}
+.bl .p{font:700 14px/1.2 var(--num);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bl .p em{display:block;font:400 10.5px/1.4 var(--mono);font-style:normal;color:var(--ink3)}
+.bl a{grid-column:1/-1;justify-self:start;font:500 12px/1 var(--body);color:var(--acc);text-decoration:none;padding:4px 0}
+.bl a:hover{text-decoration:underline}
+.bl .empty{display:block;color:var(--ink2);font-size:13px}
+.bill-tot{display:flex;align-items:baseline;gap:10px;padding:12px 0 4px;border-top:1px solid var(--edge2);margin-top:6px}
+.bill-tot span{font:600 12px/1.3 var(--body);letter-spacing:.06em}
+.bill-tot b{margin-left:auto;font:700 26px/1 var(--num);color:var(--acc);font-variant-numeric:tabular-nums}
+.bill-note{font-size:11.5px;line-height:1.6;color:var(--ink3);margin:4px 0 10px}
+.bill-a{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px;border-top:1px solid var(--edge);flex:none;align-items:center}
+.btn{border:1px solid var(--edge2);background:rgba(255,255,255,.05);color:var(--ink);border-radius:10px;padding:9px 13px;cursor:pointer;
+  font:600 13px/1 var(--body);letter-spacing:.04em;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:rgba(255,255,255,.1)}
+.btn.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.btn.pri:hover{background:#f5b24f}
+.btn.ln{margin-left:auto;border-color:transparent;background:none;color:var(--acc);padding-right:2px}
+#out{margin:10px 0 4px;background:rgba(255,255,255,.04);border:1px solid var(--edge);border-radius:10px;padding:12px;
+  font:12px/1.7 var(--mono);color:var(--ink2);white-space:pre-wrap;display:none}
+#out.on{display:block}
+.bill-f{padding:10px 0 12px;font:500 10.5px/1.6 var(--mono);color:var(--ink3);border-top:1px solid var(--edge);margin-top:10px}
+.bill-f a{color:var(--ink2)}
 
 /* Hovering an option pops its details: what it costs in both currencies, the
    part number, what it actually is, and a link to the maker's own page. It
    stays up while the pointer is inside it, so the link is reachable. */
 #card[hidden],#rackMove[hidden],#arbAcc[hidden]{display:none}
-#rackMove{margin-top:10px}
 #rackNudge button:disabled{opacity:.35;cursor:default}
-.tg:disabled{opacity:.4;cursor:default}
 #card{position:fixed;z-index:40;width:min(330px,calc(100vw - 24px));
-  background:#101a1ef2;backdrop-filter:blur(16px);border:1px solid var(--line2);
-  border-radius:6px;box-shadow:0 18px 44px #00000080;padding:13px 14px;display:grid;gap:7px;
+  background:rgba(14,21,24,.96);backdrop-filter:blur(16px);border:1px solid var(--edge2);
+  border-radius:14px;box-shadow:0 18px 44px #00000080;padding:13px 14px;display:grid;gap:7px;
   animation:cardIn .16s ease both}
 @keyframes cardIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 #card .b{font:500 10px/1 var(--mono);letter-spacing:.14em;color:var(--acc);text-transform:uppercase}
-#card h4{margin:0;font:600 15.5px/1.35 var(--body)}
+#card h4{margin:0;font:600 15.5px/1.35 var(--body);padding-right:26px}
 #card .p{display:flex;align-items:baseline;gap:9px}
-#card .p b{font:800 20px/1 var(--disp);color:var(--ink);font-variant-numeric:tabular-nums}
+#card .p b{font:700 22px/1 var(--num);color:var(--ink);font-variant-numeric:tabular-nums}
 #card .p em{font-style:normal;font:500 11.5px/1 var(--mono);color:var(--ink2)}
 #card .pn{font:500 11px/1.4 var(--mono);color:var(--ink2)}
-#card .n{font-size:12.5px;line-height:1.6;color:var(--ink2);max-height:8.2em;overflow:auto}
+#card .n{font-size:12.5px;line-height:1.6;color:var(--ink2);max-height:8.2em;overflow:auto;overscroll-behavior:contain}
 #card .tags{display:flex;gap:5px;flex-wrap:wrap}
-#card a{justify-self:start;margin-top:2px;font:600 12.5px/1 var(--body);color:var(--acc-ink);
-  background:var(--acc);padding:8px 12px;border-radius:3px;text-decoration:none}
-#card img{width:100%;aspect-ratio:16/10;object-fit:contain;border-radius:4px;
+#card a{justify-self:stretch;text-align:center;margin-top:2px;font:700 13.5px/1 var(--body);color:var(--acc-ink);
+  background:var(--acc);padding:12px 14px;border-radius:10px;text-decoration:none}
+#card a:hover{background:#f5b24f}
+#card img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:8px;
   background:radial-gradient(60% 60% at 50% 45%,#233037,#131b1e)}
-@media(hover:none){#card{width:min(330px,calc(100vw - 24px))}}
-/* The part pickers open this list instead of the native one wherever there
-   is a mouse: a native <select> menu belongs to the OS and reports nothing
-   while the pointer moves over it, so the card could only ever show the part
-   already chosen. Here pointing at a row shows that row's card beside it. */
-.pmenu{position:fixed;z-index:39;overflow:auto;overscroll-behavior:contain;
-  background:#101a1ef7;backdrop-filter:blur(16px);border:1px solid var(--line2);border-radius:6px;
-  box-shadow:0 18px 44px #00000080;padding:4px;animation:cardIn .12s ease both}
-.pmenu button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--ink);
-  font:400 13.5px/1.35 var(--body);padding:7px 10px 7px 26px;border-radius:3px;cursor:pointer;position:relative}
-.pmenu button:hover,.pmenu button.hi{background:#ffffff14}
-.pmenu button[aria-selected=true]::before{content:'✓';position:absolute;left:9px;color:var(--acc)}
+#card .cx{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid var(--edge2);
+  background:rgba(255,255,255,.06);color:var(--ink2);cursor:pointer;padding:0;display:none}
+@media(hover:none){#card .cx{display:block} #card img{aspect-ratio:16/8}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ── narrower screens ──────────────────────────────────────────────────── */
+@media(max-width:1180px){
+  .gauge{max-width:calc(100vw - 440px)}
+  .gauge .g-s{display:none}
+  .mark small{display:none}
+}
+@media(max-width:860px){
+  :root{--gut:10px;--dockH:calc(58px + var(--sab));--trayH:45dvh}
+  /* one bar across the top: mark, height, price, advisories */
+  .mark{top:calc(8px + var(--sat));left:calc(10px + var(--sal));padding:0;flex-direction:column;align-items:flex-start;gap:0;background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;height:52px;justify-content:center;padding:0 0 0 12px;z-index:2}
+  .mark svg{display:none}
+  .mark b{font-size:15px;line-height:1}
+  .mark b span{display:block;font-size:15px}
+  .gauge{top:calc(8px + var(--sat));left:calc(8px + var(--sal));right:calc(8px + var(--sar));transform:none;max-width:none;min-height:52px;border-radius:14px;padding-left:62px}
+  .gauge > div{padding:6px 10px}
+  .g-k{display:none}
+  .g-h b{font-size:27px}
+  .g-h small{font-size:11px}
+  .g-d{flex:1;min-width:0}
+  .g-d i{font-size:11px;color:var(--acc)}
+  .g-d .o{display:none}
+  .g-d em{font-size:10.5px;white-space:nowrap}
+  .g-p b{font-size:17px}
+  .g-p em{font-size:9.5px}
+  .gauge .g-s{display:none}
+  .flagbar{padding:6px 8px;font-size:11px}
+  .flagbar span{display:none}
+  .flagbar i:not(:first-child){display:none}
+  .flaglist{right:-6px}
+  .g-d{gap:5px;overflow:hidden}
+  .pchip{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .g-d em{display:none}
+  .pchip{display:block}
+  /* phones: compass and stage switch live in a popover behind one button */
+  .vbtn{display:grid;place-items:center;position:absolute;top:calc(70px + var(--sat));right:calc(10px + var(--sar));
+    width:42px;height:42px;border-radius:50%;padding:0;color:var(--ink);cursor:pointer}
+  .vbtn svg{width:22px;height:22px}
+  .vbtn[aria-expanded=true]{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+  .viewer{display:none;top:calc(120px + var(--sat));right:calc(10px + var(--sar));padding:10px;gap:10px;border-radius:16px;
+    background:rgba(12,18,20,.92);border:1px solid var(--edge2);box-shadow:0 12px 34px rgba(0,0,0,.35);backdrop-filter:var(--blur);justify-items:stretch}
+  body.viewpop .viewer{display:grid}
+  body.tray-open .vbtn,body.tray-open .viewer{display:none}
+  .compass{width:auto;height:auto;display:flex;gap:4px;border-radius:0;background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;cursor:default}
+  .compass svg.dial{display:none}
+  .compass .snap,.compass .snap.top{position:static;margin:0;width:54px;height:auto;padding:8px 2px 6px;border-radius:10px;
+    display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(255,255,255,.05)}
+  .compass .snap svg{width:18px;height:18px}
+  .compass .snap::after,.compass .snap:hover::after{content:attr(data-tip)!important;display:block!important;position:static;transform:none;
+    background:none;border:0;padding:0;font:500 10.5px/1 var(--body);color:inherit;letter-spacing:0;white-space:nowrap}
+  .stagepick{justify-content:stretch;border-radius:12px}
+  .stagepick button{flex:1;justify-content:center;padding:9px 10px}
+  .coach{top:40%}
+  /* the dock becomes the tab bar along the bottom edge */
+  .dock{left:0;right:0;bottom:0;transform:none;border-radius:0;border-left:0;border-right:0;border-bottom:0;
+    padding:4px calc(4px + var(--sar)) calc(4px + var(--sab)) calc(4px + var(--sal));gap:0;background:rgba(10,15,17,.92)}
+  .dock button{flex:1;min-width:0;padding:4px 1px 3px;border-radius:10px;gap:3px}
+  .dock button svg{width:21px;height:21px}
+  .dock button b{font-size:10.5px;letter-spacing:0}
+  .dock button i{display:none}
+  .dock .sep{display:none}
+  .dock button,.dock .billbtn{flex:1 1 0;min-width:0}
+  .dock .billbtn{background:none;color:var(--ink2)}
+  .dock .billbtn svg{stroke:var(--acc)}
+  .dock .billbtn[aria-expanded=true]{background:rgba(240,160,48,.16);color:var(--acc);box-shadow:none}
+  .dock .cnt{background:var(--acc);color:var(--acc-ink)}
+  .dock .cnt{top:1px;right:calc(50% - 22px);min-width:17px;height:17px;line-height:17px;font-size:10px}
+  /* the tray is a bottom sheet about 45% tall; the car stays visible above it */
+  .tray{left:0;right:0;width:auto;bottom:var(--dockH);height:var(--trayH);border-radius:18px 18px 0 0;border-bottom:0;
+    transform:translateY(30px)}
+  body.tray-open .tray{transform:none}
+  .tray-h{padding:8px 8px 7px 14px;gap:8px}
+  .tray-h h2{font-size:14px}
+  .subs button{padding:6px 10px;font-size:12.5px}
+  .pane{padding:8px 12px 12px}
+  .pc{width:142px}
+  .pc .pt{padding:6px 8px 7px}
+  .pc .pt b{font-size:12.5px}
+  .wcard{width:118px}
+  .styles .style{width:170px}
+  .card{width:210px}
+  .trow{width:118px}
+  .tr{width:180px}
+  .q{width:96px}
+  .rh .lbl em{display:none}
+  .credit{left:calc(8px + var(--sal));bottom:calc(var(--dockH) + 8px);max-width:60%;font-size:9px}
+  .credit .disc{display:none}
+  .bill{left:0;right:0;width:auto;bottom:var(--dockH);border-radius:18px 18px 0 0;max-height:calc(100% - var(--dockH) - 64px - var(--sat))}
+  .bill-a .btn{padding:10px 11px;font-size:12.5px}
+  .cols{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -498,222 +651,258 @@ select:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-o
     <button id="bootretry" type="button" hidden>重新載入</button>
   </div>
 <div class="app">
-  <div class="stage studio">
+  <div class="stage">
     <canvas id="cv"></canvas>
-    <div class="badge"><div class="mk">SUZUKI · JB74W</div><div class="md">JIMNY SIERRA</div></div>
-    <div class="views" id="views"></div>
-    <div class="stagepick" id="stagePick" role="group" aria-label="場景">
-      <button data-stage="studio" aria-pressed="true">攝影棚</button><button data-stage="outdoor" aria-pressed="false">戶外</button></div>
-    <div class="hud" id="hud">
-      <span class="tip">拖曳旋轉 · 雙指縮放</span>
-      <b id="hCol">—</b>
-      <span class="stats">舉升 <i id="hLiftN">0</i> · 胎徑 <i id="hTyreN">693</i> · 離地 <i id="hClearN">210</i> mm</span>
-      <span class="ver" id="hVer"></span>
-    </div>
-    <div class="credit">3D 模型 “2023 Suzuki Jimny Sierra” by tonielpro520,<br>
-      <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a><br>
-      <span class="disc">個人非營利專案，與 Suzuki 及各改裝品牌無關聯；資訊整理自公開網路資料，以官方為準。<br>
-      商標屬各自所有者。</span>如有不妥請<a href="https://github.com/carloxthebot/jimny/issues" target="_blank" rel="noopener">告知</a><span class="disc">，將儘速修正或移除</span>。— @Carlos</div>
   </div>
 
-  <div class="panel">
-    <button class="grab" id="grab" aria-label="展開設定面板"><span></span></button>
-    <button class="sheetx" id="sheetx" type="button" aria-label="關閉設定面板">✕</button>
-    <div class="head">
-      <div class="kicker"><span>改裝配置器</span><a href="parts.html">零件目錄與價格 →</a></div>
-      <h1>Jimny JB74</h1>
-      <div class="hero">
-        <div class="h-l"><span>總車高</span><b><i id="rHeightN">1730</i><small> mm</small></b></div>
-        <div class="h-r"><i id="rHeightDelta">原廠高度</i><em id="rPark"></em></div>
+  <!-- Everything the reader touches, laid over the car. The shot tools hide
+       .panel (and .credit) before rendering card images. -->
+  <div class="panel" id="ui">
+    <a class="mark glass" href="app.html" aria-label="Jimny JB 74 首頁">
+      <svg viewBox="0 0 34 22" aria-hidden="true"><rect x="1" y="1" width="32" height="20" rx="3.5" fill="none" stroke="#f0a030" stroke-width="1.6"/>
+        <g fill="#f0a030"><rect x="7.5" y="5" width="2.6" height="12" rx="1"/><rect x="12.3" y="5" width="2.6" height="12" rx="1"/><rect x="19.1" y="5" width="2.6" height="12" rx="1"/><rect x="23.9" y="5" width="2.6" height="12" rx="1"/></g>
+        <circle cx="4.2" cy="11" r="1.6" fill="none" stroke="#f0a030" stroke-width="1.2"/><circle cx="29.8" cy="11" r="1.6" fill="none" stroke="#f0a030" stroke-width="1.2"/></svg>
+      <span><b>Jimny <span>JB 74</span></b><small>Suzuki Jimny Sierra JB74 · 3D 改裝配置</small></span>
+    </a>
+
+    <!-- gauges: total height is the number people actually ask about -- it
+         decides whether the car still fits the mechanical parking most
+         Taiwanese buildings use -- so it leads, measured off the built model -->
+    <div class="gauge glass" id="gauge">
+      <div class="g-h"><span class="g-k">總車高</span><b><i id="rHeightN">1730</i><small>mm</small></b></div>
+      <div class="g-d"><i id="rHeightDelta">原廠高度</i><em id="rPark"></em><b class="pchip" id="rParkS"></b></div>
+      <div class="g-s stats"><span>舉升 <i id="hLiftN">0</i> · 胎徑 <i id="hTyreN">693</i></span><span>離地 <i id="hClearN">210</i> mm</span></div>
+      <div class="g-p"><span class="g-k">零件預估</span><b id="gPrice">—</b><em id="gCount">原廠</em></div>
+      <div class="g-f"><div class="flags" id="flags"></div></div>
+    </div>
+
+    <!-- phones: the compass and the stage switch fold into this one button -->
+    <button class="vbtn glass" id="viewBtn" type="button" aria-label="視角與場景" aria-expanded="false" aria-controls="viewer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3"/><path d="M12 8.2 14 12l-2 3.8L10 12z" fill="currentColor"/></svg></button>
+    <div class="viewer" id="viewer">
+      <div class="compass glass" id="compass" role="group" aria-label="視角：拖曳轉動，或點選固定視角">
+        <svg class="dial" viewBox="-50 -50 100 100" aria-hidden="true">
+          <defs><radialGradient id="coneG" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 0) scale(46)">
+            <stop offset="0" stop-color="#f0a030" stop-opacity=".05"/><stop offset="1" stop-color="#f0a030" stop-opacity=".45"/></radialGradient></defs>
+          <circle class="ring" r="46"/><circle class="ring" r="30" opacity=".5"/>
+          <g id="cmpTicks"></g>
+          <g id="cmpCone"><path class="cone" d="M0 0 L-15 -44 A46 46 0 0 1 15 -44 Z"/></g>
+          <!-- the car from above, nose up -->
+          <rect class="cbody" x="-8.5" y="-17" width="17" height="34" rx="4"/>
+          <path class="glass-l" d="M-6.5 -8.5 H6.5 M-6.5 9 H6.5"/>
+          <circle class="cam" id="cmpCam" r="4.2" cx="0" cy="-38"/>
+        </svg>
       </div>
+      <div class="stagepick glass" id="stagePick" role="group" aria-label="場景">
+        <button data-stage="studio" data-label="車庫" aria-label="車庫" aria-pressed="true">車庫</button><button data-stage="outdoor" data-label="野外" aria-label="野外" aria-pressed="false">野外</button></div>
     </div>
 
-    <div class="steps" id="steps" role="tablist">
-      <button role="tab" data-s="0" aria-selected="true"><b>風格</b><i id="sumStyle">未選</i></button>
-      <button role="tab" data-s="1" aria-selected="false"><b>底盤</b><i id="sum0">原廠</i></button>
-      <button role="tab" data-s="2" aria-selected="false"><b>胎框</b><i id="sum1">原廠</i></button>
-      <button role="tab" data-s="3" aria-selected="false"><b>外觀</b><i id="sum2">原廠</i></button>
-      <button role="tab" data-s="4" aria-selected="false"><b>裝備</b><i id="sum3">無</i></button>
-      <button role="tab" data-s="5" aria-selected="false"><b>燈具</b><i id="sum5">無</i></button>
+    <div class="coach" id="coach" hidden aria-hidden="true">
+      <div class="trk">
+        <svg class="arc" viewBox="0 0 170 64"><path d="M14 40 Q85 6 156 40"/><path d="M150 32 L157 41 L146 43"/><path d="M20 32 L13 41 L24 43"/></svg>
+        <svg class="hand" viewBox="0 0 44 52"><circle class="dot" cx="17" cy="9" r="0" fill="#f0a030" opacity="0"/>
+          <path d="M14 30V9a3.2 3.2 0 0 1 6.4 0v14l.2-3.2a3 3 0 0 1 6 .2v3.4l.2-2.2a3 3 0 0 1 6 .3v3l.3-1.4a2.8 2.8 0 0 1 5.5.6V36c0 7.6-5.3 13-12.8 13h-2.5c-4.4 0-7.2-1.8-9.6-5.2L6.2 35.6a3.1 3.1 0 0 1 4.8-3.9z"
+            fill="#fff" stroke="#11181a" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </div>
+      <p>拖曳轉動・滾輪或雙指縮放</p>
     </div>
 
-    <div class="body" id="body">
-      <!-- 0 ── 風格 -->
-      <div class="pane on" data-p="0">
-        <div class="grp">
-          <p class="lbl">先選一種風格<span class="hint" id="styleCount"></span></p>
-          <div class="styles" id="styles"></div>
-          <p class="styleNote">風格只是起點：選完之後每一項都還能換，也可以直接按上面的分頁自己配。
-            金額是照目錄現價把這組零件加起來的概估，<b>不含輪胎、工資與安裝</b>，標「洽詢」的是原廠沒公布價格的品項。</p>
+    <section class="tray glass" id="tray" aria-label="改裝選項">
+      <div class="tray-h">
+        <h2 id="trayTitle">整台風格</h2>
+        <div class="subs" id="subs" role="tablist"></div>
+        <button class="tray-x" id="trayX" type="button" aria-label="收起選項">✕</button>
+      </div>
+      <div class="body" id="body">
+        <!-- 0 ── 整台風格 -->
+        <div class="pane" data-p="0" data-subs="all:全部|kit:廠商全車套件|style:我們搭的整台">
+          <p class="lbl">從一台完整的車開始 <em id="styleCount"></em></p>
+          <div class="styles rail" id="styles" data-f="all"></div>
+          <p class="styleNote">風格只是起點：選完之後每一項都還能換。金額是照目錄現價把這組零件加起來的概估，<b>不含輪胎、工資與安裝</b>，標「洽詢」的是原廠沒公布價格的品項。</p>
         </div>
-      </div>
-      <!-- 1 ── 底盤 -->
-      <div class="pane" data-p="1">
-        <div class="grp">
-          <p class="lbl">懸吊舉升 <em id="liftCount"></em></p>
+
+        <!-- 1 ── 升高 -->
+        <div class="pane" data-p="1">
           <div class="live"><b id="liftPick"></b><p id="liftNote"></p></div>
+          <div class="rh"><span class="lbl">懸吊舉升 <em id="liftCount"></em></span></div>
           <div class="seg" id="liftSeg"></div>
-          <div class="cards" id="liftCards" style="margin-top:8px"></div>
+          <div class="cards rail" id="liftCards"></div>
         </div>
-      </div>
 
-      <!-- 2 ── 胎框 -->
-      <div class="pane" data-p="2">
-        <div class="grp">
-          <p class="lbl">輪框 <em id="wheelCount"></em></p>
-          <div class="live"><b id="wheelPick"></b><p id="wheelNote"></p></div>
-          <div class="chips" id="wSize"></div>
-          <div class="chips" id="wKind" style="margin-top:6px"></div>
-          <div class="wgrid" id="wheelGrid" style="margin-top:9px"></div>
-          <p class="hint" id="flareNote">標「輪胎外凸」的輪框，offset 讓輪胎超出原廠葉子板；台灣驗車要求輪胎不得凸出車身，
-            所以要一併裝寬版輪弧（俗稱爆龜）把它蓋住。ET+20 那幾顆是 JB64 的配置，反而會往內縮。</p>
-          <p class="lbl" style="margin-top:16px">輪框顏色 <em>只列這款輪框原廠有賣的顏色</em></p>
-          <div class="swatches" id="rimSw"></div>
-          <p class="hint" id="rimName"></p>
+        <!-- 2 ── 輪框輪胎 -->
+        <div class="pane" data-p="2" data-subs="wheel:輪框|tyre:輪胎尺寸|tread:胎紋">
+          <div class="sub" data-g="wheel" data-keys="wheel rimFinish">
+            <div class="live"><b id="wheelPick"></b><p id="wheelNote"></p></div>
+            <div class="rh"><span class="lbl">輪框 <em id="wheelCount"></em></span>
+              <div class="chips" id="wSize"></div><div class="chips" id="wKind"></div>
+              <input class="q" id="wQ" type="search" placeholder="搜尋輪框…" aria-label="搜尋輪框"></div>
+            <div class="wgrid rail" id="wheelGrid"></div>
+            <div class="row"><span class="lbl">輪框顏色 <em>只列這款原廠有賣的顏色</em></span>
+              <div class="swatches" id="rimSw"></div><span class="swn" id="rimName"></span></div>
+            <p class="hint" id="flareNote">標「輪胎外凸」的輪框，offset 讓輪胎超出原廠葉子板；台灣驗車要求輪胎不得凸出車身，
+              所以要一併裝寬版輪弧（俗稱爆龜）把它蓋住。ET+20 那幾顆是 JB64 的配置，反而會往內縮。</p>
+          </div>
+          <div class="sub" data-g="tyre" data-keys="tyre">
+            <div class="live"><b id="tyrePick"></b><p id="tyreNote"></p></div>
+            <div class="rh"><span class="lbl">輪胎尺寸 <em id="tyreEcho"></em></span></div>
+            <div class="ladder rail" id="tyreLadder"></div>
+          </div>
+          <div class="sub" data-g="tread" data-keys="tread owl">
+            <div class="tabs" id="patTabs"></div>
+            <div class="treads rail" id="treadList"></div>
+            <button class="tg solo" id="tgOwl" aria-pressed="false">
+              <span class="nm">白字胎邊<i id="owlNote">Outlined White Letters</i></span><span class="st">關閉</span></button>
+          </div>
         </div>
-        <div class="grp">
-          <p class="lbl">輪胎尺寸 <em id="tyreEcho"></em></p>
-          <div class="live"><b id="tyrePick"></b><p id="tyreNote"></p></div>
-          <div class="ladder" id="tyreLadder"></div>
-        </div>
-        <div class="grp">
-          <p class="lbl">胎紋個性</p>
-          <div class="tabs" id="patTabs"></div>
-          <div class="treads" id="treadList"></div>
-          <button class="tg solo" id="tgOwl" aria-pressed="false">
-            <span class="nm">白字胎邊<i id="owlNote">Outlined White Letters</i></span><span class="st">關閉</span></button>
-        </div>
-      </div>
 
-      <!-- 3 ── 外觀 -->
-      <div class="pane" data-p="3">
-        <div class="grp">
-          <p class="lbl">車身配色 <em id="colName"></em></p>
-          <div class="live"><b id="colPick"></b><p id="colNote"></p></div>
-          <div class="swatches" id="colSw"></div>
-          <select id="selColor" style="margin-top:10px" aria-label="車身配色"></select>
-          <button class="tg solo" id="tgTwo" aria-pressed="false">
-            <span class="nm">雙色車頂<i id="twoNote">黑頂 ZJ3</i></span><span class="st">關閉</span></button>
-          <p class="lbl" style="margin-top:16px">下半車身分色 <em>窗線以下重烤或貼膜</em></p>
-          <select id="selSplit" aria-label="下半車身分色"></select><p class="hint" id="hSplit"></p>
-          <button class="tg solo" id="tgFlare" aria-pressed="false">
-            <span class="nm">輪弧烤成車身色<i>分色時跟下半同色，黑色塑膠件就不見了</i></span><span class="st">原廠黑</span></button>
+        <!-- 3 ── 外觀件 -->
+        <div class="pane" data-p="3" data-subs="color:車色|kit:全車套件|face:換臉|frontBumper:前保桿|grille:水箱護罩|hood:引擎蓋|rearBumper:後保桿|fender:寬體葉子板|sideStep:側踏滑桿|snorkel:呼吸管|exhaust:排氣管|mirrors:後照鏡|mudFlap:擋泥板|sideMould:側飾條|stripe:拉花|bits:小改">
+          <div class="sub" data-g="color" data-keys="color twoTone split paintFlares">
+            <div class="live"><b id="colPick"></b><p id="colNote"></p></div>
+            <div class="row" style="margin-top:0"><span class="lbl">車身配色 <em id="colName"></em></span>
+              <div class="swatches" id="colSw"></div></div>
+            <select id="selColor" hidden aria-label="車身配色"></select>
+            <div class="row"><button class="tg" id="tgTwo" aria-pressed="false">
+              <span class="nm">雙色車頂<i id="twoNote">黑頂 ZJ3</i></span><span class="st">關閉</span></button>
+              <button class="tg" id="tgFlare" aria-pressed="false">
+              <span class="nm">輪弧烤成車身色<i>分色時跟下半同色，黑色塑膠件就不見了</i></span><span class="st">原廠黑</span></button></div>
+            <div class="row"><span class="lbl">下半車身分色 <em>窗線以下重烤或貼膜</em></span>
+              <div class="swatches" id="splitSw"></div><span class="swn" id="splitName"></span></div>
+            <select id="selSplit" hidden aria-label="下半車身分色"></select><p class="hint" id="hSplit"></p>
+          </div>
+          <div class="sub" data-g="kit" data-keys="kit"><div class="fam" data-fam="kit"></div><select id="selKit" hidden aria-label="全車套件"></select><p class="hint" id="hKit"></p></div>
+          <div class="sub" data-g="face" data-keys="face"><div class="fam" data-fam="face"></div><select id="selFace" hidden aria-label="換臉套件"></select><p class="hint" id="hFace"></p></div>
+          <div class="sub" data-g="frontBumper" data-keys="frontBumper"><div class="fam" data-fam="frontBumper"></div><select id="selBumper" hidden aria-label="前保桿"></select><p class="hint" id="hBumper"></p></div>
+          <div class="sub" data-g="grille" data-keys="grille"><div class="fam" data-fam="grille"></div><select id="selGrille" hidden aria-label="水箱護罩"></select><p class="hint" id="hGrille"></p></div>
+          <div class="sub" data-g="hood" data-keys="hood"><div class="fam" data-fam="hood"></div><select id="selHood" hidden aria-label="引擎蓋"></select><p class="hint" id="hHood"></p></div>
+          <div class="sub" data-g="rearBumper" data-keys="rearBumper"><div class="fam" data-fam="rearBumper"></div><select id="selRear" hidden aria-label="後保桿"></select><p class="hint" id="hRear"></p></div>
+          <div class="sub" data-g="fender" data-keys="fender"><div class="fam" data-fam="fender"></div><select id="selFender" hidden aria-label="寬體葉子板"></select><p class="hint" id="hFender"></p></div>
+          <div class="sub" data-g="sideStep" data-keys="sideStep"><div class="fam" data-fam="sideStep"></div><select id="selStep" hidden aria-label="側踏"></select><p class="hint" id="hStep"></p></div>
+          <div class="sub" data-g="snorkel" data-keys="snorkel"><div class="fam" data-fam="snorkel"></div><select id="selSnorkel" hidden aria-label="呼吸管"></select><p class="hint" id="hSnorkel"></p></div>
+          <div class="sub" data-g="exhaust" data-keys="exhaust"><div class="fam" data-fam="exhaust"></div><select id="selExhaust" hidden aria-label="排氣管"></select><p class="hint" id="hExhaust"></p></div>
+          <div class="sub" data-g="mirrors" data-keys="mirrors"><div class="fam" data-fam="mirrors"></div><select id="selMirror" hidden aria-label="後照鏡"></select><p class="hint" id="hMirror"></p></div>
+          <div class="sub" data-g="mudFlap" data-keys="mudFlap"><div class="fam" data-fam="mudFlap"></div><select id="selMudFlap" hidden aria-label="擋泥板"></select><p class="hint" id="hMudFlap"></p></div>
+          <div class="sub" data-g="sideMould" data-keys="sideMould"><div class="fam" data-fam="sideMould"></div><select id="selSideMould" hidden aria-label="側飾條"></select><p class="hint" id="hSideMould"></p></div>
+          <div class="sub" data-g="stripe" data-keys="stripe"><div class="fam" data-fam="stripe"></div><select id="selStripe" hidden aria-label="車身拉花"></select><p class="hint" id="hStripe"></p></div>
+          <div class="sub" data-g="bits" data-keys="flares sideSkirt decals gullwing">
+            <p class="lbl">小改 <em>開關式的小件</em></p>
+            <div class="toggles" id="togglesBody"></div>
+          </div>
         </div>
-        <div class="grp">
-          <p class="lbl">全車套件</p>
-          <select id="selKit" aria-label="全車套件"></select><p class="hint" id="hKit"></p>
-        </div>
-        <div class="grp">
-          <p class="lbl">寬體葉子板</p><select id="selFender" aria-label="寬體葉子板"></select><p class="hint" id="hFender"></p>
-          <p class="lbl" style="margin-top:16px">擋泥板（套件）</p><select id="selMudFlap" aria-label="擋泥板"></select><p class="hint" id="hMudFlap"></p>
-          <p class="lbl" style="margin-top:16px">側飾條</p><select id="selSideMould" aria-label="側飾條"></select><p class="hint" id="hSideMould"></p>
-          <p class="lbl" style="margin-top:16px">車頂尾翼</p><select id="selSpoiler" aria-label="車頂尾翼"></select><p class="hint" id="hSpoiler"></p>
-          <p class="lbl" style="margin-top:16px">外掛防滾籠</p><select id="selCage" aria-label="外掛防滾籠"></select><p class="hint" id="hCage"></p>
-          <p class="lbl" style="margin-top:16px">車身拉花</p><select id="selStripe" aria-label="車身拉花"></select><p class="hint" id="hStripe"></p>
-        </div>
-        <div class="grp">
-          <p class="lbl">換臉套件</p><select id="selFace" aria-label="換臉套件"></select><p class="hint" id="hFace"></p>
-        </div>
-        <div class="grp">
-          <p class="lbl">前保桿</p><select id="selBumper" aria-label="前保桿"></select><p class="hint" id="hBumper"></p>
-          <p class="lbl" style="margin-top:16px">水箱護罩</p><select id="selGrille" aria-label="水箱護罩"></select><p class="hint" id="hGrille"></p>
-          <p class="lbl" style="margin-top:16px">後保桿</p><select id="selRear" aria-label="後保桿"></select><p class="hint" id="hRear"></p>
-        </div>
-        <div class="grp">
-          <p class="lbl">引擎蓋</p><select id="selHood" aria-label="引擎蓋"></select><p class="hint" id="hHood"></p>
-          <p class="lbl" style="margin-top:16px">備胎蓋（套件）</p><select id="selSpareKit" aria-label="備胎蓋"></select><p class="hint" id="hSpareKit"></p>
-          <p class="lbl" style="margin-top:16px">後照鏡</p><select id="selMirror" aria-label="後照鏡"></select><p class="hint" id="hMirror"></p>
-        </div>
-        <div class="grp">
-          <p class="lbl">拿掉備胎 <em>背門空出來，可以另外裝護板、書包、框架或載二輪車</em></p>
-          <select id="selSpareDel" aria-label="拿掉備胎"></select><p class="hint" id="hSpareDel"></p>
-          <p class="lbl" style="margin-top:16px">背門護板</p><select id="selTgPanel" aria-label="背門護板"></select><p class="hint" id="hTgPanel"></p>
-          <p class="lbl" style="margin-top:16px">背門書包</p><select id="selTgBag" aria-label="背門書包"></select><p class="hint" id="hTgBag"></p>
-          <p class="lbl" style="margin-top:16px">背門框架</p><select id="selTgFrame" aria-label="背門框架"></select><p class="hint" id="hTgFrame"></p>
-          <p class="lbl" style="margin-top:16px">拖車座 <em>二輪車架插在這裡</em></p><select id="selHitch" aria-label="拖車座"></select><p class="hint" id="hHitch"></p>
-          <p class="lbl" style="margin-top:16px">二輪車架 <em>車上的腳踏車／機車是示意</em></p><select id="selCarrier" aria-label="二輪車架"></select><p class="hint" id="hCarrier"></p>
-        </div>
-      </div>
 
-      <!-- 4 ── 裝備 -->
-      <div class="pane" data-p="4">
-        <div class="grp">
-          <p class="lbl">車頂架</p><select id="selRack" aria-label="車頂架"></select><p class="hint" id="hRack"></p>
-          <p class="lbl" style="margin-top:12px">車頂架顏色 <em>淺色要另外烤漆</em></p><select id="selRackPaint" aria-label="車頂架顏色"></select>
-          <div id="arbAcc"><p class="lbl" style="margin-top:14px">ARB 車頂架配件 <em>卡進貨架燕尾槽</em></p>
-            <div class="toggles" id="arbToggles"></div></div>
-          <div class="sides" id="rackMove"><div class="side-row"><span class="nm">前後位置<i id="rackPos">置中</i></span>
-            <span class="pick" id="rackNudge"><button data-d="1" aria-label="車頂架往車頭移">往車頭</button><button data-d="-1" aria-label="車頂架往車尾移">往車尾</button></span></div></div>
-          <p class="lbl" style="margin-top:16px">車邊帳</p><select id="selAwning" aria-label="車邊帳"></select><p class="hint" id="hAwning"></p>
-          <button class="tg solo" id="tgAwnSide" aria-pressed="false">
-            <span class="nm">車邊帳安裝側<i>台灣左駕，一般裝副駕（右）側</i></span><span class="st">左側</span></button>
+        <!-- 4 ── 車頂與後方 -->
+        <div class="pane" data-p="4" data-subs="roofRack:車頂架|awning:車邊帳|spoiler:車頂尾翼|cage:外掛防滾籠|ladder:後爬梯|spare:備胎|spareDelete:拿掉備胎|tgPanel:背門護板|tgBag:背門書包|tgFrame:背門框架|hitch:拖車座|carrier:二輪車架|guards:鐵窗掛載">
+          <div class="sub" data-g="roofRack" data-keys="roofRack rackPaint rackShift shovel">
+            <div class="fam" data-fam="roofRack"></div><select id="selRack" hidden aria-label="車頂架"></select><p class="hint" id="hRack"></p>
+            <div class="cols">
+              <div><p class="lbl">車頂架顏色 <em>淺色要另外烤漆</em></p><div class="swatches" id="rackSw"></div>
+                <select id="selRackPaint" hidden aria-label="車頂架顏色"></select></div>
+              <div class="sides" id="rackMove"><div class="side-row"><span class="nm">前後位置<i id="rackPos">置中</i></span>
+                <span class="pick" id="rackNudge"><button data-d="1" aria-label="車頂架往車頭移">往車頭</button><button data-d="-1" aria-label="車頂架往車尾移">往車尾</button></span></div></div>
+            </div>
+            <div class="toggles" id="togglesRack" style="margin-top:10px"></div>
+            <div id="arbAcc"><p class="lbl" style="margin-top:14px">ARB 車頂架配件 <em>卡進貨架燕尾槽</em></p>
+              <div class="toggles" id="arbToggles"></div></div>
+          </div>
+          <div class="sub" data-g="awning" data-keys="awning awningSide">
+            <div class="fam" data-fam="awning"></div><select id="selAwning" hidden aria-label="車邊帳"></select><p class="hint" id="hAwning"></p>
+            <button class="tg solo" id="tgAwnSide" aria-pressed="false">
+              <span class="nm">車邊帳安裝側<i>台灣左駕，一般裝副駕（右）側</i></span><span class="st">左側</span></button>
+          </div>
+          <div class="sub" data-g="spoiler" data-keys="spoiler"><div class="fam" data-fam="spoiler"></div><select id="selSpoiler" hidden aria-label="車頂尾翼"></select><p class="hint" id="hSpoiler"></p></div>
+          <div class="sub" data-g="cage" data-keys="cage"><div class="fam" data-fam="cage"></div><select id="selCage" hidden aria-label="外掛防滾籠"></select><p class="hint" id="hCage"></p></div>
+          <div class="sub" data-g="ladder" data-keys="ladder"><div class="fam" data-fam="ladder"></div><select id="selLadder" hidden aria-label="後爬梯"></select><p class="hint" id="hLadder"></p></div>
+          <div class="sub" data-g="spare" data-keys="spareCoverKit spareBag spareCover">
+            <div class="fam" data-fam="spareCoverKit"></div><select id="selSpareKit" hidden aria-label="備胎蓋"></select><p class="hint" id="hSpareKit"></p>
+            <div class="toggles" id="togglesSpare" style="margin-top:10px"></div>
+          </div>
+          <div class="sub" data-g="spareDelete" data-keys="spareDelete"><div class="fam" data-fam="spareDelete" data-note="背門空出來，可以另外裝護板、書包、框架或載二輪車"></div><select id="selSpareDel" hidden aria-label="拿掉備胎"></select><p class="hint" id="hSpareDel"></p></div>
+          <div class="sub" data-g="tgPanel" data-keys="tgPanel"><div class="fam" data-fam="tgPanel"></div><select id="selTgPanel" hidden aria-label="背門護板"></select><p class="hint" id="hTgPanel"></p></div>
+          <div class="sub" data-g="tgBag" data-keys="tgBag"><div class="fam" data-fam="tgBag"></div><select id="selTgBag" hidden aria-label="背門書包"></select><p class="hint" id="hTgBag"></p></div>
+          <div class="sub" data-g="tgFrame" data-keys="tgFrame"><div class="fam" data-fam="tgFrame"></div><select id="selTgFrame" hidden aria-label="背門框架"></select><p class="hint" id="hTgFrame"></p></div>
+          <div class="sub" data-g="hitch" data-keys="hitch"><div class="fam" data-fam="hitch" data-note="二輪車架插在這裡"></div><select id="selHitch" hidden aria-label="拖車座"></select><p class="hint" id="hHitch"></p></div>
+          <div class="sub" data-g="carrier" data-keys="carrier"><div class="fam" data-fam="carrier" data-note="車上的腳踏車／機車是示意"></div><select id="selCarrier" hidden aria-label="二輪車架"></select><p class="hint" id="hCarrier"></p></div>
+          <div class="sub" data-g="guards" data-keys="windowGuards guardCan guardAxe guardBoard extinguisher">
+            <div class="toggles" id="togglesGuard"></div>
+            <div class="cols">
+              <div><p class="lbl">鐵窗掛載 <em>需先裝鐵窗</em></p><div class="sides" id="sides"></div></div>
+              <div><p class="lbl">滅火器</p>
+                <div class="sides"><div class="side-row"><span class="nm">1kg 乾粉瓶<i id="extNote"></i></span>
+                  <span class="pick" data-key="extinguisher" id="extPick"></span></div></div></div>
+            </div>
+          </div>
         </div>
-        <div class="grp">
-          <p class="lbl">側踏／岩石滑桿</p><select id="selStep" aria-label="側踏"></select><p class="hint" id="hStep"></p>
-          <p class="lbl" style="margin-top:16px">後爬梯</p><select id="selLadder" aria-label="後爬梯"></select><p class="hint" id="hLadder"></p>
-          <p class="lbl" style="margin-top:16px">呼吸管</p><select id="selSnorkel" aria-label="呼吸管"></select><p class="hint" id="hSnorkel"></p>
-          <p class="lbl" style="margin-top:16px">排氣管</p><select id="selExhaust" aria-label="排氣管"></select><p class="hint" id="hExhaust"></p>
+
+        <!-- 5 ── 燈: every lamp on the car in one place -->
+        <div class="pane" data-p="5" data-subs="lightBar:車頂燈條|roofLights:圓燈|grilleLight:車頭燈條|lampCover:大燈罩|pods:A 柱小燈">
+          <div class="sub" data-g="lightBar" data-keys="lightBar"><div class="fam" data-fam="lightBar" data-note="有車頂架就鎖在架子前緣，沒有就用 A 柱或雨槽支架"></div><select id="selLightBar" hidden aria-label="車頂燈條"></select><p class="hint" id="hLightBar"></p></div>
+          <div class="sub" data-g="roofLights" data-keys="roofLights"><div class="fam" data-fam="roofLights" data-note="有車頂架就夾在架子前緣，沒有就裝在原廠支架"></div><select id="selRoofLights" hidden aria-label="圓燈"></select><p class="hint" id="hRoofLights"></p></div>
+          <div class="sub" data-g="grilleLight" data-keys="grilleLight"><div class="fam" data-fam="grilleLight"></div><select id="selGrilleLight" hidden aria-label="車頭燈條"></select><p class="hint" id="hGrilleLight"></p></div>
+          <div class="sub" data-g="lampCover" data-keys="lampCover"><div class="fam" data-fam="lampCover"></div><select id="selLampCover" hidden aria-label="大燈罩"></select><p class="hint" id="hLampCover"></p></div>
+          <div class="sub" data-g="pods" data-keys="pillarPods"><p class="lbl">小燈</p><div class="toggles" id="lightToggles"></div></div>
         </div>
-        <div class="grp">
-          <p class="lbl">鐵窗掛載 <em>需先裝鐵窗</em></p>
-          <div class="sides" id="sides"></div>
-          <p class="lbl" style="margin-top:16px">滅火器</p>
-          <div class="sides"><div class="side-row"><span class="nm">1kg 乾粉瓶<i id="extNote"></i></span>
-            <span class="pick" data-key="extinguisher" id="extPick"></span></div></div>
-        </div>
-        <div class="grp">
-          <p class="lbl">加裝配件</p>
-          <div class="toggles" id="toggles"></div>
-        </div>
-      </div>
-      <!-- 5 ── 燈具: every lamp on the car in one place -->
-      <div class="pane" data-p="5">
-        <div class="grp">
-          <p class="lbl">車頂燈條 <em>有車頂架就鎖在架子前緣，沒有就用 A 柱或雨槽支架</em></p><select id="selLightBar" aria-label="車頂燈條"></select><p class="hint" id="hLightBar"></p>
-          <p class="lbl" style="margin-top:16px">圓燈 <em>有車頂架就夾在架子前緣，沒有就裝在原廠支架</em></p><select id="selRoofLights" aria-label="圓燈"></select><p class="hint" id="hRoofLights"></p>
-        </div>
-        <div class="grp">
-          <p class="lbl">車頭燈條</p><select id="selGrilleLight" aria-label="車頭燈條"></select><p class="hint" id="hGrilleLight"></p>
-          <p class="lbl" style="margin-top:16px">大燈罩</p><select id="selLampCover" aria-label="大燈罩"></select><p class="hint" id="hLampCover"></p>
-        </div>
-        <div class="grp">
-          <p class="lbl">小燈</p>
-          <div class="toggles" id="lightToggles"></div>
-        </div>
-      </div>
-      <!-- camping: off the menu for now (owner, 2026-09-27). The markup stays,
-           hidden, so camp.js and its controls keep working when it returns. -->
-      <div class="pane" data-p="camp" hidden><span id="sum4" hidden></span>
-        <div class="grp">
-          <p class="lbl">露營範例 <em>一次套好、全部展開</em></p>
+
+        <!-- camping: off the menu for now (owner, 2026-09-27). The markup stays,
+             hidden, so camp.js and its controls keep working when it returns. -->
+        <div class="pane" data-p="camp" hidden><span id="sum4" hidden></span>
           <div class="sides"><div class="side-row"><span class="nm">看展開後的樣子<i>之後每一項都還能改</i></span>
             <span class="pick" id="campDemos"><button data-demo="rack">車頂帳＋車邊帳</button><button data-demo="norack">免車頂架</button><button data-demo="rear">車尾帳</button></span></div></div>
-        </div>
-        <div class="grp">
-          <p class="lbl">車頂帳</p><select id="selTent" aria-label="車頂帳"></select><p class="hint" id="hTent"></p>
+          <select id="selTent" aria-label="車頂帳"></select><p class="hint" id="hTent"></p>
           <button class="tg solo" id="tgTentOpen" aria-pressed="false">
             <span class="nm">帳篷展開<i>關掉就是行車時收合在車頂的樣子</i></span><span class="st">收合</span></button>
-        </div>
-        <div class="grp">
-          <p class="lbl">車邊帳 <em>在「裝備」選款式與安裝側</em></p><p class="hint" id="campAwn"></p>
+          <p class="hint" id="campAwn"></p>
           <button class="tg solo" id="tgAwnOpen" aria-pressed="false">
             <span class="nm">車邊帳展開<i>布面、支臂與立腳照廠方尺寸</i></span><span class="st">收合</span></button>
           <button class="tg solo" id="tgRoom" aria-pressed="false">
             <span class="nm">ARB Deluxe 帳房 813108<i>掛在 ARB 2500×2500 車邊帳下 · AUD 431</i></span><span class="st">未裝</span></button>
-        </div>
-        <div class="grp">
-          <p class="lbl">車尾／車側帳</p><select id="selCampExtra" aria-label="車尾車側帳"></select><p class="hint" id="hCampExtra"></p>
+          <select id="selCampExtra" aria-label="車尾車側帳"></select><p class="hint" id="hCampExtra"></p>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="flags" id="flags"></div>
-    <div class="acts">
-      <button type="button" id="btnDemo">載入範例車</button>
-      <button type="button" id="btnReset">全部還原</button>
-      <button type="button" class="solid" id="btnExport">匯出這台配置 →</button>
-    </div>
-    <pre id="out"></pre>
+    <nav class="dock glass" id="steps" role="tablist" aria-label="改裝分類">
+      <button role="tab" data-s="0" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 15.5 5.2 10a2 2 0 0 1 1.9-1.3h9.8a2 2 0 0 1 1.9 1.3l2.2 5.5v3H3z"/><circle cx="7.5" cy="18.5" r="1.8"/><circle cx="16.5" cy="18.5" r="1.8"/><path d="M12 2.5l1 2.2 2.3.3-1.7 1.6.4 2.3L12 7.8l-2 1.1.4-2.3L8.7 5l2.3-.3z"/></svg><b>整台風格</b><i id="sumStyle">未選</i></button>
+      <button role="tab" data-s="1" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 3v9M8.5 6.5 12 3l3.5 3.5"/><path d="M4 15h16M6 15v2.5m12-2.5v2.5"/><path d="M6 20.5l1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5"/></svg><b>升高</b><i id="sum0">原廠</i></button>
+      <button role="tab" data-s="2" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 3v5.8M12 15.2V21M3 12h5.8M15.2 12H21"/></svg><b>輪框輪胎</b><i id="sum1">原廠</i></button>
+      <button role="tab" data-s="3" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="10" rx="2"/><path d="M7 9v4M10.3 9v4M13.7 9v4M17 9v4"/><path d="M3.5 19h17"/></svg><b>外觀件</b><i id="sum2">原廠</i></button>
+      <button role="tab" data-s="4" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 17l2-6h14l2 6v2H3z"/><path d="M5 8h14M7 8V6m10 2V6M12 8V6"/><circle cx="7.5" cy="19" r="1.5"/><circle cx="16.5" cy="19" r="1.5"/></svg><b>車頂與後方</b><i id="sum3">無</i></button>
+      <button role="tab" data-s="5" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M9 6.5a5.5 5.5 0 0 0 0 11h1.5v-11z"/><path d="M14 8l6.5-2M14 12h7M14 16l6.5 2"/></svg><b>燈</b><i id="sum5">無</i></button>
+      <span class="sep" aria-hidden="true"></span>
+      <button class="billbtn" id="btnBill" type="button" aria-expanded="false" aria-controls="bill"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 9h6M9 12.5h6M9 16h4"/></svg><b>改裝單</b><i id="gTotal">原廠</i><span class="cnt" id="billN"></span></button>
+    </nav>
+
+    <div class="credit">3D 模型 “2023 Suzuki Jimny Sierra” by tonielpro520,
+      <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a><br>
+      <span class="disc">個人非營利專案，與 Suzuki 及各改裝品牌無關聯；資訊整理自公開網路資料，以官方為準。<br>
+      商標屬各自所有者。</span>如有不妥請<a href="https://github.com/carloxthebot/jimny/issues" target="_blank" rel="noopener">告知</a><span class="disc">，將儘速修正或移除</span>。— @Carlos</div>
+
+    <!-- 改裝單: every non-stock choice, its price and where to buy it -->
+    <section class="bill glass" id="bill" hidden aria-label="改裝單">
+      <div class="bill-h"><div><h2>改裝單</h2><small>JIMNY JB 74 · 概估，以店家報價為準</small></div>
+        <button class="tray-x" id="billX" type="button" aria-label="關閉改裝單">✕</button></div>
+      <div class="bill-b">
+        <div class="bill-sum">
+          <div><span>總車高</span><b id="bH">—</b></div>
+          <div><span>舉升</span><b id="bLift">—</b></div>
+          <div><span>離地</span><b id="bClear">—</b></div>
+          <div class="wide"><span>車色</span><b id="hCol">—</b></div>
+        </div>
+        <p class="bill-park" id="bPark"></p>
+        <ul class="bl" id="bList"></ul>
+        <div class="bill-tot"><span>零件合計<br><em id="bOpen" style="font:500 11px var(--mono);color:var(--ink3);font-style:normal"></em></span><b id="bTotal">—</b></div>
+        <p class="bill-note">輪框以四顆計；輪胎、工資與安裝不在內。外幣照概估匯率換算，日本標價含稅。</p>
+        <pre id="out"></pre>
+        <div class="bill-f">個人非營利專案，與 Suzuki 及各改裝品牌無關聯；資訊整理自公開網路資料，以官方為準。商標屬各自所有者。
+          如有不妥請<a href="https://github.com/carloxthebot/jimny/issues" target="_blank" rel="noopener">告知</a>，將儘速修正或移除。— @Carlos<br>
+          <span id="hVer"></span></div>
+      </div>
+      <div class="bill-a">
+        <button class="btn pri" type="button" id="btnExport">產生改裝單</button>
+        <button class="btn" type="button" id="btnReset">回到原廠</button>
+        <button class="btn" type="button" id="btnDemo">看一台範例</button>
+        <a class="btn ln" href="parts.html">零件目錄 →</a>
+      </div>
+    </section>
   </div>
   <div id="card" hidden></div>
 </div>
@@ -736,15 +925,15 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { rigJimny, applyConfig, updateSplit } from './rig.js?v=202609280747';
-import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609280747';
-import { buildAccessory, loadParts, getPart, allParts } from './accessories.js?v=202609280747';
-import { openAwning, roofTent, campExtra } from './camp.js?v=202609280747';
-import { buildWheel, loadTreadMasks } from './wheels.js?v=202609280747';
-import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609280747';
+import { rigJimny, applyConfig, updateSplit } from './rig.js?v=202609280915';
+import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609280915';
+import { buildAccessory, loadParts, getPart, allParts } from './accessories.js?v=202609280915';
+import { openAwning, roofTent, campExtra } from './camp.js?v=202609280915';
+import { buildWheel, loadTreadMasks } from './wheels.js?v=202609280915';
+import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609280915';
 // Written by stamp.sh on each deploy; shown in the HUD so a stale cached copy
 // is obvious at a glance.
-const BUILD = '202609280747';
+const BUILD = '202609280915';
 
 const cv = document.getElementById('cv');
 // The backdrop is CSS behind a transparent canvas: a background texture in
@@ -784,11 +973,6 @@ THREE.DefaultLoadingManager.onLoad = () => invalidate();
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = 1.0;
-new RGBELoader().load(`model/env.hdr?v=${BUILD}`, (hdr) => {
-  STUDIO.env = pmrem.fromEquirectangular(hdr).texture;
-  if (stageAt === 'studio') { scene.environment = STUDIO.env; scene.environmentIntensity = STUDIO.intensity; syncChrome(); invalidate(); }
-  hdr.dispose();
-});
 scene.add(new THREE.HemisphereLight(0xdfe8ef, 0x2b3a40, 0.55));
 const kl = new THREE.DirectionalLight(0xffffff, 2.1); kl.position.set(4, 6.5, 4.5);
 kl.castShadow = true; kl.shadow.mapSize.set(2048, 2048);
@@ -827,17 +1011,29 @@ function ambient(t) {
   POOL.position.z = 0.09 * Math.sin(t / 5200);
 }
 
-/* ═══ stages: studio and outdoor ════════════════════════════════════════ */
-// Studio: the bright backdrop is CSS behind the transparent canvas, the car
-// reflects the studio HDR, and it stands on a contact shadow only.
-// Outdoor: a CC0 Poly Haven panorama (Goegap Road, Greg Zaal) projected onto
-// the ground with GroundedSkybox, so the car sits IN the place and reflects
-// it; the sun lamp is aimed from the brightest pixel of the same image, so
-// the shadow falls the way the photograph's shadows do.
-const STUDIO = { env: null, intensity: 1.35 };
-const OUTDOOR = { env: null, sky: null, loading: null, sun: null };
+/* ═══ stages: garage and outdoor ════════════════════════════════════════ */
+// Both are CC0 Poly Haven panoramas projected onto the ground with
+// GroundedSkybox, so the car stands IN the place and reflects it.
+// Garage: "Autoshop 01" (Oliksiy Yakovlyev) -- a clean, evenly lit service
+//   hall with a grey concrete floor. It replaced the white CSS studio, which
+//   read as a CAD render; a workshop is where these parts get fitted. Its
+//   fluorescent light is close to neutral (5050 K), which keeps the paint
+//   colours on their chips under Neutral tone mapping.
+// Outdoor: "Goegap Road" (Greg Zaal); the sun lamp is aimed from the
+//   brightest pixel of the same image, so the shadow falls the way the
+//   photograph's shadows do.
+// `h` is the height the panorama was shot from (it sets the size of the
+// floor), `r` how far out the flat ground runs before it bends up into the
+// walls or the horizon.
+const GARAGE = { file: 'env_autoshop_2k.hdr', h: 1.7, r: 22, intensity: 2.0, key: 2.0, rim: 0.3,
+  shadow: 0.5, exposure: 1.1, overhead: true, rot: Math.PI / 2, gain: 1.15, env: null, sky: null, loading: null, sun: null };
+const OUTDOOR = { file: 'env_goegap_2k.hdr', h: 1.8, r: 160, intensity: 1.0, key: 2.6, rim: 0.25,
+  shadow: 0.5, exposure: 0.95, overhead: false, rot: 0, gain: 1, env: null, sky: null, loading: null, sun: null };
+const STAGES = { garage: GARAGE, outdoor: OUTDOOR };
+// 'studio' is the garage's old name, still in readers' storage
+const stageKey = (s) => (s === 'studio' ? 'garage' : s);
 const stageEl = document.querySelector('.stage');
-let stageAt = 'studio';
+let stageAt = 'garage', stageTok = 0;
 function sunFrom(tex) {
   const { data, width: W, height: H } = tex.image;
   let best = -1, bi = 0;
@@ -849,64 +1045,69 @@ function sunFrom(tex) {
   const phi = (u - 0.5) * 2 * Math.PI, lat = (v - 0.5) * Math.PI;
   return new THREE.Vector3(Math.cos(lat) * Math.cos(phi), Math.sin(lat), Math.cos(lat) * Math.sin(phi));
 }
-function loadOutdoor() {
-  if (OUTDOOR.loading) return OUTDOOR.loading;
-  OUTDOOR.loading = new Promise((res, rej) => new RGBELoader().setDataType(THREE.FloatType)
-    .load(`model/env_goegap_2k.hdr?v=${BUILD}`, (hdr) => {
+function loadStage(P) {
+  if (P.loading) return P.loading;
+  P.loading = new Promise((res, rej) => new RGBELoader().setDataType(THREE.FloatType)
+    .load(`model/${P.file}?v=${BUILD}`, (hdr) => {
       hdr.mapping = THREE.EquirectangularReflectionMapping;
-      OUTDOOR.sun = sunFrom(hdr);
+      P.sun = sunFrom(hdr);
       // The sun's pixels run to tens of thousands; through the half-float
       // post chain that overflowed to Inf and rendered the car solid black.
       // The directional light carries the sun, so the image is capped.
       const d = hdr.image.data;
       for (let i = 0; i < d.length; i++) if (d[i] > 24) d[i] = 24;
       hdr.needsUpdate = true;
-      OUTDOOR.env = pmrem.fromEquirectangular(hdr).texture;
-      // projected from about the height the panorama was shot at, so the
-      // gravel is the right size; the flat disc runs out far enough that its
-      // edge sits on the horizon rather than across the view
-      OUTDOOR.sky = new GroundedSkybox(hdr, 1.8, 160);
-      OUTDOOR.sky.position.y = 1.8 - 0.01;
+      P.env = pmrem.fromEquirectangular(hdr).texture;
+      P.sky = new GroundedSkybox(hdr, P.h, P.r);
+      P.sky.position.y = P.h - 0.01;
       res();
-    }, undefined, rej));
-  return OUTDOOR.loading;
+    }, undefined, (e) => { P.loading = null; rej(e); }));
+  return P.loading;
 }
 async function setStage(name) {
-  const btn = document.querySelector(`[data-stage="${name}"]`);
-  if (name === 'outdoor' && !OUTDOOR.sky) {
-    btn.disabled = true; btn.textContent = '載入中…';
-    try { await loadOutdoor(); } catch { btn.disabled = false; btn.textContent = '戶外'; return; }
-    btn.disabled = false; btn.textContent = '戶外';
+  name = stageKey(name);
+  const P = STAGES[name]; if (!P) return;
+  const tok = ++stageTok;
+  const btns = [...document.querySelectorAll('[data-stage]')].filter(b => stageKey(b.dataset.stage) === name);
+  if (!P.sky) {
+    for (const b of btns) { b.disabled = true; b.dataset.label ??= b.textContent; b.textContent = '載入中…'; }
+    const done = () => { for (const b of btns) { b.disabled = false; b.textContent = b.dataset.label; } };
+    try { await loadStage(P); } catch { done(); return; }
+    done();
   }
+  if (tok !== stageTok) return;          // another stage was picked while this one loaded
   stageAt = name;
   try { localStorage.setItem('jimny.stage', name); } catch {}
-  document.querySelectorAll('[data-stage]').forEach(b => b.setAttribute('aria-pressed', b.dataset.stage === name));
-  stageEl.classList.toggle('studio', name === 'studio');
-  stageEl.classList.toggle('outdoor', name === 'outdoor');
-  if (name === 'outdoor') {
-    scene.add(OUTDOOR.sky);
-    scene.environment = OUTDOOR.env; scene.environmentIntensity = 1.0;
-    kl.position.copy(OUTDOOR.sun).multiplyScalar(10); kl.intensity = 2.6; fl2.intensity = 0.25;
-    floor.material.opacity = 0.5; if (POOL) POOL.visible = false;
-    renderer.toneMappingExposure = 0.95;
-  } else {
-    if (OUTDOOR.sky) scene.remove(OUTDOOR.sky);
-    if (STUDIO.env) scene.environment = STUDIO.env;
-    scene.environmentIntensity = STUDIO.intensity;
-    kl.position.set(4, 6.5, 4.5); kl.intensity = 2.1; fl2.intensity = 0.9;
-    floor.material.opacity = 0.42; if (POOL) POOL.visible = false;
-    renderer.toneMappingExposure = 1.05;
-  }
+  document.querySelectorAll('[data-stage]').forEach(b => b.setAttribute('aria-pressed', stageKey(b.dataset.stage) === name));
+  for (const k of Object.keys(STAGES)) stageEl.classList.toggle(k, k === name);
+  for (const Q of Object.values(STAGES)) if (Q.sky && Q !== P) scene.remove(Q.sky);
+  // `rot` turns the room so the view the page opens on looks at its best
+  // wall; the reflections turn with it. `gain` lifts the backdrop alone.
+  P.sky.rotation.y = P.rot; scene.environmentRotation.set(0, P.rot, 0);
+  P.sky.material.color.setScalar(P.gain);
+  scene.add(P.sky);
+  scene.environment = P.env; scene.environmentIntensity = P.intensity;
+  // Indoors the light is the whole ceiling: a key from nearly straight above
+  // drops the shadow under the car, where a garage's tubes put it, instead
+  // of the long raking one the brightest single tube would cast.
+  if (P.overhead) kl.position.set(1.4, 9.5, 2.2);
+  else kl.position.copy(P.sun).multiplyScalar(10);
+  kl.intensity = P.key; fl2.intensity = P.rim;
+  floor.material.opacity = P.shadow; if (POOL) POOL.visible = false;
+  renderer.toneMappingExposure = P.exposure;
   // the first call runs while the module is still being evaluated, before
   // the car (and the chrome registry below) exist; update() covers that one
   try { syncChrome(); } catch {}
   invalidate();
 }
 document.getElementById('stagePick').onclick = (e) => { const b = e.target.closest('[data-stage]'); if (b && !b.disabled) setStage(b.dataset.stage); };
-// outdoors by default; a reader who picked the studio keeps it. The shot
-// tools (webdriver) always get the studio their cards are framed for.
+// outdoors by default; a reader who picked the garage keeps it. The shot
+// tools (webdriver) always get the garage their cards are framed for.
 { let st = null; try { st = localStorage.getItem('jimny.stage'); } catch {}
-  setStage(navigator.webdriver || st === 'studio' ? 'studio' : 'outdoor'); }
+  setStage(navigator.webdriver || stageKey(st) === 'garage' ? 'garage' : 'outdoor'); }
+// for the shot tools: they wait on `at` before shooting
+window.__jimnyStage = { get at() { return stageAt; }, get ready() { return !!STAGES[stageAt].sky && scene.environment === STAGES[stageAt].env; },
+  set: setStage, STAGES, renderer, kl };
 
 // Desktop gets ambient occlusion through a post-processing chain (crevices,
 // grille slats and rack slats stop looking pasted on); phones render direct,
@@ -945,31 +1146,88 @@ function idleSpin(t) {
   if (REDUCED || navigator.webdriver || t - lastTouch < 9000 || tweens.some(w => w.tag === 'cam')) return;
   orbit.az += dt * 0.00011; applyCam();
 }
+/* Framing around the overlay. The canvas is the whole screen, but the gauges
+   cover its top and the dock (or an open tray) its bottom, so the car is
+   centred in the free band between them (VIEW.top..VIEW.bottom). Two knobs:
+   - a lens shift (cam.setViewOffset, so the perspective does not change)
+     that puts the centre of the car's own projected box -- not the orbit
+     pivot, which a three-quarter view throws off to one side -- in the
+     middle of the band; recomputed on every camera move, it is 8 points;
+   - `k`, which stands the camera further back when the band is too small
+     for the whole car (a phone's width, an open tray). It multiplies
+     orbit.dist, so zooming still works on top of it.
+   Both are neutral whenever the overlay is hidden, which is how the shot
+   tools see the page. */
+const VIEW = { k: 1, active: false, top: 0, bottom: 0, box: null };
+const _v = new THREE.Vector3();
+function carBox() {
+  if (!rig) return null;
+  if (!VIEW.box) {
+    const b = new THREE.Box3();
+    rig.updateMatrixWorld(true);
+    // the model's own (hidden) masts and empty groups do not count
+    rig.traverse((o) => { if (o.isMesh && o.visible) b.expandByObject(o); });
+    VIEW.box = b.isEmpty() ? null : b;
+  }
+  return VIEW.box;
+}
+/** The car's box on screen for the camera as it stands, in canvas pixels. */
+function screenBox(c, W, H) {
+  const b = carBox(); if (!b) return null;
+  c.updateMatrixWorld();
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (let i = 0; i < 8; i++) {
+    _v.set(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z).project(c);
+    const x = (_v.x + 1) / 2 * W, y = (1 - _v.y) / 2 * H;
+    x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+  }
+  return { x0, x1, y0, y1 };
+}
+function applyView() {
+  const W = cv.clientWidth, H = cv.clientHeight;
+  cam.clearViewOffset(); cam.updateProjectionMatrix();
+  if (!VIEW.active || !W || !H) return;
+  const s = screenBox(cam, W, H); if (!s) return;
+  const sx = (s.x0 + s.x1) / 2 - W / 2, sy = (s.y0 + s.y1) / 2 - (VIEW.top + VIEW.bottom) / 2;
+  cam.setViewOffset(W, H, sx, sy, W, H);
+  cam.updateProjectionMatrix();
+}
 function applyCam() {
   orbit.el = Math.max(-.15, Math.min(1.1, orbit.el));
   orbit.dist = Math.max(4.5, Math.min(22, orbit.dist));
-  cam.position.set(Math.cos(orbit.el) * Math.sin(orbit.az) * orbit.dist,
-    orbit.ty + Math.sin(orbit.el) * orbit.dist, Math.cos(orbit.el) * Math.cos(orbit.az) * orbit.dist);
+  const d = orbit.dist * VIEW.k;
+  cam.position.set(Math.cos(orbit.el) * Math.sin(orbit.az) * d,
+    orbit.ty + Math.sin(orbit.el) * d, Math.cos(orbit.el) * Math.cos(orbit.az) * d);
   cam.lookAt(0, orbit.ty, 0);
+  applyView();
+  compassSync?.();
   invalidate(false);
 }
-let drag = null, pinch = 0;
+let compassSync = null;
+let drag = null, pinch = 0, tap = null;
 cv.addEventListener('pointerdown', e => { stopTween('cam'); stopTween('dolly');
-  drag = { x: e.clientX, y: e.clientY }; cv.setPointerCapture(e.pointerId); hideCard(true); });
+  drag = { x: e.clientX, y: e.clientY }; tap = { x: e.clientX, y: e.clientY, t: performance.now() };
+  cv.setPointerCapture(e.pointerId); hideCard(true); });
 cv.addEventListener('pointermove', e => { if (!drag) return;
   orbit.az -= (e.clientX - drag.x) * .008; orbit.el += (e.clientY - drag.y) * .006;
   drag = { x: e.clientX, y: e.clientY }; applyCam(); });
-addEventListener('pointerup', () => drag = null);
+// a tap on the car (not a drag) puts away whatever is open over it
+addEventListener('pointerup', (e) => {
+  if (tap && drag && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 8 && performance.now() - tap.t < 400) onCarTap?.();
+  drag = null; tap = null;
+});
+let onCarTap = null;
 cv.addEventListener('wheel', e => { e.preventDefault(); orbit.dist *= 1 + Math.sign(e.deltaY) * .09; applyCam(); }, { passive: false });
 cv.addEventListener('touchmove', e => { if (e.touches.length !== 2) return; e.preventDefault();
   const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
   if (pinch) { orbit.dist *= pinch / d; applyCam(); } pinch = d; }, { passive: false });
 cv.addEventListener('touchend', () => pinch = 0);
 function resize() { const w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return;
-  renderer.setSize(w, h, false); composer?.setSize(w, h); outline?.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); invalidate(false); }
+  renderer.setSize(w, h, false); composer?.setSize(w, h); outline?.setSize(w, h); cam.aspect = w / h; applyView(); invalidate(false); }
 addEventListener('resize', resize);
-const VIEWS = [['前側', .8, .18, 9], ['側面', Math.PI / 2, .08, 8.6], ['後側', 2.4, .18, 9],
-  ['正前', 0, .1, 8], ['俯視', .6, 1.0, 10]];
+// the compass's snap points: [tooltip, az, el, dist]
+const VIEWS = [['車頭斜看', .8, .18, 9], ['側身', Math.PI / 2, .08, 8.6], ['車尾斜看', 2.4, .18, 9],
+  ['正臉', 0, .1, 8], ['鳥瞰', .6, 1.0, 10]];
 
 const DEF = { color: 'ZVL', twoTone: false, lift: 'stock', bodyLift: 'none', wheel: 'oem', tyre: 't195',
   tread: 'toyo_at3', owl: false, rimFinish: 'GM',
@@ -1201,9 +1459,11 @@ function loadBody(tries = 0) {
   }
   $('boot').classList.add('gone');
   setTimeout(() => { $('boot').style.display = 'none'; }, 480);
-  if (preset) { document.body.classList.add('sheet'); goStep(stepOf([...q.keys()][0])); }
-  else if (seen) goStep(1);
-  else goStep(0);
+  // A link from the catalogue opens the tray on the part it links; anyone
+  // else gets the whole car, with the dock waiting underneath it.
+  if (preset) { const k = [...q.keys()].find(x => x in DEF); const [c, g] = groupOf(k); openTray(c, g); }
+  else if (!seen) $('steps').querySelector('[data-s="0"]').classList.add('hint-me');
+  coach();
   }, (p) => { if (!p.total) return;
     const k = p.loaded / p.total;
     drawCar(k);
@@ -1236,8 +1496,8 @@ function finishMat(finish) {
 }
 const rackPaintMat = () => RACK_PAINT_MAT ??= new THREE.MeshPhysicalMaterial({ name: 'RackPaint', roughness: 0.4, metalness: 0.05, clearcoat: 0.5, clearcoatRoughness: 0.25 });
 /* Chrome and mirror-polished stainless. A metal only shows what it reflects,
- * and both stages give it little: the studio HDR is an even light box, so
- * bright chrome read as flat pale grey, and outdoors it reflects the dusk
+ * and both stages give it little: the old studio HDR was an even light box,
+ * so bright chrome read as flat pale grey, and outdoors it reflects the dusk
  * sky and the asphalt, so SUPER MOON discs and Liberte bars read as dull
  * bronze. Each polished metal (metalness >= 0.85, roughness <= 0.2, which
  * catches ChromeTrim, Stainless, FinishMirror, the chrome wheel finish and
@@ -1247,7 +1507,7 @@ const rackPaintMat = () => RACK_PAINT_MAT ??= new THREE.MeshPhysicalMaterial({ n
  * slightly tighter roughness. ACES rolls the highlights off, so the sun
  * glint does not clip to a white blob. The brightness follows the scene's
  * own intensity every frame, so the intro fade-in still applies. */
-const CHROME_BOOST = { studio: 1.3, outdoor: 2.1 };
+const CHROME_BOOST = { garage: 1.6, outdoor: 2.1 };
 const CHROME_MATS = new Set();
 function isPolished(m) {
   return m && (m.isMeshStandardMaterial || m.isMeshPhysicalMaterial) && m.metalness >= 0.85 && m.roughness <= 0.2 && !m.map;
@@ -1260,6 +1520,7 @@ function syncChrome() {
   });
   for (const m of CHROME_MATS) {
     if (m.envMap !== scene.environment) { m.envMap = scene.environment; m.needsUpdate = true; }
+    m.envMapRotation.copy(scene.environmentRotation);
     m.envMapIntensity = CHROME_BOOST[stageAt] * scene.environmentIntensity;
   }
 }
@@ -1534,20 +1795,6 @@ function update() {
   countTo($('hLiftN'), total);
   countTo($('hTyreN'), ty.dia);
   countTo($('hClearN'), 210 + total + Math.round((ty.dia - 693) / 2));
-  $('sum0').textContent = total ? total + 'mm 舉升' : '原廠';
-  $('sum1').textContent = ty.label;
-  const n1 = (S.kit !== 'none') + (S.face !== 'none') + (S.spoiler !== 'none') + (S.mudFlap !== 'none') + (S.sideMould !== 'none') + (S.fender !== 'none') + (S.cage !== 'none') + (S.stripe !== 'none') + (S.frontBumper !== 'stock') + (S.grille !== 'stock') + (S.rearBumper !== 'stock')
-    + (S.hood !== 'stock') + (S.spareCoverKit !== 'none') + (S.mirrors !== 'stock')
-    + ['spareDelete', 'tgPanel', 'tgBag', 'tgFrame', 'hitch', 'carrier'].filter(k => S[k] !== 'none').length;
-  $('sum2').textContent = col.name.split('（')[0] + (n1 ? ` · ${n1} 項` : '');
-  const n2 = ['windowGuards','spareBag','spareCover','shovel','flares','decals','sideSkirt','gullwing'].filter(k => S[k]).length
-    + SIDED.filter(k => S[k] !== 'none').length
-    + (S.extinguisher !== 'none')
-    + (S.exhaust !== 'stock' ? 1 : 0)
-    + (S.roofRack !== 'none') + (S.awning !== 'none') + (S.ladder !== 'none') + (S.sideStep !== 'none') + (S.snorkel !== 'none');
-  $('sum3').textContent = n2 ? `${n2} 項` : '無';
-  const n5 = ['lightBar', 'roofLights', 'grilleLight', 'lampCover'].filter(k => S[k] !== 'none').length + !!S.pillarPods;
-  $('sum5').textContent = n5 ? `${n5} 項` : '無';
   const st = ALL_STYLES.find(x => x.id === styleAt);
   const drift = styleDrift();
   $('sumStyle').textContent = !st ? '未選' : drift ? `${st.label}・改 ${drift}` : st.label;
@@ -1557,13 +1804,17 @@ function update() {
   syncChrome();
   invalidate();
   renderFlags(validate(S, { tyre: ty, lift, bodyLift: bl, wheel: wh }));
+  syncSummary(total, ty, col);
+  syncRails();
+  // a rack, a tent or a lift changes the car's size: refit it
+  VIEW.box = null; carBox(); frame(true);
 }
 
 /**
- * The advisories live under the parts list, where they push it off screen, so
- * they collapse to a single line that says how many there are and of what
- * kind. Whether they are open is remembered between redraws -- an advisory the
- * reader opened must not shut itself the next time they change a wheel.
+ * The advisories are one chip in the gauge strip that says how many there are
+ * and of what kind, opening into the list. Whether it is open is remembered
+ * between redraws -- an advisory the reader opened must not shut itself the
+ * next time they change a wheel.
  */
 let flagsOpen = false;
 const LEVELS = { error: '不相容', warn: '注意', info: '提醒' };
@@ -1577,9 +1828,15 @@ function renderFlags(fl) {
     .map(([lv, cls]) => `<i class="${cls}">${n(lv)} ${LEVELS[lv]}</i>`).join('<span>·</span>');
   box.className = 'flags' + (flagsOpen ? ' open' : '');
   box.innerHTML = `<button type="button" class="flagbar ${worst}" aria-expanded="${flagsOpen}">`
-    + `${parts}<em>\u25be</em></button>`
-    + fl.map(f => `<div class="flag ${f.level}"><b>${LEVELS[f.level]}</b>${esc(f.msg)}</div>`).join('');
+    + `${parts}<em>\u25be</em></button><div class="flaglist glass">`
+    + fl.map(f => `<div class="flag ${f.level}"><b>${LEVELS[f.level]}</b>${esc(f.msg)}</div>`).join('') + '</div>';
 }
+// a click anywhere else folds the list back into its chip
+addEventListener('pointerdown', (e) => {
+  if (!flagsOpen || $('flags').contains(e.target)) return;
+  flagsOpen = false; $('flags').classList.remove('open');
+  $('flags').querySelector('.flagbar')?.setAttribute('aria-expanded', 'false');
+}, true);
 $('flags').addEventListener('click', (e) => {
   if (!e.target.closest('.flagbar')) return;
   flagsOpen = !flagsOpen;
@@ -1847,7 +2104,7 @@ function showHeight() {
   const h = Math.round((measuredHeight() + (HEIGHT_CAL ?? 0)) / 5) * 5;
   const d = h - STOCK_H;
   countTo($('rHeightN'), h);
-  $('rHeightDelta').textContent = d === 0 ? `原廠 ${STOCK_H}mm` : `原廠 ${STOCK_H}mm　${d > 0 ? '+' : '−'}${Math.abs(d)}mm`;
+  $('rHeightDelta').innerHTML = d === 0 ? `原廠 ${STOCK_H}mm` : `<span class="o">原廠 ${STOCK_H}mm　</span>${d > 0 ? '+' : '−'}${Math.abs(d)}mm`;
   const cls = PARK.find(([limit]) => h <= limit - 30);
   const tight = PARK.find(([limit]) => h <= limit);
   const el = $('rPark');
@@ -1856,10 +2113,14 @@ function showHeight() {
   el.dataset.cls = now;
   el.className = now;
   el.textContent = cls ? '可進 ' + cls[1] : tight ? '幾乎頂到 ' + tight[1] : '超過 2050mm，機械車位進不去';
+  // the phone's gauge strip has room for a chip, not the sentence
+  const short = (c) => c[1].replace(/機械車位.*$/, '機械');
+  $('rParkS').textContent = cls ? '可進' + short(cls) : tight ? '幾乎頂到' : '進不去';
+  $('rParkS').title = el.textContent;
+  $('rParkS').className = 'pchip ' + now;
   // crossing into a tighter class is worth noticing
   if (prevS && now !== was && now !== '' && !REDUCED) {
-    el.classList.add('blink');
-    setTimeout(() => el.classList.remove('blink'), 1900);
+    for (const e of [el, $('rParkS')]) { e.classList.add('blink'); setTimeout(() => e.classList.remove('blink'), 1900); }
   }
 }
 
@@ -1933,14 +2194,15 @@ function buildStyles() {
       const { sum, open } = styleCost(st);
       price = sum ? `零件約 NT$${wan(sum)} 萬・不含胎${open ? `・${open} 項洽詢` : ''}` : '洽詢';
     }
-    return `<button class="style" data-style="${st.id}" aria-pressed="${st.id === styleAt}">
+    return `<button class="style${st.kitOf ? ' kit' : ''}" data-style="${st.id}" aria-pressed="${st.id === styleAt}">
       <img src="model/shots/style-${st.id}.webp?v=${BUILD}" alt="" loading="lazy" onerror="this.remove()">
-      ${st.brand ? `<i class="sb">${esc(st.brand)}</i>` : ''}<b>${esc(st.label)}</b>
+      ${st.brand ? `<i class="sb">${esc(st.brand)}</i>` : `<i class="sb">我們搭的</i>`}<b>${esc(st.label)}</b>
       <span class="ds">${esc(st.desc)}</span>
       <span class="pr">${esc(price)}</span></button>`;
   };
-  $('styles').innerHTML = `<p class="stylehead">廠商全車套件<em>整套換上，其他維持原廠</em></p>` + KIT_STYLES.map(card).join('')
-    + `<p class="stylehead">配置風格<em>我們依實車與官方示範車搭的整台</em></p>` + STYLES.map(card).join('');
+  // the makers' complete kits (each whole kit on an otherwise stock car)
+  // first, then the cars we put together; the sub row filters between them
+  $('styles').innerHTML = KIT_STYLES.map(card).join('') + STYLES.map(card).join('');
 }
 
 const HERO_STYLE = 'cal_twotone';
@@ -1972,140 +2234,330 @@ $('styles').addEventListener('click', (e) => {
   if (b) applyStyle(b.dataset.style);
 });
 
-/* ═══ step navigation ════════════════════════════════════════════════════ */
-const STEP_OF = { lift:1, wheel:2, rimFinish:2, tyre:2, tread:2, owl:2,
-  color:3, kit:3, frontBumper:3, grille:3, rearBumper:3, hood:3, spareCoverKit:3, mirrors:3,
-  spareDelete:3, tgPanel:3, tgBag:3, tgFrame:3, hitch:3, carrier:3 };
-const stepOf = (k) => STEP_OF[k] ?? 4;
-const STEPS = 6;
-let stepAt = 0;
-function goStep(i) {
-  const back = i < stepAt;
-  stepAt = i;
-  document.querySelectorAll('.steps button').forEach(b => b.setAttribute('aria-selected', +b.dataset.s === i));
-  document.querySelectorAll('.pane').forEach(p => {
-    const on = +p.dataset.p === i;
-    p.classList.toggle('back', back);
-    if (on) { p.classList.remove('on'); void p.offsetWidth; }   // restart the entrance
-    p.classList.toggle('on', on);
-  });
-  $('body').scrollTop = 0;
-}
-$('steps').onclick = e => { const b = e.target.closest('[data-s]'); if (!b) return;
-  goStep(+b.dataset.s); document.body.classList.add('sheet'); };
-
-/* Which way a gesture on the list is going, decided once per gesture: the
-   sheet drag and the step swipe both live on the same element. */
-let swipeAxis = null;
-
-/* ═══ phone: the panel is a sheet you drag ═══════════════════════════════
-   Tapping the handle works, but a sheet that only responds to a 38-pixel
-   target is a sheet people fight with. Dragging anywhere on the handle, the
-   header or the step row moves it, and it snaps to whichever end is nearer.
-   The peek height is measured rather than guessed, so the step row always
-   clears the browser's own bottom bar. */
-const sheetEl = document.querySelector('.panel');
-const phone = () => matchMedia('(max-width: 860px)').matches;
-function setPeek() {
-  if (!phone()) { document.documentElement.style.removeProperty('--sheet'); return; }
-  const h = $('grab').offsetHeight + document.querySelector('.head').offsetHeight + $('steps').offsetHeight;
-  const safe = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
-  document.documentElement.style.setProperty('--sheet', Math.round(h + 14 + safe) + 'px');
-}
-addEventListener('resize', setPeek);
-{
-  let y0 = null, moved = 0, height = 0, peek = 0, wasOpen = false, from = null;
-  const peekPx = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sheet')) || 200;
-  const stop = () => { y0 = null; sheetEl.style.transition = ''; sheetEl.style.transform = ''; };
-  const down = (e) => {
-    if (!phone() || e.button > 0) return;
-    // inside the scrolling list, only take over when it is already at the top
-    if (e.currentTarget === $('body') && $('body').scrollTop > 0) return;
-    y0 = e.clientY; moved = 0; from = e.currentTarget;
-    height = sheetEl.getBoundingClientRect().height; peek = peekPx();
-    wasOpen = document.body.classList.contains('sheet');
-    sheetEl.style.transition = 'none';
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-  };
-  const move = (e) => {
-    if (y0 === null) return;
-    if (swipeAxis === 'x') { stop(); return; }      // the step swipe has it
-    moved = e.clientY - y0;
-    // an open sheet scrolled to the top still has to let the list scroll up
-    if (wasOpen && moved < 0 && from === $('body')) { stop(); return; }
-    // and dragging DOWN never closes it -- that gesture belongs to the host
-    // app, which uses it to dismiss the whole in-app browser. The X does it.
-    if (wasOpen && moved > 0) { moved = 0; return; }
-    const base = wasOpen ? 0 : height - peek;
-    const dy = Math.max(0, Math.min(height - peek, base + moved));
-    if (Math.abs(moved) > 6 && e.cancelable) e.preventDefault();
-    sheetEl.style.transform = `translateY(${dy}px)`;
-  };
-  const up = () => {
-    if (y0 === null) return;
-    // a tap anywhere along the top -- handle or header -- still opens and
-    // closes it, the way it did before the drag was added
-    const d = moved, tap = from === $('grab') || from === document.querySelector('.head');
-    const was = document.body.classList.contains('sheet');
-    stop();
-    if (d < -40) document.body.classList.add('sheet');
-    else if (tap && Math.abs(d) < 8 && !was) document.body.classList.add('sheet');
-    if (document.body.classList.contains('sheet') !== was) sheetSettled();
-  };
-  for (const el of [$('grab'), document.querySelector('.head'), $('body')]) {
-    el.addEventListener('pointerdown', down);
-    el.addEventListener('pointermove', move, { passive: false });
-    el.addEventListener('pointerup', up);
-    el.addEventListener('pointercancel', up);
-  }
-  // a tap on the handle alone still toggles, and the header's link still works
-  document.querySelector('.head a').addEventListener('pointerdown', (e) => e.stopPropagation());
-}
-
-/* Up opens it, the X closes it. Nothing here closes on a downward swipe. */
-$('sheetx').addEventListener('click', () => {
-  if (!document.body.classList.contains('sheet')) return;
-  document.body.classList.remove('sheet');
-  sheetSettled();
+/* ═══ the dock and its tray ══════════════════════════════════════════════
+   Six categories along the bottom. Choosing one slides its tray up out of the
+   dock; choosing it again, or the ✕, puts it away. Inside, a row of
+   sub-groups picks which family the tray shows. Nothing here closes on a
+   downward swipe: that gesture belongs to LINE's and Facebook's in-app
+   browsers, which shut themselves on it. */
+const CAT_NAMES = ['整台風格', '升高', '輪框輪胎', '外觀件', '車頂與後方', '燈'];
+// which category and sub-group each setting lives in, read off the markup
+// (a catalogue link opens the tray there; the dock counts by it)
+const GROUP = { lift: [1, null], bodyLift: [1, null] };
+document.querySelectorAll('.pane[data-p]').forEach(p => {
+  const c = +p.dataset.p; if (Number.isNaN(c)) return;
+  p.querySelectorAll('.sub[data-keys]').forEach(s => { for (const k of s.dataset.keys.split(' ')) GROUP[k] ??= [c, s.dataset.g]; });
 });
-$('sheetx').addEventListener('pointerdown', (e) => e.stopPropagation());
-
-/** A tick of haptics as it snaps, and the car slides up out of the way. */
-function sheetSettled() {
-  navigator.vibrate?.(8);
-  const open = document.body.classList.contains('sheet');
-  const y0 = orbit.ty, y1 = open ? 1.02 : 0.85;
-  tween({ ms: 380, ease: inOutCubic, tag: 'ty',
-    step: (v) => { orbit.ty = y0 + (y1 - y0) * v; applyCam(); } });
+const groupOf = (k) => GROUP[k] ?? (/^arb[A-Z]/.test(k) ? [4, 'roofRack'] : [0, null]);
+let catAt = -1;
+const subAt = {};                       // category -> the sub-group last shown in it
+const paneOf = (c) => document.querySelector(`.pane[data-p="${c}"]`);
+function openTray(c, g) {
+  catAt = c;
+  closeBill(); setViewPop(false);
+  document.body.classList.add('tray-open');
+  document.querySelectorAll('#steps [data-s]').forEach(b => b.setAttribute('aria-selected', +b.dataset.s === c));
+  $('steps').querySelector('.hint-me')?.classList.remove('hint-me');
+  const pane = paneOf(c);
+  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p === pane));
+  $('trayTitle').textContent = CAT_NAMES[c];
+  const subs = (pane.dataset.subs ?? '').split('|').filter(Boolean).map(s => s.split(':'));
+  $('subs').innerHTML = subs.map(([id, l]) => `<button role="tab" type="button" data-g="${id}">${esc(l)}</button>`).join('');
+  showSub(g ?? subAt[c] ?? subs[0]?.[0]);
+  frame(true);
 }
-
-/* Swipe sideways across the list to change step, the way the four tabs
-   above it read as a strip you move along. */
-{
-  const list = $('body');
-  let x0 = 0, y0 = 0;
-  const cur = () => [...document.querySelectorAll('.steps button')]
-    .findIndex(b => b.getAttribute('aria-selected') === 'true');
-  list.addEventListener('pointerdown', (e) => { x0 = e.clientX; y0 = e.clientY; swipeAxis = null; });
-  list.addEventListener('pointermove', (e) => {
-    if (swipeAxis === 'y') return;
-    const dx = e.clientX - x0, dy = e.clientY - y0;
-    if (!swipeAxis && Math.hypot(dx, dy) > 12) swipeAxis = Math.abs(dx) > Math.abs(dy) * 1.3 ? 'x' : 'y';
-    if (swipeAxis === 'x' && e.cancelable) e.preventDefault();
-  }, { passive: false });
-  const end = (e) => {
-    if (swipeAxis === 'x') {
-      const dx = e.clientX - x0;
-      if (Math.abs(dx) > 55) {
-        const next = Math.max(0, Math.min(STEPS - 1, cur() - Math.sign(dx)));
-        if (next !== cur()) { navigator.vibrate?.(6); goStep(next); }
-      }
+function closeTray() {
+  if (!document.body.classList.contains('tray-open')) return;
+  catAt = -1;
+  document.body.classList.remove('tray-open');
+  document.querySelectorAll('#steps [data-s]').forEach(b => b.setAttribute('aria-selected', 'false'));
+  hideCard(true); highlight(null);
+  frame(true);
+}
+function showSub(g) {
+  const pane = paneOf(catAt); if (!pane) return;
+  if (g) subAt[catAt] = g;
+  document.querySelectorAll('#subs [data-g]').forEach(b => b.setAttribute('aria-selected', b.dataset.g === g));
+  if (catAt === 0) $('styles').dataset.f = g || 'all';
+  pane.querySelectorAll('.sub').forEach(s => s.classList.toggle('on', s.dataset.g === g));
+  const sub = pane.querySelector(`.sub[data-g="${g}"]`) ?? pane;
+  sub.querySelectorAll('[data-fam]').forEach(f => renderFam(f.dataset.fam));
+  syncSubs();
+  $('body').scrollTop = 0;
+  hideCard(true);
+  // bring what is fitted now into view, and the chip that was picked
+  requestAnimationFrame(() => {
+    for (const r of sub.querySelectorAll('.rail')) {
+      const on = r.querySelector('[aria-pressed=true]');
+      if (on && r.offsetParent) r.scrollLeft = Math.max(0, (on.closest('.pcw') ?? on).offsetLeft - r.offsetLeft - 24);
     }
-    swipeAxis = null;
-  };
-  list.addEventListener('pointerup', end);
-  list.addEventListener('pointercancel', end);
+    const b = $('subs').querySelector('[aria-selected=true]'), row = $('subs');
+    if (b && (b.offsetLeft < row.scrollLeft || b.offsetLeft + b.offsetWidth > row.scrollLeft + row.clientWidth))
+      row.scrollLeft = b.offsetLeft - row.offsetLeft - 40;
+  });
 }
+/** A dot on every sub-group whose settings are no longer stock. */
+function syncSubs() {
+  const pane = paneOf(catAt); if (!pane) return;
+  document.querySelectorAll('#subs [data-g]').forEach(b => {
+    const s = pane.querySelector(`.sub[data-g="${b.dataset.g}"]`);
+    b.classList.toggle('mod', !!s && s.dataset.keys.split(' ').some(k => k in DEF && S[k] !== DEF[k]));
+  });
+}
+$('steps').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-s]'); if (!b) return;
+  const c = +b.dataset.s;
+  if (c === catAt && document.body.classList.contains('tray-open')) closeTray(); else openTray(c);
+});
+$('subs').addEventListener('click', (e) => { const b = e.target.closest('[data-g]'); if (b) showSub(b.dataset.g); });
+$('trayX').onclick = closeTray;
+// phones: the view/stage popover
+const setViewPop = (on) => { document.body.classList.toggle('viewpop', on); $('viewBtn').setAttribute('aria-expanded', String(on)); };
+$('viewBtn').onclick = () => setViewPop(!document.body.classList.contains('viewpop'));
+addEventListener('pointerdown', (e) => {
+  if (document.body.classList.contains('viewpop') && !e.target.closest?.('#viewer, #viewBtn')) setViewPop(false);
+}, true);
+// a tap on the car closes what is open over it: the popover, the sheet, the tray
+onCarTap = () => { if (!$('bill').hidden) closeBill(); else closeTray(); };
+addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || !cardEl.hidden) return;
+  if (!$('bill').hidden) closeBill(); else closeTray();
+});
+
+/* Fit the car in the band the overlay leaves free: under the gauges, above
+   the dock -- or above the tray when it is up. `k` is sized so the whole car,
+   seen from any of the usual angles at the standard distance, fits the band
+   with a margin; the lens shift in applyView does the centring. */
+function fitK(W, H, band) {
+  if (!carBox()) return 1;
+  const c = cam.clone(); c.clearViewOffset(); c.aspect = W / H; c.updateProjectionMatrix();
+  let need = 1;
+  for (const az of [0, 0.8, Math.PI / 2, 2.4, Math.PI]) {
+    const el = 0.18, d = 9;
+    c.position.set(Math.cos(el) * Math.sin(az) * d, orbit.ty + Math.sin(el) * d, Math.cos(el) * Math.cos(az) * d);
+    c.lookAt(0, orbit.ty, 0);
+    const s = screenBox(c, W, H); if (!s) return 1;
+    need = Math.max(need, (s.x1 - s.x0) / (W * 0.86), (s.y1 - s.y0) / (band * 0.84));
+  }
+  return need;
+}
+function frame(animate) {
+  const ui = $('ui'), W = cv.clientWidth, H = cv.clientHeight;
+  const active = ui.offsetParent !== null && !!W && !!H;
+  let top = 0, bottom = H, k = 1;
+  if (active) {
+    const g = $('gauge'), tray = $('tray'), dock = $('steps');
+    top = g.offsetTop + g.offsetHeight + 8;
+    bottom = (document.body.classList.contains('tray-open') ? tray.offsetTop : dock.offsetTop) - 8;
+    k = fitK(W, H, Math.max(80, bottom - top));
+  }
+  const wasActive = VIEW.active;
+  VIEW.active = active;
+  const t0 = VIEW.top, b0 = VIEW.bottom, k0 = VIEW.k;
+  // opening the tray backs a zoomed-in camera out to the whole car
+  const d0 = orbit.dist, d1 = active && document.body.classList.contains('tray-open') ? Math.max(d0, 9) : d0;
+  if (!animate || REDUCED || !wasActive || !active) {
+    stopTween('ty'); Object.assign(VIEW, { top, bottom, k }); applyCam(); return;
+  }
+  if (Math.abs(k - k0) < 0.01 && Math.abs(top - t0) < 1 && Math.abs(bottom - b0) < 1 && d1 === d0) return;
+  tween({ ms: 420, ease: inOutCubic, tag: 'ty',
+    step: (v) => { VIEW.k = k0 + (k - k0) * v; VIEW.top = t0 + (top - t0) * v; VIEW.bottom = b0 + (bottom - b0) * v;
+      orbit.dist = d0 + (d1 - d0) * v; applyCam(); } });
+}
+addEventListener('resize', () => frame(false));
+
+/* ═══ the view compass ═══════════════════════════════════════════════════
+   The car from above, nose up, with the camera as a dot on the disc: round
+   the rim is round the car, towards the middle is higher up. Drag the disc
+   and the camera follows; the five icons snap to fixed views. */
+{
+  const box = $('compass');
+  const CAM_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M1.8 5.2h2.9L6 3.4h4l1.3 1.8h2.9v7.4H1.8z"/><circle cx="8" cy="8.8" r="2.2"/></svg>';
+  const EYE_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.5 8s2.4-4 6.5-4 6.5 4 6.5 4-2.4 4-6.5 4-6.5-4-6.5-4z"/><circle cx="8" cy="8" r="1.9"/></svg>';
+  $('cmpTicks').innerHTML = Array.from({ length: 12 }, (_, i) => {
+    const a = i * Math.PI / 6, s = Math.sin(a), c = Math.cos(a);
+    return `<line class="tick" x1="${(s * 41).toFixed(1)}" y1="${(-c * 41).toFixed(1)}" x2="${(s * 46).toFixed(1)}" y2="${(-c * 46).toFixed(1)}"/>`;
+  }).join('');
+  box.insertAdjacentHTML('beforeend', VIEWS.map(([name, az], i) => {
+    const top = i === 4;
+    const pos = top ? 'left:50%;top:50%' : `left:${(50 - Math.sin(az) * 46).toFixed(1)}%;top:${(50 - Math.cos(az) * 46).toFixed(1)}%`;
+    return `<button class="snap${top ? ' top' : ''}" type="button" data-v="${i}" style="${pos}" data-tip="${name}" aria-label="${name}">${top ? EYE_SVG : CAM_SVG}</button>`;
+  }).join(''));
+  const camDot = $('cmpCam'), cone = box.querySelector('.cone'), grad = $('coneG');
+  // radius on the disc for an elevation: the rim is eye level, the centre straight down
+  const rOf = (el) => 8 + Math.max(0, Math.min(1, (1.05 - el) / 1.07)) * 36;
+  const elOf = (r) => 1.05 - Math.max(0, Math.min(1, (r - 8) / 36)) * 1.07;
+  compassSync = () => {
+    const r = rOf(orbit.el), x = -Math.sin(orbit.az) * r, y = -Math.cos(orbit.az) * r;
+    camDot.setAttribute('cx', x.toFixed(1)); camDot.setAttribute('cy', y.toFixed(1));
+    const nx = -y / r * 11, ny = x / r * 11;
+    cone.setAttribute('d', `M${x.toFixed(1)} ${y.toFixed(1)}L${nx.toFixed(1)} ${ny.toFixed(1)}L${(-nx).toFixed(1)} ${(-ny).toFixed(1)}Z`);
+    grad.setAttribute('gradientTransform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${r.toFixed(1)})`);
+    let best = -1, bd = 0.35;
+    VIEWS.forEach(([, az, el], i) => {
+      let da = Math.abs(((orbit.az - az) % (Math.PI * 2) + Math.PI * 3) % (Math.PI * 2) - Math.PI);
+      if (i === 4) da = 0;
+      const d = da + Math.abs(orbit.el - el) * 1.5;
+      if (d < bd) { bd = d; best = i; }
+    });
+    box.querySelectorAll('.snap').forEach((b, i) => b.classList.toggle('on', i === best));
+  };
+  let dragging = false;
+  const aim = (e, fly) => {
+    const r = box.getBoundingClientRect();
+    const x = (e.clientX - r.left - r.width / 2) / (r.width / 100), y = (e.clientY - r.top - r.height / 2) / (r.height / 100);
+    const az = Math.atan2(-x, -y), el = elOf(Math.hypot(x, y));
+    if (fly) flyTo(az, el, orbit.dist, 360);
+    else { stopTween('cam'); orbit.az = az; orbit.el = el; applyCam(); }
+  };
+  box.addEventListener('pointerdown', (e) => {
+    // (on a phone the compass is a row of buttons in a popover, not a disc)
+    if (e.target.closest('.snap') || matchMedia('(max-width: 860px)').matches) return;
+    dragging = true; box.setPointerCapture(e.pointerId); hideCard(true); aim(e, true);
+  });
+  box.addEventListener('pointermove', (e) => { if (dragging) aim(e, false); });
+  const end = () => { dragging = false; };
+  box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
+  box.addEventListener('click', (e) => {
+    const b = e.target.closest('.snap'); if (!b) return;
+    const [, az, el, d] = VIEWS[+b.dataset.v]; flyTo(az, el, d, 720);
+    setViewPop(false);
+  });
+}
+
+/* ═══ first visit: show the gesture once ═════════════════════════════════
+   A hand drags across the car for about two seconds; the first touch, click
+   or scroll anywhere puts it away for good. */
+function coach() {
+  if (navigator.webdriver && !/[?&]coach\b/.test(location.search)) return;   // the shot tools
+  let seen = null; try { seen = localStorage.getItem('jimny.coach'); } catch {}
+  if (seen && !/[?&]coach\b/.test(location.search)) return;
+  const el = $('coach'); el.hidden = false;
+  let timer = 0;
+  const done = () => {
+    try { localStorage.setItem('jimny.coach', '1'); } catch {}
+    clearTimeout(timer);
+    el.classList.add('out'); setTimeout(() => { el.hidden = true; }, 400);
+    removeEventListener('pointerdown', done, true); removeEventListener('wheel', done, true);
+  };
+  addEventListener('pointerdown', done, true);
+  addEventListener('wheel', done, { capture: true, passive: true });
+  timer = setTimeout(done, 9000);
+}
+
+/* ═══ 改裝單: every non-stock choice, what it costs, where to buy it ════════ */
+// the switches that carry no catalogue entry of their own
+const TG_NAMES = { windowGuards: '鐵窗（WLM）', shovel: '車頂架鏟子', flares: '輪弧鉚釘', sideSkirt: '側裙飾板（SHOWA）',
+  decals: '車門貼字', spareBag: '備胎書包', spareCover: '備胎硬殼蓋', gullwing: '鷗翼窗（URNIETA 1970）', pillarPods: 'A 柱小圓燈' };
+/** One line per thing that differs from a stock car, in the dock's order.
+ *  `twd` is a number when priced, null when the maker publishes no price,
+ *  and undefined for things nobody sells as a priced part (paint, a switch). */
+function billLines() {
+  const out = [];
+  const kit = S.kit !== 'none' ? find(KITS, S.kit) : null;
+  const inKit = (k) => kit?.set && k in kit.set && S[k] === kit.set[k];
+  const push = (cat, name, it, extra = {}) => {
+    const qty = extra.qty ?? 1, price = extra.price !== undefined ? extra.price : it?.price;
+    const priced = it && 'price' in it;
+    const one = priced ? toTWD(price, it.cur) : undefined;
+    const p = it && priced ? priceLabel({ ...it, price }) : null;
+    out.push({ cat, name, label: extra.label ?? `${it?.brand && it.brand !== '—' ? it.brand + ' ' : ''}${it?.label ?? ''}`.trim(),
+      twd: one == null ? one : one * qty, main: p?.main ?? '—', sub: p?.sub ?? '', qty, url: it?.url ?? null });
+  };
+  const L = (k, list, name, cat, extra) => { if (S[k] !== DEF[k] && !inKit(k)) push(cat, name, find(list, S[k]), extra?.()); };
+  // 升高 / 輪框輪胎
+  L('lift', LIFTS, '懸吊舉升', 1);
+  if (S.wheel !== DEF.wheel || S.rimFinish !== DEF.rimFinish) {
+    const w = find(WHEELS, S.wheel);
+    push(2, '輪框', w, { qty: 4, price: wheelPrice(w, S.rimFinish), label: `${w.brand ?? ''} ${w.label}・${wheelFinish(w, S.rimFinish).name}`.trim() });
+  }
+  if (S.tyre !== DEF.tyre || S.tread !== DEF.tread || S.owl) {
+    const t = find(TYRES, S.tyre), tm = find(TYRE_MODELS, S.tread);
+    out.push({ cat: 2, name: '輪胎', label: `${t.label} ${tm.brand ?? ''} ${tm.label}${S.owl ? '（白字）' : ''}`, twd: undefined, main: '不計價', sub: '', url: tm.url ?? null });
+  }
+  // 外觀件
+  if (S.twoTone) out.push({ cat: 3, name: '雙色車頂', label: '黑頂 ZJ3（原廠選配）', twd: undefined, main: '—', sub: '' });
+  if (S.split !== 'none') out.push({ cat: 3, name: '下半車身分色', label: find(SPLIT_PAINTS, S.split).label, twd: undefined, main: '依烤漆廠', sub: '' });
+  if (S.paintFlares) out.push({ cat: 3, name: '輪弧烤成車身色', label: '輪弧烤漆', twd: undefined, main: '依烤漆廠', sub: '' });
+  if (kit) push(3, '全車套件', kit);
+  for (const [k, list, name] of [['face', FACES, '換臉套件'], ['frontBumper', FRONT_BUMPERS, '前保桿'], ['grille', GRILLES, '水箱護罩'],
+    ['hood', HOODS, '引擎蓋'], ['rearBumper', REAR_BUMPERS, '後保桿'], ['fender', FENDERS, '寬體葉子板'], ['sideStep', SIDE_STEPS, '側踏／滑桿'],
+    ['snorkel', SNORKELS, '呼吸管'], ['exhaust', EXHAUSTS, '排氣管'], ['mirrors', MIRRORS, '後照鏡'], ['mudFlap', MUD_FLAPS, '擋泥板'],
+    ['sideMould', SIDE_MOULDINGS, '側飾條'], ['stripe', STRIPES, '車身拉花']]) L(k, list, name, 3);
+  for (const k of ['flares', 'sideSkirt', 'decals', 'gullwing']) if (S[k]) out.push({ cat: 3, name: '小改', label: TG_NAMES[k], twd: undefined, main: '—', sub: '' });
+  // 車頂與後方
+  L('roofRack', ROOF_RACKS, '車頂架', 4, () => ({ label: `${find(ROOF_RACKS, S.roofRack).brand ?? ''} ${find(ROOF_RACKS, S.roofRack).label}`
+    + (S.rackPaint !== 'none' ? `・${find(RACK_PAINTS, S.rackPaint).label}` : '') + (S.rackShift ? `・往車${S.rackShift > 0 ? '頭' : '尾'} ${Math.abs(S.rackShift)}mm` : '') }));
+  if (S.roofRack === 'arb') for (const a of ARB_RACK_ACC) if (S[a.key]) push(4, 'ARB 配件', { ...a, id: a.key, part: a.pn });
+  if (S.shovel) out.push({ cat: 4, name: '車頂架', label: TG_NAMES.shovel, twd: undefined, main: '—', sub: '' });
+  L('awning', AWNINGS, '車邊帳', 4, () => ({ label: `${find(AWNINGS, S.awning).brand ?? ''} ${find(AWNINGS, S.awning).label}（${S.awningSide === 'left' ? '左' : '右'}側）` }));
+  L('spoiler', SPOILERS, '車頂尾翼', 4); L('cage', CAGES, '外掛防滾籠', 4); L('ladder', LADDERS, '後爬梯', 4);
+  L('spareCoverKit', SPARE_COVERS, '備胎蓋', 4);
+  for (const k of ['spareBag', 'spareCover']) if (S[k]) out.push({ cat: 4, name: '備胎', label: TG_NAMES[k], twd: undefined, main: '—', sub: '' });
+  for (const [k, , , list, name] of TG_UI) L(k, list, name, 4);
+  if (S.windowGuards) out.push({ cat: 4, name: '鐵窗', label: TG_NAMES.windowGuards, twd: undefined, main: '—', sub: '' });
+  for (const k of SIDED) if (S[k] !== 'none')
+    out.push({ cat: 4, name: '鐵窗掛載', label: `${S[k] === 'left' ? '左' : '右'}鐵窗${{ guardCan: '油桶', guardAxe: '斧頭', guardBoard: '脫困板' }[k]}`, twd: undefined, main: '—', sub: '' });
+  L('extinguisher', EXTINGUISHERS, '滅火器', 4);
+  // 燈
+  L('lightBar', LIGHT_BARS, '車頂燈條', 5); L('roofLights', ROOF_LIGHTS, '圓燈', 5);
+  L('grilleLight', GRILLE_LIGHTS, '車頭燈條', 5); L('lampCover', LAMP_COVERS, '大燈罩', 5);
+  if (S.pillarPods) out.push({ cat: 5, name: '小燈', label: TG_NAMES.pillarPods, twd: undefined, main: '—', sub: '' });
+  return out;
+}
+function billTotal(lines) {
+  let sum = 0, open = 0;
+  for (const l of lines) { if (typeof l.twd === 'number') sum += l.twd; else if (l.twd === null) open++; }
+  return { sum, open };
+}
+const ntd = (n) => 'NT$' + n.toLocaleString('en-US');
+/** The gauge strip's price and count, the dock's per-category summaries and
+ *  the build-sheet badge, all from the same list the sheet prints. */
+function syncSummary(total, ty, col) {
+  const lines = billLines(), { sum, open } = billTotal(lines);
+  $('gPrice').textContent = sum ? `NT$${wan(sum)} 萬` : lines.length ? '洽詢' : '原廠';
+  $('gCount').textContent = lines.length ? `${lines.length} 項${open ? `・${open} 項洽詢` : ''}` : '未改裝';
+  $('gTotal').textContent = sum ? `NT$${wan(sum)} 萬` : lines.length ? `${lines.length} 項` : '原廠';
+  $('billN').textContent = lines.length || '';
+  const n = (c) => lines.filter(l => l.cat === c).length;
+  $('sum0').textContent = total ? total + 'mm 舉升' : '原廠';
+  $('sum1').textContent = ty.label;
+  $('sum2').textContent = col.name.split('（')[0] + (n(3) ? ` · ${n(3)} 項` : '');
+  $('sum3').textContent = n(4) ? `${n(4)} 項` : '無';
+  $('sum5').textContent = n(5) ? `${n(5)} 項` : '無';
+  if (!$('bill').hidden) renderBill(lines);
+}
+function renderBill(lines = billLines()) {
+  const lift = find(LIFTS, S.lift), total = lift.lift + (lift.body ?? 0), ty = find(TYRES, S.tyre);
+  const col = COLORS.find(c => c.code === S.color) || COLORS[3];
+  $('bH').innerHTML = `${esc($('rHeightN').textContent)}<small>mm</small>`;
+  $('bLift').innerHTML = `${total}<small>mm</small>`;
+  $('bClear').innerHTML = `${210 + total + Math.round((ty.dia - 693) / 2)}<small>mm</small>`;
+  $('hCol').textContent = `${col.code} ${col.name}${S.twoTone ? '・雙色黑頂' : ''}`;
+  $('bPark').textContent = $('rPark').textContent;
+  $('bPark').className = 'bill-park ' + ($('rPark').dataset.cls ?? '');
+  $('bList').innerHTML = lines.length ? lines.map(l => `<li><span class="k">${esc(CAT_NAMES[l.cat])}・${esc(l.name)}</span>
+      <span class="n">${esc(l.label)}${l.qty > 1 ? ` <i>× ${l.qty}</i>` : ''}</span>
+      <span class="p">${typeof l.twd === 'number' && l.qty > 1 ? ntd(l.twd) : esc(l.main)}${typeof l.twd === 'number' && (l.qty > 1 || l.sub) ? `<em>${l.qty > 1 ? `單顆 ${esc(l.main)}` : esc(l.sub)}</em>` : ''}</span>
+      ${l.url ? `<a href="${esc(l.url)}" target="_blank" rel="noopener">看產品頁 ↗</a>` : ''}</li>`).join('')
+    : '<li><span class="empty">目前是原廠車。從下方的分類開始改，或先看一台範例。</span></li>';
+  const { sum, open } = billTotal(lines);
+  $('bTotal').textContent = sum ? ntd(sum) : '—';
+  $('bOpen').textContent = open ? `另有 ${open} 項未公布價格` : '';
+}
+function openBill() {
+  closeTray();
+  renderBill();
+  $('bill').hidden = false;
+  $('btnBill').setAttribute('aria-expanded', 'true');
+}
+function closeBill() {
+  $('bill').hidden = true;
+  $('btnBill').setAttribute('aria-expanded', 'false');
+  $('out').classList.remove('on');
+}
+$('btnBill').onclick = () => { if ($('bill').hidden) openBill(); else closeBill(); };
+$('billX').onclick = closeBill;
 
 /* ═══ 1 · lift: pick the height first, then the kit ══════════════════════ */
 const INC = { spring:'彈簧', shock:'避震', hose:'長油管', caster:'Caster 修正', panhard:'橫拉桿', body:'車身墊高' };
@@ -2134,9 +2586,9 @@ function renderLiftCards() {
     const inc = includes(l);
     const tags = l.id === 'stock' ? '' : '<span class="inc">' + Object.keys(INC).map(k =>
       `<span class="tag ${inc[k] ? 'on' : 'no'}">${INC[k]}</span>`).join('') + '</span>';
-    return `<button class="card" data-l="${esc(l.id)}" aria-pressed="${l.id === S.lift}">
+    return `<div class="pcw"><button class="card" data-l="${esc(l.id)}" aria-pressed="${l.id === S.lift}">
       <span class="nm"><span class="brand">${esc(l.brand ?? '')}</span>${esc(l.label)}</span>
-      ${priceCell(l)}${tags}</button>`;
+      ${priceCell(l)}${tags}</button>${l.id === 'stock' ? '' : infoBtn(l)}</div>`;
   }).join('');
   syncLift();
 }
@@ -2160,9 +2612,10 @@ $('liftCards').onclick = e => { const b = e.target.closest('[data-l]'); if (!b) 
 // (`kind`); anything else is an off-road wheel. 台灣製 is its own filter and
 // only counts wheels with Made-in-Taiwan evidence (`mit: true`).
 const wKind = (w) => w.kind ?? '越野';
-let wSize = 'all', wKindF = 'all';
+let wSize = 'all', wKindF = 'all', wQ = '';
 const wList = () => WHEELS.filter(w =>
-  (wSize === 'all' || w.rim === +wSize) && (wKindF === 'all' || (wKindF === '台灣製' ? w.mit === true : wKind(w) === wKindF)));
+  (wSize === 'all' || w.rim === +wSize) && (wKindF === 'all' || (wKindF === '台灣製' ? w.mit === true : wKind(w) === wKindF))
+  && (!wQ || [w.brand, w.label, w.note].join(' ').toLowerCase().includes(wQ)));
 function renderWChips() {
   $('wSize').innerHTML = [['all','全部尺寸'],['15','15 吋'],['16','16 吋'],['18','18 吋']].map(([v, l]) =>
     `<button class="chip" data-ws="${v}" aria-pressed="${wSize === v}">${l}</button>`).join('');
@@ -2172,12 +2625,13 @@ function renderWChips() {
 function renderWheels() {
   const list = wList();
   $('wheelCount').textContent = `${WHEELS.length} 款 → ${list.length} 款`;
-  $('wheelGrid').innerHTML = list.map(w => `
-    <button class="wcard" data-w="${esc(w.id)}" aria-pressed="${w.id === S.wheel}">
+  $('wheelGrid').innerHTML = list.map(w => { const p = priceLabel({ ...w, price: wheelPrice(w, S.rimFinish) });
+    return `<div class="pcw"><button class="wcard" data-w="${esc(w.id)}" aria-pressed="${w.id === S.wheel}">
       <img src="model/wheels/${esc(w.id)}.webp?v=${BUILD}" alt="${esc(w.label)} 輪框面" loading="lazy" width="120" height="120">
       <span class="wn" title="${esc((w.brand ?? '') + ' ' + w.label)}">${esc(w.label)}</span>
       <span class="wm">${w.rim}×${w.width}J ET${w.offset > 0 ? '+' : w.offset < 0 ? '−' : ''}${Math.abs(w.offset)}${w.mit === true ? ' · 台灣製' : ''}${w.needsFlares ? '<br><b>輪胎外凸</b>' : ''}</span>
-    </button>`).join('');
+      <span class="wp">${p.main === '原廠' ? '原廠' : '單顆 ' + p.main}</span>
+    </button>${infoBtn(w)}</div>`; }).join('');
   syncWheel();
 }
 // the finish swatches of the wheel on the car: a two-tone finish shows its
@@ -2202,6 +2656,7 @@ $('wSize').onclick = e => { const b = e.target.closest('[data-ws]'); if (!b) ret
   wSize = b.dataset.ws; renderWChips(); renderWheels(); };
 $('wKind').onclick = e => { const b = e.target.closest('[data-wk]'); if (!b) return;
   wKindF = b.dataset.wk; renderWChips(); renderWheels(); };
+$('wQ').oninput = e => { wQ = e.target.value.trim().toLowerCase(); renderWheels(); };
 $('wheelGrid').onclick = e => { const b = e.target.closest('[data-w]'); if (!b) return;
   const w = find(WHEELS, b.dataset.w), t = find(TYRES, S.tyre);
   S.wheel = w.id; normFinish(S); renderRimSw();
@@ -2279,12 +2734,12 @@ function renderTabs() {
   $('patTabs').innerHTML = PATS.map(([id, n, d]) =>
     `<button data-p="${id}" aria-pressed="${id === cur}"><b>${n}</b><i>${d}</i></button>`).join('');
   const list = TYRE_MODELS.filter(t => t.pattern === cur);
-  $('treadList').innerHTML = list.map(t => `
+  $('treadList').innerHTML = list.map(t => `<div class="pcw">
     <button class="tr" data-tr="${esc(t.id)}" aria-pressed="${t.id === S.tread}"${t.unavailable ? ' disabled' : ''}>
       <canvas data-pat="${t.pattern}" aria-hidden="true"></canvas>
       <span><span class="tb">${esc(t.brand ?? '')}</span><span class="tn">${esc(t.label)}</span></span>
       ${t.owl ? '<span class="tag on">有白字</span>' : t.unavailable ? '<span class="tag">裝不上</span>' : ''}
-    </button>`).join('');
+    </button>${infoBtn(t)}</div>`).join('');
   $('treadList').querySelectorAll('canvas').forEach(c => swatch(c, c.dataset.pat));
 }
 $('patTabs').onclick = e => { const b = e.target.closest('[data-p]'); if (!b) return;
@@ -2298,12 +2753,16 @@ $('tgOwl').onclick = e => { if (e.currentTarget.disabled) return;
   S.owl = !S.owl; update(); };
 
 /* ═══ the rest of the panel ══════════════════════════════════════════════ */
+const TOGGLE_BOXES = ['togglesBody', 'togglesRack', 'togglesSpare', 'togglesGuard'];
+/** The details button on a card: on touch there is no hover, so this (or a
+ *  long press) is the way to the price, the notes and the maker's page. */
+const infoBtn = (it) => `<button class="pinfo" type="button" data-info="${esc(it.id)}" aria-label="${esc(it.label)}：詳細資料與產品頁">i</button>`;
 function syncToggles() {
-  const t = $('toggles'); if (!t) return;
+  if (!$('togglesBody')) return;
   const aw = $('tgAwnSide');
   aw.setAttribute('aria-pressed', S.awningSide === 'right');
   aw.querySelector('.st').textContent = S.awningSide === 'left' ? '左側' : '右側';
-  document.querySelectorAll('#toggles [data-k], #arbToggles [data-k], #lightToggles [data-k]').forEach(b => {
+  document.querySelectorAll('.toggles [data-k]').forEach(b => {
     b.setAttribute('aria-pressed', !!S[b.dataset.k]);
     b.querySelector('.st').textContent = S[b.dataset.k] ? '已裝' : '未裝';
   });
@@ -2315,6 +2774,9 @@ function syncToggles() {
   const owl = $('tgOwl');
   if (!owl.disabled) { owl.setAttribute('aria-pressed', S.owl); owl.querySelector('.st').textContent = S.owl ? '開啟' : '關閉'; }
   const fl = $('tgFlare'); fl.setAttribute('aria-pressed', S.paintFlares); fl.querySelector('.st').textContent = S.paintFlares ? '車身色' : '原廠黑';
+  document.querySelectorAll('[data-rp]').forEach(b => b.setAttribute('aria-pressed', b.dataset.rp === S.rackPaint));
+  document.querySelectorAll('[data-sp]').forEach(b => b.setAttribute('aria-pressed', b.dataset.sp === S.split));
+  $('splitName').textContent = find(SPLIT_PAINTS, S.split).label;
   const two = $('tgTwo'); two.setAttribute('aria-pressed', S.twoTone);
   two.querySelector('.st').textContent = S.twoTone ? '開啟' : '關閉';
 }
@@ -2368,10 +2830,17 @@ function buildUI() {
     `<button class="tg" data-k="${a.key}" aria-pressed="false"><span class="nm">${esc(a.label)}<i>${esc(priceLabel(a).main)}${priceLabel(a).sub ? `（${priceLabel(a).sub}）` : ''}</i></span><span class="st">未裝</span></button>`).join('');
   $('lightToggles').innerHTML = [['pillarPods', 'A 柱小圓燈']].map(([k, l]) =>
     `<button class="tg" data-k="${k}" aria-pressed="false"><span class="nm">${l}</span><span class="st">未裝</span></button>`).join('');
-  $('toggles').innerHTML = TG.map(([k, l]) =>
+  // the switches live with the part of the car they belong to
+  const TG_AT = { windowGuards: 'togglesGuard', shovel: 'togglesRack', flares: 'togglesBody', sideSkirt: 'togglesBody',
+    decals: 'togglesBody', gullwing: 'togglesBody', spareBag: 'togglesSpare', spareCover: 'togglesSpare' };
+  for (const box of TOGGLE_BOXES) $(box).innerHTML = TG.filter(([k]) => TG_AT[k] === box).map(([k, l]) =>
     `<button class="tg" data-k="${k}" aria-pressed="false"><span class="nm">${l}</span><span class="st">未裝</span></button>`).join('');
-  $('views').innerHTML = VIEWS.map((v, i) =>
-    `<button data-v="${i}" aria-pressed="${i === 0}">${v[0]}</button>`).join('');
+  // rack paint and the lower-body split as colour chips over their (hidden) selects
+  const hx = (h) => '#' + h.toString(16).padStart(6, '0');
+  $('rackSw').innerHTML = RACK_PAINTS.map(p => `<button class="sw${p.hex == null ? ' none' : ''}" data-rp="${p.id}" title="${esc(p.label)}" aria-label="${esc(p.label)}"
+    aria-pressed="${p.id === S.rackPaint}"${p.hex == null ? '' : ` style="background:${hx(p.hex)}"`}></button>`).join('');
+  $('splitSw').innerHTML = SPLIT_PAINTS.map(p => `<button class="sw${p.hex == null ? ' none' : ''}" data-sp="${p.id}" title="${esc(p.label)}" aria-label="${esc(p.label)}"
+    aria-pressed="${p.id === S.split}"${p.hex == null ? '' : ` style="background:${hx(p.hex)}"`}></button>`).join('');
   hints(); syncToggles(); syncCamp();
 }
 
@@ -2411,7 +2880,7 @@ function hints() {
      from where it was a moment ago to the card's near edge. A row it then
      rests on still gets its card, after a short pause. */
 const cardEl = $('card');
-let cardTimer = 0, cardOver = false, cardAnchor = null, cardPend = 0;
+let cardTimer = 0, cardOver = false, cardAnchor = null, cardPend = 0, cardAt = null;
 const trail = [];                       // recent mouse positions [t, x, y]
 let ptrNow = null;                      // where the mouse is, as of the event being handled
 const track = (e) => {
@@ -2435,10 +2904,15 @@ function headingForCard() {
   const [, ax, ay] = recent ?? trail[trail.length - 1];
   if (Math.hypot(x - ax, y - ay) < 2) return false;
   const c = cardEl.getBoundingClientRect();
-  const edge = ax <= c.left ? c.left : ax >= c.right ? c.right : null;
-  if (edge === null) return false;
-  // point in triangle (apex, near-top, near-bottom), the edge padded a little
-  const bx = edge, by = c.top - 16, cx = edge, cy = c.bottom + 16;
+  let bx, by, cx, cy;
+  if (ay >= c.bottom) {                   // the card sits above the tray's cards
+    bx = c.left - 16; by = c.bottom; cx = c.right + 16; cy = c.bottom;
+  } else {
+    const edge = ax <= c.left ? c.left : ax >= c.right ? c.right : null;
+    if (edge === null) return false;
+    // point in triangle (apex, near-top, near-bottom), the edge padded a little
+    bx = edge; by = c.top - 16; cx = edge; cy = c.bottom + 16;
+  }
   const d = (px, py, qx, qy, rx, ry) => (px - rx) * (qy - ry) - (qx - rx) * (py - ry);
   const d1 = d(x, y, ax, ay, bx, by), d2 = d(x, y, bx, by, cx, cy), d3 = d(x, y, cx, cy, ax, ay);
   return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
@@ -2456,8 +2930,15 @@ function hideCard(now = false) {
   cardTimer = setTimeout(check, 300);
 }
 cardEl.addEventListener('pointerenter', () => { cardOver = true; clearTimeout(cardTimer); clearTimeout(cardPend); });
-cardEl.addEventListener('pointerleave', () => { cardOver = false; hideCard(); });
-addEventListener('keydown', (e) => { if (e.key === 'Escape' && !cardEl.hidden && !menuEl) hideCard(true); });
+// (a finger lifting off is also a "leave": on touch the card waits for a tap elsewhere)
+cardEl.addEventListener('pointerleave', (e) => { cardOver = false; if (e.pointerType === 'mouse') hideCard(); });
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && !cardEl.hidden) hideCard(true); });
+cardEl.addEventListener('click', (e) => { if (e.target.closest('.cx')) hideCard(true); });
+// On touch the card stays until a tap lands somewhere else.
+addEventListener('pointerdown', (e) => {
+  if (cardEl.hidden || e.pointerType === 'mouse' || cardEl.contains(e.target) || e.target.closest?.('[data-info]')) return;
+  hideCard(true);
+}, true);
 /** The hover entry point: show this row's card, unless the pointer is only
  *  passing over the row on its way into the card already open. */
 function hoverCard(item, anchor, thumb) {
@@ -2492,10 +2973,19 @@ function showCard(item, anchor, thumb) {
     tags ? `<div class="tags">${tags}</div>` : '',
     item.note ? `<div class="n">${esc(item.note)}</div>` : '',
     item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noopener">看產品頁 ↗</a>` : '',
+    '<button class="cx" type="button" aria-label="關閉">✕</button>',
   ].filter(Boolean).join('');
   cardEl.hidden = false;
-  // place it beside the row, clamped into the window
   const r = anchor.getBoundingClientRect(), c = cardEl.getBoundingClientRect();
+  cardAt = r;
+  if (anchor.closest('.tray')) {
+    // above the card it belongs to, so the rest of the row stays in sight
+    // and the pointer reaches it by moving straight up
+    cardEl.style.left = Math.max(12, Math.min(r.left + r.width / 2 - c.width / 2, innerWidth - c.width - 12)) + 'px';
+    cardEl.style.top = Math.max(12, r.top - c.height - 10) + 'px';
+    return;
+  }
+  // otherwise beside it, clamped into the window
   let x = r.left - c.width - 12;
   if (x < 12) x = Math.min(r.right + 12, innerWidth - c.width - 12);
   cardEl.style.left = Math.max(12, x) + 'px';
@@ -2506,104 +2996,38 @@ function showCard(item, anchor, thumb) {
  * Wire a container so pointing at one of its rows shows that row's card.
  * Touch has no hover, so a long press does the same thing.
  */
-function cardsOn(containerId, attr, list, thumbOf) {
-  const box = $(containerId); if (!box) return;
+function cardsOn(container, attr, list, thumbOf) {
+  const box = typeof container === 'string' ? $(container) : container; if (!box) return;
   const itemOf = (el) => list().find((x) => String(x.id) === el.dataset[attr]);
-  let press = 0;
+  let press = 0, pressed = false;
+  // the (i) button: the card for that item, on any device
+  box.addEventListener('click', (e) => {
+    // a long press showed the card; the click that ends it must not also fit the part
+    if (pressed) { pressed = false; e.stopPropagation(); e.preventDefault(); return; }
+    const b = e.target.closest('[data-info]'); if (!b) return;
+    e.stopPropagation(); e.preventDefault();
+    const it = list().find((x) => String(x.id) === b.dataset.info);
+    const anchor = b.closest('.pcw') ?? b;
+    if (!it) return;
+    if (cardAnchor === anchor && !cardEl.hidden) hideCard(true); else showCard(it, anchor, thumbOf?.(it));
+  }, true);
   box.addEventListener('pointerover', (e) => {
     if (!matchMedia('(hover: hover)').matches) return;
     const el = e.target.closest(`[data-${attr.toLowerCase()}]`); if (!el) return;
     const it = itemOf(el); if (it) hoverCard(it, el, thumbOf?.(it));
   });
   box.addEventListener('pointerout', (e) => {
+    if (e.pointerType !== 'mouse') return;
     if (e.relatedTarget && box.contains(e.relatedTarget)) return;
     hideCard();
   });
   box.addEventListener('pointerdown', (e) => {
     if (matchMedia('(hover: hover)').matches) return;
     const el = e.target.closest(`[data-${attr.toLowerCase()}]`); if (!el) return;
-    clearTimeout(press);
-    press = setTimeout(() => { const it = itemOf(el); if (it) showCard(it, el, thumbOf?.(it)); }, 420);
+    clearTimeout(press); pressed = false;
+    press = setTimeout(() => { const it = itemOf(el); if (it) { pressed = true; navigator.vibrate?.(8); showCard(it, el.closest('.pcw') ?? el, thumbOf?.(it)); } }, 420);
   });
   for (const ev of ['pointerup', 'pointercancel', 'pointermove']) box.addEventListener(ev, () => clearTimeout(press));
-}
-
-/* Hovering a menu on a desktop draws a line round the part it controls, so
-   you can tell which thing on the car it is before you change anything. */
-for (const [id, key] of [['selBumper', 'frontBumper'], ['selGrille', 'grille'], ['selRear', 'rearBumper'],
-  ['selHood', 'hood'], ['selSpareKit', 'spareCoverKit'], ['selMirror', 'mirrors'], ['selRack', 'roofRack'],
-  ['selAwning', 'awning'], ['selStep', 'sideStep'], ['selLadder', 'ladder'], ['selSnorkel', 'snorkel'],
-  ['selExhaust', 'exhaust'], ['selLightBar', 'lightBar'], ['selRoofLights', 'roofLights'],
-  ['selGrilleLight', 'grilleLight'], ['selFace', 'face'], ['selSpoiler', 'spoiler'], ['selMudFlap', 'mudFlap'], ['selSideMould', 'sideMould'], ['selTent', 'tent'], ['selCampExtra', 'campExtra'], ['selLampCover', 'lampCover'], ['selFender', 'fender'], ['selCage', 'cage'], ['selStripe', 'stripe'],
-  ...TG_UI.map(([k, sel]) => [sel, k])]) {
-  const el = $(id); if (!el) continue;
-  const list = { frontBumper: FRONT_BUMPERS, grille: GRILLES, rearBumper: REAR_BUMPERS, hood: HOODS,
-    spareCoverKit: SPARE_COVERS, mirrors: MIRRORS, roofRack: ROOF_RACKS, awning: AWNINGS,
-    sideStep: SIDE_STEPS, ladder: LADDERS, snorkel: SNORKELS, exhaust: EXHAUSTS,
-    lightBar: LIGHT_BARS, roofLights: ROOF_LIGHTS, grilleLight: GRILLE_LIGHTS, face: FACES, spoiler: SPOILERS, mudFlap: MUD_FLAPS, sideMould: SIDE_MOULDINGS, tent: TENTS, campExtra: CAMP_EXTRAS, lampCover: LAMP_COVERS, fender: FENDERS, cage: CAGES, stripe: STRIPES, ...Object.fromEntries(TG_UI.map(([k, , , L]) => [k, L])) }[key];
-  el.addEventListener('pointerenter', () => {
-    highlight(BUILT[key] ?? null, 0);
-    if (list && matchMedia('(hover: hover)').matches) {
-      const it = find(list, S[key]);
-      hoverCard(it, el, shotFor(key, it));
-    }
-  });
-  el.addEventListener('pointerleave', () => { if (!menuEl) { highlight(null); hideCard(); } });
-  if (list) el.addEventListener('mousedown', (e) => {
-    if (!matchMedia('(hover: hover)').matches || e.button !== 0) return;
-    e.preventDefault();
-    if (menuEl?.dataset.for === id) { closeMenu(); return; }
-    openMenu(el, key, list);
-  });
-}
-
-/** The pointer-driven picker (see .pmenu). Keyboard and touch keep the
- *  native <select>; choosing here sets its value and fires the same change
- *  event, so nothing downstream knows the difference. */
-let menuEl = null;
-function closeMenu() {
-  if (!menuEl) return;
-  menuEl.remove(); menuEl = null;
-  hideCard(); highlight(null);
-  removeEventListener('pointerdown', menuOutside, true);
-  removeEventListener('keydown', menuKey, true);
-}
-function menuOutside(e) { if (menuEl && !menuEl.contains(e.target) && !cardEl.contains(e.target)) closeMenu(); }
-function menuKey(e) { if (e.key === 'Escape') { e.preventDefault(); closeMenu(); } }
-function openMenu(sel, key, list) {
-  closeMenu();
-  const m = document.createElement('div');
-  m.className = 'pmenu'; m.dataset.for = sel.id; m.setAttribute('role', 'listbox');
-  m.innerHTML = [...sel.options].map(o =>
-    `<button type="button" role="option" data-v="${esc(o.value)}" aria-selected="${o.value === sel.value}">${esc(o.textContent)}</button>`).join('');
-  document.body.appendChild(m);
-  menuEl = m;
-  // under the select, or above it when the window runs out, never off screen
-  const r = sel.getBoundingClientRect(), gap = 4;
-  const below = innerHeight - r.bottom - 12, above = r.top - 12;
-  const h = Math.min(m.scrollHeight, Math.max(below, above), innerHeight * 0.7);
-  // wide enough that a brand, a name and a price fit on one line; it grows
-  // leftwards, over the car, since the panel sits against the right edge
-  const w = Math.min(Math.max(r.width, 420), innerWidth - 24);
-  m.style.width = w + 'px';
-  m.style.left = Math.max(12, Math.min(r.left, r.right - w)) + 'px';
-  m.style.maxHeight = h + 'px';
-  m.style.top = (below >= h || below >= above ? r.bottom + gap : r.top - gap - h) + 'px';
-  m.querySelector('[aria-selected=true]')?.scrollIntoView({ block: 'nearest' });
-  m.addEventListener('pointerover', (e) => {
-    const b = e.target.closest('button'); if (!b) return;
-    const it = list.find(x => String(x.id) === b.dataset.v);
-    if (it) hoverCard(it, b, shotFor(key, it)); else hideCard();
-  });
-  m.addEventListener('pointerleave', () => hideCard());
-  m.addEventListener('click', (e) => {
-    const b = e.target.closest('button'); if (!b) return;
-    sel.value = b.dataset.v;
-    closeMenu();
-    sel.dispatchEvent(new Event('change'));
-  });
-  addEventListener('pointerdown', menuOutside, true);
-  addEventListener('keydown', menuKey, true);
 }
 
 /* Each card shows the part fitted to THIS car -- a render of our own model,
@@ -2632,15 +3056,29 @@ window.__jimnyAim = aimFor;
 window.__jimnyTyre = () => { const t = find(TYRES, S.tyre); return { dia: t.dia, width: t.width }; };
 window.__jimnyDefault = (k) => DEF[k];
 // frame the part itself: at the whole-car distance a snorkel is a few pixels,
-// so the crop ends up being most of the car
-window.__jimnyFrame = (key) => {
-  const n = BUILT[key]; if (!n) return false;
+// so the crop ends up being most of the car. The cards are close-ups: the
+// part fills most of the frame, with just enough car round it to say where
+// it sits.
+// A family fitted at all four corners (the flares) would frame the whole car:
+// its card closes in on the front-left one, the corner aimFor looks at.
+const SHOT_CORNER = new Set(['fender', 'mudFlap']);
+function shotBox(key) {
+  const n = BUILT[key]; if (!n) return null;
   const b = new THREE.Box3().setFromObject(n);
-  if (!isFinite(b.min.x)) return false;
+  if (!isFinite(b.min.x)) return null;
+  if (SHOT_CORNER.has(key)) {
+    const c = new THREE.Box3(), m = new THREE.Box3(), v = new THREE.Vector3();
+    n.traverse((o) => { if (o.isMesh && o.visible) { m.setFromObject(o); m.getCenter(v); if (v.x > 0.2 && v.z > 0.2) c.union(m); } });
+    if (isFinite(c.min.x)) return c;
+  }
+  return b;
+}
+window.__jimnyFrame = (key) => {
+  const b = shotBox(key); if (!b) return false;
   const c = b.getCenter(new THREE.Vector3());
   const r = Math.max(0.1, b.getSize(new THREE.Vector3()).length() / 2);
   const [az, el] = aimFor(key) || [0.8, 0.2];
-  const d = Math.max(0.85, Math.min(9, r / Math.tan(cam.fov * Math.PI / 360) * 1.75));
+  const d = Math.max(0.8, Math.min(9, r / Math.tan(cam.fov * Math.PI / 360) * 1.3));
   cam.position.set(c.x + Math.cos(el) * Math.sin(az) * d,
                    c.y + Math.sin(el) * d,
                    c.z + Math.cos(el) * Math.cos(az) * d);
@@ -2649,10 +3087,25 @@ window.__jimnyFrame = (key) => {
   invalidate(false);
   return true;
 };
+// the card's line round the part: the page's own hover outline, in the
+// accent yellow and heavier, since a card is looked at small
+window.__jimnyOutline = (key) => {
+  if (!outline) return false;
+  const n = key ? BUILT[key] : null;
+  clearTimeout(hlTimer);       // a fitting highlight still pending would wipe it
+  outline.selectedObjects = n ? [n] : [];
+  if (n) {
+    outline.visibleEdgeColor.set(0xd0d735); outline.hiddenEdgeColor.set(0x2c2e0b);
+    Object.assign(outline, { edgeStrength: 6, edgeGlow: 0.15, edgeThickness: 1.4 });
+  } else {
+    outline.visibleEdgeColor.set(0xffb24a); outline.hiddenEdgeColor.set(0x6a4d1d);
+    Object.assign(outline, { edgeStrength: 3.4, edgeGlow: 0.35, edgeThickness: 1.6 });
+  }
+  invalidate(false);
+  return !!n;
+};
 window.__jimnyShotBox = (key) => {
-  const n = BUILT[key]; if (!n) return null;
-  const b = new THREE.Box3().setFromObject(n);
-  if (!isFinite(b.min.x)) return null;
+  const b = shotBox(key); if (!b) return null;
   const r = cv.getBoundingClientRect(), v = new THREE.Vector3();
   let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
   for (let i = 0; i < 8; i++) {
@@ -2661,7 +3114,7 @@ window.__jimnyShotBox = (key) => {
     x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py);
   }
   // pad out to 8:5 around the part, so every card image crops the same way
-  const pad = 0.22 * Math.max(x1 - x0, y1 - y0);
+  const pad = 0.12 * Math.max(x1 - x0, y1 - y0);
   let cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
   // the part is framed to fill the shot, so this only floors the tiny ones
   let w = Math.max(x1 - x0 + pad * 2, (y1 - y0 + pad * 2) * 1.6, 200);
@@ -2673,15 +3126,98 @@ window.__jimnyShotBox = (key) => {
   return { x: Math.round(cx - w / 2), y: Math.round(cy - h / 2), width: Math.round(w), height: Math.round(h) };
 };
 
+/* ═══ rails: each catalogue list as a row of cards ═══════════════════════
+   The part lists are no longer menus: each is a sideways row of cards with
+   our own render of the part fitted to this car, its name and its price.
+   Picking a card sets the family's (hidden) <select> and fires its change
+   event, so every rule that hangs off the select -- kits clearing their
+   panels, a spare delete dropping what hung on the spare -- still runs. */
+const FAM = { kit: [KITS, 'selKit'], face: [FACES, 'selFace'], frontBumper: [FRONT_BUMPERS, 'selBumper'],
+  grille: [GRILLES, 'selGrille'], hood: [HOODS, 'selHood'], rearBumper: [REAR_BUMPERS, 'selRear'],
+  fender: [FENDERS, 'selFender'], sideStep: [SIDE_STEPS, 'selStep'], snorkel: [SNORKELS, 'selSnorkel'],
+  exhaust: [EXHAUSTS, 'selExhaust'], mirrors: [MIRRORS, 'selMirror'], mudFlap: [MUD_FLAPS, 'selMudFlap'],
+  sideMould: [SIDE_MOULDINGS, 'selSideMould'], stripe: [STRIPES, 'selStripe'], roofRack: [ROOF_RACKS, 'selRack'],
+  awning: [AWNINGS, 'selAwning'], spoiler: [SPOILERS, 'selSpoiler'], cage: [CAGES, 'selCage'], ladder: [LADDERS, 'selLadder'],
+  spareCoverKit: [SPARE_COVERS, 'selSpareKit'], lightBar: [LIGHT_BARS, 'selLightBar'], roofLights: [ROOF_LIGHTS, 'selRoofLights'],
+  grilleLight: [GRILLE_LIGHTS, 'selGrilleLight'], lampCover: [LAMP_COVERS, 'selLampCover'],
+  ...Object.fromEntries(TG_UI.map(([k, sel, , L]) => [k, [L, sel]])) };
+const famF = {};                                   // key -> { b: brand filter, q: search }
+const isNone = (it) => it.id === 'none' || it.id === 'stock';
+const brandKey = (it) => (it.brand && it.brand !== '—' ? it.brand : '其他');
+// a maker's kit is pictured by its style card: the whole kit on the car
+// (the lamp covers have no renders yet: tools/partshots.mjs does not shoot them)
+const famShot = (key, it) => key === 'lampCover' ? null : key !== 'kit' ? shotFor(key, it)
+  : isNone(it) ? null : `model/shots/style-kit_${it.id}.webp?v=${BUILD}`;
+function pcard(key, it) {
+  const none = isNone(it), src = none ? null : famShot(key, it), p = priceLabel(it);
+  const mark = (it.brand ?? '').split(/[\s（(×・]/)[0].slice(0, 9);
+  return `<div class="pcw"><button class="pc${none ? ' none' : ''}" type="button" data-id="${esc(it.id)}" aria-pressed="${String(S[key]) === String(it.id)}">
+    <span class="ph">${src ? `<img src="${src}" alt="" loading="lazy" draggable="false" onerror="this.remove()">` : ''}<span class="ph0">${none ? '∅' : esc(mark)}</span></span>
+    <span class="pt"><i>${none ? '原廠狀態' : esc(it.brand ?? '')}</i><b>${esc(it.label)}</b>${none ? '' : `<em>${esc(p.main)}${p.sub ? `<small>${esc(p.sub)}</small>` : ''}</em>`}</span></button>
+    ${none ? '' : infoBtn(it)}</div>`;
+}
+function renderFam(key) {
+  const box = document.querySelector(`[data-fam="${key}"]`); if (!box || !FAM[key]) return;
+  const [L, sel] = FAM[key];
+  const f = famF[key] ??= { b: 'all', q: '' };
+  if (!box.dataset.built) {
+    const real = L.filter(x => !isNone(x));
+    const brands = Object.entries(real.reduce((m, x) => (m[brandKey(x)] = (m[brandKey(x)] ?? 0) + 1, m), {}))
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    const name = $(sel).getAttribute('aria-label');
+    // long lists get a brand row, the longest a search box too
+    box.innerHTML = `<div class="rh"><span class="lbl">${esc(name)} <em>${real.length} 款${box.dataset.note ? `・${esc(box.dataset.note)}` : ''}</em></span>`
+      + (L.length > 9 && brands.length > 2 ? `<div class="fchips">${[['all', '全部品牌', 0], ...brands.map(([b, n]) => [b, b, n])].map(([v, l, n]) =>
+        `<button class="chip" type="button" data-b="${esc(v)}" aria-pressed="${f.b === v}">${esc(l)}${n ? `<em>${n}</em>` : ''}</button>`).join('')}</div>` : '')
+      + (L.length > 14 ? `<input class="q" type="search" placeholder="搜尋${esc(name)}…" aria-label="搜尋${esc(name)}">` : '')
+      + `</div><div class="rail" data-rail="${key}"></div>`;
+    box.dataset.built = '1';
+    const rail = box.querySelector('.rail');
+    box.querySelector('.fchips')?.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-b]'); if (!b) return;
+      f.b = b.dataset.b; box.querySelectorAll('[data-b]').forEach(x => x.setAttribute('aria-pressed', x === b)); fillFam(key);
+    });
+    box.querySelector('.q')?.addEventListener('input', (e) => { f.q = e.target.value.trim().toLowerCase(); fillFam(key); });
+    rail.addEventListener('click', (e) => {
+      const b = e.target.closest('.pc'); if (!b) return;
+      const s = $(sel);
+      if (s.value === b.dataset.id) return;
+      s.value = b.dataset.id; s.dispatchEvent(new Event('change'));
+    });
+    // desktop: pointing into a family's row draws a line round that part on the car
+    rail.addEventListener('pointerenter', () => highlight(BUILT[key] ?? null, 0));
+    rail.addEventListener('pointerleave', () => highlight(null));
+    cardsOn(rail, 'id', () => L, (it) => famShot(key, it));
+  }
+  fillFam(key);
+}
+function fillFam(key) {
+  const rail = document.querySelector(`[data-rail="${key}"]`); if (!rail) return;
+  const [L] = FAM[key], f = famF[key];
+  const hit = (x) => (f.b === 'all' || brandKey(x) === f.b)
+    && (!f.q || [x.label, x.brand, x.note, x.part].join(' ').toLowerCase().includes(f.q));
+  rail.innerHTML = [...L.filter(isNone), ...L.filter(x => !isNone(x) && hit(x))].map(it => pcard(key, it)).join('');
+}
+/** Which card is pressed follows the car, whatever changed it. */
+function syncRails() {
+  for (const rail of document.querySelectorAll('[data-rail]')) {
+    const v = String(S[rail.dataset.rail]);
+    rail.querySelectorAll('.pc').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === v));
+  }
+  syncSubs();
+}
+
 cardsOn('liftCards', 'l', () => LIFTS);
 cardsOn('wheelGrid', 'w', () => WHEELS, (w) => `model/wheels/${w.id}.webp?v=${BUILD}`);
 cardsOn('tyreLadder', 't', () => TYRES);
 cardsOn('treadList', 'tr', () => TYRE_MODELS);
-cardsOn('selKit', 'k', () => KITS);
 // (scrolling the card's own note must not close the card it is in)
+// A scroll that carries the card's row away closes it; one that leaves the
+// row where it was (a rail settling on its snap point) does not.
 addEventListener('scroll', (e) => { if (e.target instanceof Node && cardEl.contains(e.target)) return;
-  hideCard(true); if (menuEl && e.target !== menuEl) closeMenu(); }, true);
-addEventListener('resize', () => closeMenu());
+  if (cardAnchor && cardAt) { const r = cardAnchor.getBoundingClientRect();
+    if (Math.abs(r.left - cardAt.left) < 24 && Math.abs(r.top - cardAt.top) < 24) return; }
+  hideCard(true); }, true);
 
 /* wiring that does not belong to one picker */
 const on = (id, f) => $(id).onchange = e => { f(e.target.value); hints(); update(); };
@@ -2797,12 +3333,12 @@ $('arbToggles').addEventListener('pointerover', (e) => {
   const a = ARB_RACK_ACC.find(x => x.key === b.dataset.k);
   if (a) hoverCard({ ...a, id: a.key, part: a.pn }, b, shotFor('arbAcc', { id: a.key }));
 });
-$('arbToggles').addEventListener('pointerleave', () => hideCard());
+$('arbToggles').addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') hideCard(); });
 $('lightToggles').onclick = e => {
   const b = e.target.closest('[data-k]'); if (!b) return;
   S[b.dataset.k] = !S[b.dataset.k]; syncToggles(); update();
 };
-$('toggles').onclick = e => {
+for (const box of TOGGLE_BOXES) $(box).onclick = e => {
   const b = e.target.closest('[data-k]'); if (!b) return;
   const k = b.dataset.k; S[k] = !S[k];
   // a bag and a hard cover cannot both sit on the spare
@@ -2810,11 +3346,20 @@ $('toggles').onclick = e => {
   if (other && S[k] && S[other]) S[other] = false;
   syncToggles(); update();
 };
-$('views').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return;
-  document.querySelectorAll('[data-v]').forEach(x => x.setAttribute('aria-pressed', x === b));
-  const [, az, el, d] = VIEWS[+b.dataset.v]; flyTo(az, el, d, 720); };
-$('btnDemo').onclick = () => { S = { ...DEF, ...DEMO }; tyreSwap = ''; buildUI(); update(); };
-$('btnReset').onclick = () => location.reload();
+// colour chips standing in for the rack-paint and split-paint selects
+$('rackSw').onclick = e => { const b = e.target.closest('[data-rp]'); if (!b) return;
+  $('selRackPaint').value = b.dataset.rp; $('selRackPaint').dispatchEvent(new Event('change')); syncToggles(); };
+$('splitSw').onclick = e => { const b = e.target.closest('[data-sp]'); if (!b) return;
+  $('selSplit').value = b.dataset.sp; $('selSplit').dispatchEvent(new Event('change')); };
+// 看一台範例: the owner's own car
+$('btnDemo').onclick = () => { S = { ...DEF, ...DEMO }; styleAt = null; tyreSwap = ''; buildUI(); update();
+  document.querySelectorAll('#styles [data-style]').forEach(b => b.setAttribute('aria-pressed', 'false')); };
+// 回到原廠: a stock car, in place (it used to reload the page, which brought
+// a returning reader's last style straight back)
+$('btnReset').onclick = () => { S = { ...DEF }; styleAt = null; tyreSwap = '';
+  try { localStorage.removeItem('jimny.style'); } catch {}
+  buildUI(); update(); $('out').classList.remove('on');
+  document.querySelectorAll('#styles [data-style]').forEach(b => b.setAttribute('aria-pressed', 'false')); };
 $('btnExport').onclick = () => {
   const lift = find(LIFTS, S.lift), bl = { body: lift.body ?? 0 };
   const wh = find(WHEELS, S.wheel), ty = find(TYRES, S.tyre);
@@ -2863,22 +3408,24 @@ $('btnExport').onclick = () => {
   const total = lift.lift + bl.body;
   const pr = (o) => { const p = priceLabel(o); return p.main === '原廠' ? '' : `  ${p.main}${p.sub ? `（${p.sub}）` : ''}`; };
   const o = $('out');
-  o.textContent = ['JIMNY JB74 改裝配置', '─'.repeat(30),
+  o.textContent = ['Jimny JB 74 改裝單（Suzuki Jimny Sierra JB74）', '─'.repeat(30),
     `車色    ${col.code} ${col.name}${S.twoTone ? '（雙色黑頂）' : ''}`,
     `懸吊    ${lift.brand ?? ''} ${lift.label}${pr(lift)}`,
     `輪框    ${wh.brand ?? ''} ${wh.label}  ${wh.rim}×${wh.width}J ET${wh.offset > 0 ? '+' : wh.offset < 0 ? '−' : ''}${Math.abs(wh.offset)}${pr(wh)}`,
     `輪胎    ${ty.label} Ø${ty.dia}mm · ${find(TYRE_MODELS, S.tread).label}`, '',
-    `總車高  ${$('rHeight').textContent.replace(/\s/g, '')}　（原廠 ${STOCK_H}mm）`,
+    `總車高  ${$('rHeightN').textContent}mm　（原廠 ${STOCK_H}mm）`,
     `總舉升  ${total}mm`,
     `估離地  ${210 + total + Math.round((ty.dia - 693) / 2)}mm`,
     `停車    ${$('rPark').textContent}`, '',
     acc.length ? '配件\n' + acc.map(a => '  · ' + a).join('\n') : '配件    無',
+    (() => { const { sum, open } = billTotal(billLines()); return sum ? `\n零件合計  約 ${ntd(sum)}${open ? `（另有 ${open} 項未公布價格）` : ''}，輪框以四顆計、不含輪胎與工資` : null; })(),
     fl.length ? '\n注意\n' + fl.map(f => '  ! ' + f.msg).join('\n') : '',
     '', `※ ${FX_NOTE}`, '※ 價格為概略值，實際以代理商報價為準。'].filter(x => x !== null).join('\n');
   o.classList.add('on'); o.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  navigator.clipboard?.writeText(o.textContent).catch(() => {});
 };
 
-resize(); setPeek(); applyCam();
+resize(); frame(false); applyCam();
 (function loop(t) {
   requestAnimationFrame(loop);
   t = t || performance.now();
