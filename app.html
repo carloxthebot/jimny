@@ -17,7 +17,7 @@
      browser does not learn they exist until three.js has downloaded, parsed
      and run, which on a phone is seconds of an idle connection. -->
 <link rel="preload" as="fetch" type="model/gltf-binary" href="model/jimny-hq.glb" crossorigin>
-<link rel="preload" as="fetch" type="model/gltf-binary" href="model/rims.glb?v=202609281237" crossorigin>
+<link rel="preload" as="fetch" type="model/gltf-binary" href="model/rims.glb?v=202609281400" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
@@ -758,7 +758,7 @@ body.tray-open .credit{opacity:0;pointer-events:none}
         </div>
 
         <!-- 3 ── 外觀件 -->
-        <div class="pane" data-p="3" data-subs="color:車色|kit:全車套件|face:換臉|frontBumper:前保桿|grille:水箱護罩|hood:引擎蓋|rearBumper:後保桿|fender:寬體葉子板|sideStep:側踏滑桿|snorkel:呼吸管|exhaust:排氣管|mirrors:後照鏡|mudFlap:擋泥板|sideMould:側飾條|stripe:拉花|bits:小改">
+        <div class="pane" data-p="3" data-subs="color:車色|kit:全車套件|frontBumper:前保桿|grille:水箱護罩|hood:引擎蓋|rearBumper:後保桿|fender:寬體葉子板|sideStep:側踏滑桿|snorkel:呼吸管|exhaust:排氣管|mirrors:後照鏡|mudFlap:擋泥板|sideMould:側飾條|stripe:拉花|bits:小改">
           <div class="sub" data-g="color" data-keys="color twoTone split paintFlares">
             <div class="live"><b id="colPick"></b><p id="colNote"></p></div>
             <div class="row" style="margin-top:0"><span class="lbl">車身配色 <em id="colName"></em></span>
@@ -773,7 +773,8 @@ body.tray-open .credit{opacity:0;pointer-events:none}
             <select id="selSplit" hidden aria-label="下半車身分色"></select><p class="hint" id="hSplit"></p>
           </div>
           <div class="sub" data-g="kit" data-keys="kit"><div class="fam" data-fam="kit"></div><select id="selKit" hidden aria-label="全車套件"></select><p class="hint" id="hKit"></p></div>
-          <div class="sub" data-g="face" data-keys="face"><div class="fam" data-fam="face"></div><select id="selFace" hidden aria-label="換臉套件"></select><p class="hint" id="hFace"></p></div>
+          <!-- face kits come only as part of a maker kit (全車套件); no separate picker -->
+          <div class="sub" data-g="face" data-keys="face" hidden><div class="fam" data-fam="face"></div><select id="selFace" hidden aria-label="換臉套件"></select><p class="hint" id="hFace"></p></div>
           <div class="sub" data-g="frontBumper" data-keys="frontBumper"><div class="fam" data-fam="frontBumper"></div><select id="selBumper" hidden aria-label="前保桿"></select><p class="hint" id="hBumper"></p></div>
           <div class="sub" data-g="grille" data-keys="grille"><div class="fam" data-fam="grille"></div><select id="selGrille" hidden aria-label="水箱護罩"></select><p class="hint" id="hGrille"></p></div>
           <div class="sub" data-g="hood" data-keys="hood"><div class="fam" data-fam="hood"></div><select id="selHood" hidden aria-label="引擎蓋"></select><p class="hint" id="hHood"></p></div>
@@ -928,15 +929,15 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { rigJimny, applyConfig, updateSplit } from './rig.js?v=202609281237';
-import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609281237';
-import { buildAccessory, loadParts, getPart, allParts } from './accessories.js?v=202609281237';
-import { openAwning, roofTent, campExtra } from './camp.js?v=202609281237';
-import { buildWheel, loadTreadMasks } from './wheels.js?v=202609281237';
-import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609281237';
+import { rigJimny, applyConfig, updateSplit } from './rig.js?v=202609281400';
+import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609281400';
+import { buildAccessory, loadParts, getPart, allParts } from './accessories.js?v=202609281400';
+import { openAwning, roofTent, campExtra } from './camp.js?v=202609281400';
+import { buildWheel, loadTreadMasks } from './wheels.js?v=202609281400';
+import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609281400';
 // Written by stamp.sh on each deploy; shown in the HUD so a stale cached copy
 // is obvious at a glance.
-const BUILD = '202609281237';
+const BUILD = '202609281400';
 
 const cv = document.getElementById('cv');
 // The backdrop is CSS behind a transparent canvas: a background texture in
