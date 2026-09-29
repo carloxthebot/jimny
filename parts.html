@@ -62,6 +62,16 @@ section h2 small{font:500 10px var(--mono);color:var(--ink-3);letter-spacing:.1e
 .empty{color:var(--ink-3);font-size:13px;padding:10px 0}
 footer{margin-top:40px;font:500 10.5px/1.7 var(--mono);color:var(--ink-3)}
 </style>
+<!-- Cloudflare Web Analytics: page views only, no cookies. The token is a public site key. -->
+<!-- only on the published site, and never for the render/test tools -->
+<script>
+if (location.hostname === 'carloxthebot.github.io' && !navigator.webdriver) {
+  const s = document.createElement('script'); s.defer = true;
+  s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+  s.dataset.cfBeacon = '{"token": "2e22038b89644b92bbc54637ce0cf057"}';
+  document.head.appendChild(s);
+}
+</script>
 </head>
 <body>
 <div class="wrap">
