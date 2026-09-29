@@ -13,13 +13,18 @@
 <meta property="og:url" content="https://carloxthebot.github.io/jimny/app.html">
 <meta property="og:image" content="https://carloxthebot.github.io/jimny/model/shots/style-cal_twotone.webp">
 <meta name="twitter:card" content="summary_large_image">
-<!-- The two files the first frame cannot do without. Without these the
-     browser does not learn they exist until three.js has downloaded, parsed
-     and run, which on a phone is seconds of an idle connection. -->
+<!-- The body and the parts list are what the first frame cannot do without.
+     Without these the browser does not learn they exist until three.js has
+     downloaded, parsed and run, which on a phone is seconds of an idle
+     connection. (The parts themselves are named by the list.) -->
 <link rel="preload" as="fetch" type="model/gltf-binary" href="model/jimny-hq.glb" crossorigin>
-<link rel="preload" as="fetch" type="model/gltf-binary" href="model/rims.glb?v=202609290500" crossorigin>
+<link rel="preload" as="fetch" type="application/json" href="model/parts/index.json?v=202609290900" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- The fonts' stylesheet is 100 KB (Noto Sans TC is cut into ~100 ranges
+     per weight) and used to hold up the first paint of the boot screen; it
+     now loads alongside, and the text swaps in when it lands (display=swap). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
 <style>
 /* Instrument-cluster layout: the car owns the whole screen, and the UI is a
    set of dark glass pieces laid over it -- gauges along the top, a view
@@ -947,15 +952,15 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { rigJimny, applyConfig, updateSplit } from './rig.js?v=202609290500';
-import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609290500';
-import { buildAccessory, loadParts, getPart, allParts } from './accessories.js?v=202609290500';
-import { openAwning, roofTent, campExtra } from './camp.js?v=202609290500';
-import { buildWheel, loadTreadMasks } from './wheels.js?v=202609290500';
-import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609290500';
+import { rigJimny, applyConfig, updateSplit, loadFinishes } from './rig.js?v=202609290900';
+import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609290900';
+import { buildAccessory, initParts, ensureParts, prefetchParts, takeMissing, partNames, getPart, allParts } from './accessories.js?v=202609290900';
+import { openAwning, roofTent, campExtra } from './camp.js?v=202609290900';
+import { buildWheel, loadTreadMasks } from './wheels.js?v=202609290900';
+import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609290900';
 // Written by stamp.sh on each deploy; shown in the HUD so a stale cached copy
 // is obvious at a glance.
-const BUILD = '202609290500';
+const BUILD = '202609290900';
 
 const cv = document.getElementById('cv');
 // The backdrop is CSS behind a transparent canvas: a background texture in
@@ -1250,9 +1255,15 @@ function hangarCull(G) {
 // walls or the horizon.
 // In the garage `sky` is the hangar set; `rim` is stronger there, so the
 // roofline separates from the black behind it.
-const GARAGE = { file: 'env_autoshop_2k.hdr', hangar: true, softbox: 3.2, intensity: 1.85, key: 2.0, rim: 1.1,
+// Files (tools/prep_env.mjs, from the 2k originals in model-src/): `file` is
+// a 1k HDR for the reflections and the sun -- PMREM turns it into a 256 px
+// cube, and nobody can tell that from the 512 the 2k gave. Outdoors the
+// backdrop keeps its 2k detail as `skyFile`, an 8-bit WebP of the panorama
+// divided by `skyK`, multiplied back on the sky's material (0.3 MB, where
+// the 2k HDR was 6.5 MB). Each stage's files load only when it is chosen.
+const GARAGE = { file: 'env_autoshop_1k.hdr', hangar: true, softbox: 3.2, intensity: 1.85, key: 2.0, rim: 1.1,
   shadow: 0.5, exposure: 1.1, overhead: true, rot: Math.PI / 2, env: null, sky: null, loading: null, sun: null };
-const OUTDOOR = { file: 'env_goegap_2k.hdr', h: 1.8, r: 160, intensity: 1.0, key: 2.6, rim: 0.25,
+const OUTDOOR = { file: 'env_goegap_1k.hdr', skyFile: 'sky_goegap_2k.webp', skyK: 4, h: 1.8, r: 160, intensity: 1.0, key: 2.6, rim: 0.25,
   shadow: 0.5, exposure: 0.95, overhead: false, rot: 0, gain: 1, env: null, sky: null, loading: null, sun: null };
 const STAGES = { garage: GARAGE, outdoor: OUTDOOR };
 // 'studio' is the garage's old name, still in readers' storage
@@ -1288,8 +1299,14 @@ function softboxEnv(hdr, k) {
 }
 function loadStage(P) {
   if (P.loading) return P.loading;
+  const skyTex = P.skyFile && new Promise((res, rej) => new THREE.TextureLoader().load(`model/${P.skyFile}?v=${BUILD}`, (t) => {
+    // as the HDR was: sampled straight, no mipmaps
+    t.colorSpace = THREE.SRGBColorSpace; t.generateMipmaps = false; t.minFilter = THREE.LinearFilter;
+    res(t);
+  }, undefined, rej));
+  skyTex?.catch(() => {});             // handled where it is awaited
   P.loading = new Promise((res, rej) => new RGBELoader().setDataType(THREE.FloatType)
-    .load(`model/${P.file}?v=${BUILD}`, (hdr) => {
+    .load(`model/${P.file}?v=${BUILD}`, async (hdr) => {
       hdr.mapping = THREE.EquirectangularReflectionMapping;
       P.sun = sunFrom(hdr);
       // The sun's pixels run to tens of thousands; through the half-float
@@ -1300,7 +1317,11 @@ function loadStage(P) {
       hdr.needsUpdate = true;
       P.env = P.hangar ? softboxEnv(hdr, P.softbox) : pmrem.fromEquirectangular(hdr).texture;
       if (P.hangar) { P.sky = buildHangar(P.env, P.rot); hdr.dispose(); }
-      else { P.sky = new GroundedSkybox(hdr, P.h, P.r); P.sky.position.y = P.h - 0.01; }
+      else {
+        let map = hdr;
+        if (skyTex) try { map = await skyTex; hdr.dispose(); } catch { map = hdr; P.skyK = 1; }
+        P.sky = new GroundedSkybox(map, P.h, P.r); P.sky.position.y = P.h - 0.01;
+      }
       res();
     }, undefined, (e) => { P.loading = null; rej(e); }));
   return P.loading;
@@ -1325,7 +1346,7 @@ async function setStage(name) {
   // `rot` turns the room so the view the page opens on looks at its best
   // wall; the reflections turn with it. `gain` lifts the backdrop alone.
   scene.environmentRotation.set(0, P.rot, 0);
-  if (!P.hangar) { P.sky.rotation.y = P.rot; P.sky.material.color.setScalar(P.gain); }
+  if (!P.hangar) { P.sky.rotation.y = P.rot; P.sky.material.color.setScalar(P.gain * (P.skyK ?? 1)); }
   scene.add(P.sky);
   scene.environment = P.env; scene.environmentIntensity = P.intensity;
   // Indoors the light is the whole ceiling: a key from nearly straight above
@@ -1345,8 +1366,11 @@ async function setStage(name) {
 document.getElementById('stagePick').onclick = (e) => { const b = e.target.closest('[data-stage]'); if (b && !b.disabled) setStage(b.dataset.stage); };
 // outdoors by default; a reader who picked the garage keeps it. The shot
 // tools (webdriver) always get the garage their cards are framed for.
+// The boot screen stays up until this stage is on, so the first picture is
+// the finished one.
+let stageBoot;
 { let st = null; try { st = localStorage.getItem('jimny.stage'); } catch {}
-  setStage(navigator.webdriver || stageKey(st) === 'garage' ? 'garage' : 'outdoor'); }
+  stageBoot = setStage(navigator.webdriver || stageKey(st) === 'garage' ? 'garage' : 'outdoor'); }
 // for the shot tools: they wait on `at` before shooting
 window.__jimnyStage = { get at() { return stageAt; }, get ready() { return !!STAGES[stageAt].sky && scene.environment === STAGES[stageAt].env; },
   set: setStage, STAGES, renderer, kl };
@@ -1531,22 +1555,79 @@ const loader = new GLTFLoader();
 const draco = new DRACOLoader();
 draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/libs/draco/');
 loader.setDRACOLoader(draco);
-// Staged so the car appears as early as it can. The wheels (540 KB) and the
-// tread masks have to be in before the first frame; the accessories (7.4 MB)
-// do not, so they stream in behind and the scene is rebuilt when they land.
-const firstFrame = Promise.all([loadParts(loader, `model/rims.glb?v=${BUILD}`, THREE),
-                                loadTreadMasks(TYRE_MODELS, `model/tread/`)]);
-let accessoriesIn = false, accessoriesReady = null;
-/** Only once the car is on screen. Pulling the body (7.3 MB) and the
-    accessories (7.6 MB) at the same time costs the body the bandwidth it
-    needs and stacks two draco decodes in memory, which is how a phone in an
-    in-app browser ends up reporting a bare "Load failed". */
-const loadAccessories = () => accessoriesReady ??=
-  loadParts(loader, `model/parts.glb?v=${BUILD}`, THREE).then(() => {
-    accessoriesIn = true;
-    if (rig) update();                     // whatever is selected now gets built
-    setTimeout(warmShaders, 2500);         // after the intro camera move
+// Staged so the car appears as early as it can. The tread masks and the list
+// of parts have to be in before the first frame; each part is its own small
+// file (accessories.js), and only those the car on screen wears are fetched
+// before the boot screen lifts. The rest stream in behind (prefetchRest).
+const firstFrame = Promise.all([
+  initParts({ loader, THREE, base: 'model/parts/', build: BUILD, finishes: loadFinishes }).then(() => {
+    // Start on the parts the opening car will wear while the body is still
+    // downloading. A guess from the style's settings: whatever it misses,
+    // the first update() asks for, and the boot waits for those too.
+    try { ensureParts(guessParts(bootState())); } catch {}
+  }),
+  loadTreadMasks(TYRE_MODELS, `model/tread/`)]);
+let accessoriesIn = false;
+/** The settings the page will open on: a catalogue link's own, a returning
+    reader's last style, or the hero style. */
+function bootState() {
+  const q = new URLSearchParams(location.search);
+  if ([...q.keys()].some(k => k in DEF)) return null;       // a link: update() will say
+  let seen = null;
+  try { seen = localStorage.getItem('jimny.style'); } catch {}
+  const st = ALL_STYLES.find(x => x.id === seen) ?? ALL_STYLES.find(x => x.id === HERO_STYLE);
+  return st ? normFinish({ ...DEF, ...st.set }) : null;
+}
+// state key -> the prefix its parts carry in the library
+const PART_PREFIX = { spareCoverKit: 'spareCover', wheel: 'rim' };
+const prefixOf = (k) => PART_PREFIX[k] ?? (/^arb[A-Z]/.test(k) ? 'arbAcc' : k);
+/** Part names these settings probably draw (a superset is harmless). */
+function guessParts(st) {
+  if (!st) return [];
+  const names = partNames(), out = ['plate_stockFront', 'plate_stockRear', `rim_${find(WHEELS, st.wheel).style}`];
+  for (const [k, v] of Object.entries(st)) {
+    if (k === 'wheel' || v === DEF[k] || v === false || v === 'none' || v === 'stock') continue;
+    const p = prefixOf(k);
+    const acc = ARB_RACK_ACC.find(a => a.key === k);
+    if (acc) { out.push(`arbAcc_${acc.part}`); continue; }
+    if (v === true) { out.push(p); continue; }
+    const e = ALL_LISTS[k]?.find(x => x.id === v);
+    for (const id of new Set([v, e?.node].filter(x => typeof x === 'string')))
+      for (const n of names) if (n === `${p}_${id}` || n.startsWith(`${p}_${id}_`)) out.push(n);
+  }
+  return out;
+}
+/** Every part a category of the dock can put on the car. */
+function partsOfCat(c) {
+  const pre = [...new Set(Object.keys(DEF).filter(k => groupOf(k)[0] === c).map(prefixOf))];
+  return partNames().filter(n => pre.some(p => n === p || n.startsWith(p + '_')));
+}
+// A part that was asked for before it arrived: fetch it, then draw again.
+// The parts that were to fade in when their choice changed still do, when
+// they land (`lateSettle`), rather than popping on.
+let partsArriving = null, lateSettle = new Set();
+function fetchMissing(miss) {
+  const p = partsArriving = ensureParts(miss).then(() => {
+    // a wheel drawn before its face arrived was built without it
+    if (miss.some(n => n.startsWith('rim_')) && rig) { rig.userData.wheelCache?.clear(); rig.userData.wheelKey = null; }
+    if (rig) update();
+    if (partsArriving === p) partsArriving = null;
   });
+}
+/** Resolves once everything the car on screen wears is on it. */
+async function partsSettled() {
+  while (partsArriving) await partsArriving;
+}
+/** Everything else, a couple of files at a time, once the car is up: the
+    wheels first (the most likely next pick), then the rest. Shaders are
+    warmed for what has arrived as it arrives. */
+let restStarted = false;
+function prefetchRest() {
+  if (restStarted) return; restStarted = true;
+  const names = partNames();
+  prefetchParts([...names.filter(n => n.startsWith('rim_')), ...names.filter(n => !n.startsWith('rim_'))])
+    .then(() => setTimeout(warmShaders, 500));
+}
 /**
  * Compile every part's shaders while nobody is doing anything, so the first
  * time a bumper or a rack is picked it does not stall on building its
@@ -1556,11 +1637,13 @@ const loadAccessories = () => accessoriesReady ??=
  * the stall it is there to prevent. The copies are kept: releasing the last
  * user of a program deletes it.
  */
-const WARM = [];
+const WARM = [], WARM_SEEN = new Set();
+let outlineWarm = false;
 const PARALLEL = renderer.extensions.has('KHR_parallel_shader_compile');
 async function warmShaders() {
   const idle = () => new Promise(r => (window.requestIdleCallback ?? setTimeout)(() => r(), { timeout: 2000 }));
-  const paint = rig.userData.paintMat, seen = new Set(), todo = [];
+  // called again as more parts arrive; a material is only ever warmed once
+  const paint = rig.userData.paintMat, seen = WARM_SEEN, todo = [];
   const take = (geo, m) => { if (m && !seen.has(m)) { seen.add(m); todo.push([geo, m]); } };
   for (const node of allParts()) node.traverse((o) => {
     if (o.isMesh && o.material && !Array.isArray(o.material)) take(o.geometry, o.material.name === 'BodyPaint' ? paint : o.material);
@@ -1601,7 +1684,8 @@ async function warmShaders() {
   // The outline pass builds its own shaders the first time a part is
   // highlighted, which was the first part anyone fitted. Run it once into a
   // throwaway target, so nothing reaches the screen.
-  if (outline) {
+  if (outline && !outlineWarm) {
+    outlineWarm = true;
     await idle();
     const rt = new THREE.WebGLRenderTarget(4, 4);
     outline.selectedObjects = [accGroup.children[0] ?? rig];
@@ -1643,7 +1727,9 @@ function loadBody(tries = 0) {
   // inspection hook for headless verification scripts; harmless in the page
   window.__jimny = { THREE, rig, scene, cam, get composer() { return composer; }, get S() { return S; },
     update: () => update(), setOrbit: (o) => { Object.assign(orbit, o); applyCam(); },
-    set: (k, v) => { S[k] = v; buildUI(); update(); } };
+    set: (k, v) => { S[k] = v; buildUI(); update(); },
+    // resolves when every part the current settings draw is on the car
+    partsSettled: () => partsSettled() };
   await yieldFrame();
   // one stock render first, to line the model's measured height up with the
   // catalogue's 1730 mm before anything is bolted to it
@@ -1673,12 +1759,13 @@ function loadBody(tries = 0) {
   // (renderer.compileAsync is not the answer: without KHR_parallel_shader_compile
   // it blocks anyway, and it compiles every material in the scene, not the
   // handful this view actually shows.)
-  // The parts (bumpers, grilles, racks) come in second, still behind the
-  // overlay: lifting it with only the body loaded showed a bare nose for a
-  // few seconds before the style's parts popped on, which looked broken.
-  // Sequential, not parallel, for the phone-memory reason above.
+  // The parts (bumpers, grilles, racks) stay behind the overlay too: lifting
+  // it with only the body loaded showed a bare nose for a few seconds before
+  // the style's parts popped on, which looked broken. Only the parts this car
+  // wears are fetched here (most are already in, from guessParts); the shot
+  // tools get the whole library up front, since they fit part after part.
   $('bootmsg').textContent = '組裝零件…';
-  try { await loadAccessories(); } catch {}
+  if (navigator.webdriver) await ensureParts(partNames());
   buildStyles();
   // A first-time reader gets the style step; anyone who has been here before
   // gets the car, because making them dismiss the same screen every visit is
@@ -1689,6 +1776,11 @@ function loadBody(tries = 0) {
   // reader gets the style they last chose, a new one the two-tone showcase.
   if (!preset) loadStyle(ALL_STYLES.some(x => x.id === seen) ? seen : HERO_STYLE, false);
   else update();
+  // and wait for what that car wears, and for the stage it stands on
+  await partsSettled();
+  accessoriesIn = true;
+  $('hVer').textContent = `版本 ${BUILD}`;
+  await stageBoot.catch(() => {});
   await yieldFrame(); await yieldFrame();
   // Open on a high three-quarter and swing down to the working view while
   // the light comes up, rather than cutting to a finished picture. Started
@@ -1703,6 +1795,8 @@ function loadBody(tries = 0) {
   }
   $('boot').classList.add('gone');
   setTimeout(() => { $('boot').style.display = 'none'; }, 480);
+  // the rest of the library, behind the intro camera move
+  setTimeout(() => { warmShaders(); prefetchRest(); }, 2500);
   // A link from the catalogue opens the tray on the part it links; anyone
   // else gets the whole car, with the dock waiting underneath it.
   if (preset) { const k = [...q.keys()].find(x => x in DEF); const [c, g] = groupOf(k); openTray(c, g); }
@@ -1900,11 +1994,12 @@ function update() {
   const paint = rig.userData.paintMat;
   let flash = null;
   /** Add a part, and if it is the one that just changed, land it in place. */
+  const late = lateSettle; lateSettle = new Set();
   const add = (n, key) => {
-    if (!n) return;
+    if (!n) { if (key && (chg.has(key) || late.has(key))) lateSettle.add(key); return; }
     accGroup.add(n);
     if (key) { BUILT[key] = n; n.userData.__acc = `${key}=${S[key] === true ? 'on' : S[key]}`; }
-    if (key && chg.has(key) && prevS && !window.__jimnyStill) { settling.push(n); flash = n; }
+    if (key && (chg.has(key) || late.has(key)) && prevS && !window.__jimnyStill) { settling.push(n); flash = n; }
   };
   const settling = [];
   const spareOff = S.spareDelete !== 'none';
@@ -2060,6 +2155,9 @@ function update() {
   syncRails();
   // a rack, a tent or a lift changes the car's size: refit it
   VIEW.box = null; carBox(); frame(true);
+  // parts this drew without, because they have not arrived yet
+  const miss = takeMissing();
+  if (miss.length) fetchMissing(miss); else lateSettle.clear();
 }
 
 /**
@@ -2513,6 +2611,8 @@ const subAt = {};                       // category -> the sub-group last shown 
 const paneOf = (c) => document.querySelector(`.pane[data-p="${c}"]`);
 function openTray(c, g) {
   catAt = c;
+  // what this tray can fit goes to the front of the background fetch
+  if (restStarted) prefetchParts(partsOfCat(c), { front: true });
   closeBill(); setViewPop(false);
   document.body.classList.add('tray-open');
   document.querySelectorAll('#steps [data-s]').forEach(b => b.setAttribute('aria-selected', +b.dataset.s === c));
@@ -2868,7 +2968,7 @@ $('liftCards').onclick = e => { const b = e.target.closest('[data-l]'); if (!b) 
   document.querySelectorAll('#liftCards .card').forEach(x => x.setAttribute('aria-pressed', x === b));
   syncLift(); renderLadder(); update(); };
 
-/* ═══ 2 · wheels: thumbnails rendered from the same parts.glb ════════════ */
+/* ═══ 2 · wheels: thumbnails rendered from the same rim files═══════════ */
 // Grouping for the filter chips: parts.js marks the OEM and retro wheels
 // (`kind`); anything else is an off-road wheel. 台灣製 is its own filter and
 // only counts wheels with Made-in-Taiwan evidence (`mit: true`).
