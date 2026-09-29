@@ -22,6 +22,8 @@ let INDEX = null;                 // name -> bytes, from index.json
 let CTX = null;                   // { loader, THREE, base, build, finishes }
 const LOADING = new Map();        // name -> promise
 const FAILED = new Set();         // failed once: not asked for again this visit
+/** How many part files are on their way right now (the boot screen counts them down). */
+export const partsInFlight = () => LOADING.size;
 const MISSING = new Set();        // asked for while not loaded yet
 const MATS = new Map();           // one material per name across all the files
 
