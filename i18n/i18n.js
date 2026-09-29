@@ -12,8 +12,8 @@
 // loaded on demand: call `await setLang('ja')` before rendering Japanese text.
 // zh-TW needs no load (it is the text already in parts.js).
 
-import { STRINGS, LANGS } from './strings.js?v=202609291358';
-import { REGIONS, REGION_IDS, FX, convert, SYMBOL, AVAIL } from './markets.js?v=202609291358';
+import { STRINGS, LANGS } from './strings.js?v=202609291409';
+import { REGIONS, REGION_IDS, FX, convert, SYMBOL, AVAIL } from './markets.js?v=202609291409';
 
 export { LANGS, REGIONS, REGION_IDS, FX };
 

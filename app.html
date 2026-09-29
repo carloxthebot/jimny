@@ -21,7 +21,7 @@
      downloaded, parsed and run, which on a phone is seconds of an idle
      connection. (The parts themselves are named by the list.) -->
 <link rel="preload" as="fetch" type="model/gltf-binary" href="model/jimny-hq.glb" crossorigin>
-<link rel="preload" as="fetch" type="application/json" href="model/parts/index.json?v=202609291358" crossorigin>
+<link rel="preload" as="fetch" type="application/json" href="model/parts/index.json?v=202609291409" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- The fonts' stylesheet is 100 KB (Noto Sans TC is cut into ~100 ranges
@@ -80,7 +80,9 @@
   --ok:#62cd90; --warn:#f0b64a; --bad:#ff7d66;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --num:"Barlow Condensed","Archivo",sans-serif;
-  --cjk:"Noto Sans TC","PingFang TC";
+  /* the system face first: iPhones and Macs already have PingFang, so they
+     skip ~0.8 MB of web font on a first visit; others fall back to Noto */
+  --cjk:"PingFang TC","Noto Sans TC";
   --disp:"Archivo",var(--cjk),sans-serif;
   --body:var(--cjk),-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
@@ -90,7 +92,7 @@
 }
 /* Japanese: kanji in Japanese glyph shapes, not the Taiwanese ones; English:
    the Latin face throughout (the system CJK face covers any stray brand name) */
-:root[lang=ja]{--cjk:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo}
+:root[lang=ja]{--cjk:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",Meiryo}
 :root[lang=en]{--disp:"Archivo",-apple-system,BlinkMacSystemFont,sans-serif;
   --body:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 *{box-sizing:border-box}
@@ -1038,17 +1040,17 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { rigJimny, applyConfig, updateSplit, loadFinishes } from './rig.js?v=202609291358';
-import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609291358';
-import { buildAccessory, initParts, ensureParts, prefetchParts, takeMissing, partNames, getPart, allParts } from './accessories.js?v=202609291358';
-import { openAwning, roofTent, campExtra } from './camp.js?v=202609291358';
-import { buildWheel, loadTreadMasks } from './wheels.js?v=202609291358';
-import * as PARTS from './parts.js?v=202609291358';
+import { rigJimny, applyConfig, updateSplit, loadFinishes } from './rig.js?v=202609291409';
+import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609291409';
+import { buildAccessory, initParts, ensureParts, prefetchParts, takeMissing, partNames, getPart, allParts } from './accessories.js?v=202609291409';
+import { openAwning, roofTent, campExtra } from './camp.js?v=202609291409';
+import { buildWheel, loadTreadMasks } from './wheels.js?v=202609291409';
+import * as PARTS from './parts.js?v=202609291409';
 import { t as T, setLang, getLang, detectLang, detectRegion, setRegion, localizeCatalogue, zhOf, price, toRegion, formatTotal,
-  currencyOf, roundApprox, money as fmtMoney, available, marketName, parkingApplies, REGIONS, REGION_IDS, LANGS, FX } from './i18n/i18n.js?v=202609291358';
+  currencyOf, roundApprox, money as fmtMoney, available, marketName, parkingApplies, REGIONS, REGION_IDS, LANGS, FX } from './i18n/i18n.js?v=202609291409';
 // Written by stamp.sh on each deploy; shown in the HUD so a stale cached copy
 // is obvious at a glance.
-const BUILD = '202609291358';
+const BUILD = '202609291409';
 
 /* ═══ language and region ════════════════════════════════════════════════
    Two settings (i18n/i18n.js): the language of every word on the page, and
@@ -1364,9 +1366,13 @@ function hangarCull(G) {
 // backdrop keeps its 2k detail as `skyFile`, an 8-bit WebP of the panorama
 // divided by `skyK`, multiplied back on the sky's material (0.3 MB, where
 // the 2k HDR was 6.5 MB). Each stage's files load only when it is chosen.
-const GARAGE = { file: 'env_autoshop_1k.hdr', hangar: true, softbox: 3.2, intensity: 1.85, key: 2.0, rim: 1.1,
+// phones and tablets: lighter stage images, and no whole-library prefetch
+const LITE = matchMedia('(pointer: coarse)').matches || /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent)
+  || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent)) || (navigator.deviceMemory ?? 8) <= 4;
+const ENV_RES = LITE ? '512' : '1k';
+const GARAGE = { file: `env_autoshop_${ENV_RES}.hdr`, hangar: true, softbox: 3.2, intensity: 1.85, key: 2.0, rim: 1.1,
   shadow: 0.5, exposure: 1.1, overhead: true, rot: Math.PI / 2, env: null, sky: null, loading: null, sun: null };
-const OUTDOOR = { file: 'env_goegap_1k.hdr', skyFile: 'sky_goegap_2k.webp', skyK: 4, h: 1.8, r: 160, intensity: 1.0, key: 2.6, rim: 0.25,
+const OUTDOOR = { file: `env_goegap_${ENV_RES}.hdr`, skyFile: 'sky_goegap_2k.webp', skyK: 4, h: 1.8, r: 160, intensity: 1.0, key: 2.6, rim: 0.25,
   shadow: 0.5, exposure: 0.95, overhead: false, rot: 0, gain: 1, env: null, sky: null, loading: null, sun: null };
 const STAGES = { garage: GARAGE, outdoor: OUTDOOR };
 // 'studio' is the garage's old name, still in readers' storage
@@ -1754,8 +1760,7 @@ async function partsSettled() {
     warmed for what has arrived as it arrives. */
 let restStarted = false;
 // phones and tablets: no whole-library prefetch or shader warm-up
-const LOWMEM = matchMedia('(pointer: coarse)').matches || /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent)
-  || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent)) || (navigator.deviceMemory ?? 8) <= 4;
+const LOWMEM = LITE;
 function prefetchRest() {
   if (restStarted) return; restStarted = true;
   const names = partNames();
