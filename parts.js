@@ -1242,92 +1242,101 @@ export const OTHERS = [
 
 
 /** Which warnings apply to a configuration. Pure function so the UI and any
- *  future export share one source of truth. */
-export function validate(cfg, { tyre, lift, bodyLift, wheel }) {
+ *  future export share one source of truth.
+ *  `t` (optional) is i18n.js t(): each message then comes from its
+ *  'validate.*' string in the page's language (the catalogue labels in it are
+ *  whatever language the catalogue objects are in). Without it, the zh-TW
+ *  text below, for node tools. */
+export function validate(cfg, { tyre, lift, bodyLift, wheel }, t) {
   const out = [];
+  const say = (key, vars, zh) => (t ? t('validate.' + key, vars) : zh);
+  const sep = t ? t('validate.listSep') : '、';
   const totalLift = (lift?.lift ?? 0) + (bodyLift?.body ?? 0);
   // Lowering is not "insufficient lifting". A road tyre that needs no lift is
   // fine on a lowered car, so the comparison floors at stock height; a tyre
   // that genuinely needs clearance still fails, and gets told the real gap.
   if (tyre.needLift > Math.max(totalLift, 0)) {
     out.push({ level: 'error',
-      msg: `${tyre.label} 需要約 ${tyre.needLift}mm 舉升，目前${totalLift < 0 ? `是降低 ${-totalLift}mm` : `只有 ${totalLift}mm`}` });
+      msg: totalLift < 0 ? say('tyreNeedsLiftLowered', { tyre: tyre.label, need: tyre.needLift, low: -totalLift }, `${tyre.label} 需要約 ${tyre.needLift}mm 舉升，目前是降低 ${-totalLift}mm`)
+        : say('tyreNeedsLift', { tyre: tyre.label, need: tyre.needLift, have: totalLift }, `${tyre.label} 需要約 ${tyre.needLift}mm 舉升，目前只有 ${totalLift}mm`) });
   }
   if (totalLift < 0 && tyre.dia > 700) {
     out.push({ level: 'warn',
-      msg: `降低 ${-totalLift}mm 配 ${tyre.label}（外徑 ${tyre.dia}mm）：車身壓低又用大外徑胎，滿載或過坑時輪拱內襯容易磨到` });
+      msg: say('loweredBigTyre', { low: -totalLift, tyre: tyre.label, dia: tyre.dia }, `降低 ${-totalLift}mm 配 ${tyre.label}（外徑 ${tyre.dia}mm）：車身壓低又用大外徑胎，滿載或過坑時輪拱內襯容易磨到`) });
   }
   if (tyre.needBody > (bodyLift?.body ?? 0)) {
     out.push({ level: 'error',
-      msg: `${tyre.label} 實務上需要 ${tyre.needBody}mm 車身舉升才有足夠輪拱空間` });
+      msg: say('tyreNeedsBody', { tyre: tyre.label, need: tyre.needBody }, `${tyre.label} 實務上需要 ${tyre.needBody}mm 車身舉升才有足夠輪拱空間`) });
   }
   if (tyre.rim !== wheel.rim) {
-    out.push({ level: 'error', msg: `${tyre.label} 是 ${tyre.rim} 吋胎，但輪框是 ${wheel.rim} 吋` });
+    out.push({ level: 'error', msg: say('rimMismatch', { tyre: tyre.label, tyreRim: tyre.rim, wheelRim: wheel.rim }, `${tyre.label} 是 ${tyre.rim} 吋胎，但輪框是 ${wheel.rim} 吋`) });
   }
   if (tyre.legal === false) {
-    out.push({ level: 'warn', msg: `${tyre.label} 超出澳洲法規上限（235/75R15）；各地法規請自行確認` });
+    out.push({ level: 'warn', msg: say('tyreIllegal', { tyre: tyre.label }, `${tyre.label} 超出澳洲法規上限（235/75R15）；各地法規請自行確認`) });
   }
   if (tyre.severe) {
-    out.push({ level: 'warn', msg: '33 吋需要減速齒輪（17/87），否則一檔起步與油耗會明顯惡化' });
+    out.push({ level: 'warn', msg: say('tyreSevere', null, '33 吋需要減速齒輪（17/87），否則一檔起步與油耗會明顯惡化') });
   }
   if ((lift?.lift ?? 0) >= 75) {
-    out.push({ level: 'info', msg: '75mm 以上需 Caster 修正、可調橫拉桿、延長煞車油管與緩衝塊' });
+    out.push({ level: 'info', msg: say('lift75', null, '75mm 以上需 Caster 修正、可調橫拉桿、延長煞車油管與緩衝塊') });
   }
   if ((lift?.lift ?? 0) > 0 && (lift?.lift ?? 0) <= 50 && tyre.needBody > 0) {
-    out.push({ level: 'info', msg: '懸吊舉升只抬靜態高度，壓縮行程時輪拱空間不變 — 這是要加車身舉升的原因' });
+    out.push({ level: 'info', msg: say('liftStatic', null, '懸吊舉升只抬靜態高度，壓縮行程時輪拱空間不變 — 這是要加車身舉升的原因') });
   }
   if (wheel.offset <= -20) {
-    out.push({ level: 'info', msg: `offset ${wheel.offset} 會明顯外擴輪距，需確認輪拱覆蓋與法規` });
+    out.push({ level: 'info', msg: say('offset', { offset: wheel.offset }, `offset ${wheel.offset} 會明顯外擴輪距，需確認輪拱覆蓋與法規`) });
   }
   if (cfg.extinguisher === 'ladder' && cfg.ladder === 'none') {
-    out.push({ level: 'error', msg: '滅火器掛在尾梯上，但目前沒有裝尾梯' });
+    out.push({ level: 'error', msg: say('extNoLadder', null, '滅火器掛在尾梯上，但目前沒有裝尾梯') });
   }
   if ((cfg.extinguisher === 'left' || cfg.extinguisher === 'right') && !cfg.windowGuards) {
-    out.push({ level: 'error', msg: '滅火器綁在鐵窗的 MOLLE 板上，但目前沒有裝鐵窗' });
+    out.push({ level: 'error', msg: say('extNoGuards', null, '滅火器綁在鐵窗的 MOLLE 板上，但目前沒有裝鐵窗') });
   }
   // JB74 roof load is 30 kg dynamic. A tray is 14-18 kg on its own, so a
   // heavy light set on top of one is over the limit before anything is
   // strapped down.
   if (cfg.roofRack !== 'none' && (cfg.roofLights === 'kc_pro6' || cfg.lightBar === 'stedi_st4k')) {
     out.push({ level: 'warn',
-      msg: 'JB74 車頂動態載重只有 30kg；平盤車頂架 14–18kg 加上這組燈（KC Pro6 11.3kg／ST4K 6.6kg）已經吃滿，不要再放行李' });
+      msg: say('roofLoadLights', null, 'JB74 車頂動態載重只有 30kg；平盤車頂架 14–18kg 加上這組燈（KC Pro6 11.3kg／ST4K 6.6kg）已經吃滿，不要再放行李') });
   }
   if (cfg.face && cfg.face !== 'none' && (cfg.frontBumper !== 'stock' || cfg.grille !== 'stock' || cfg.grilleLight !== 'none')) {
-    out.push({ level: 'error', msg: '換臉套件已經包含水箱罩、頭燈與前保桿，前保桿、水箱護罩與車頭燈條請維持原廠' });
+    out.push({ level: 'error', msg: say('faceConflict', null, '換臉套件已經包含水箱罩、頭燈與前保桿，前保桿、水箱護罩與車頭燈條請維持原廠') });
   }
   // IPF's 968 pair with no rack stands on the JS-001 grille stay, in front
   // of the stock grille over a cut stock bumper
   if (cfg.roofLights === 'round' && cfg.roofRack === 'none') {
     if ((cfg.face && cfg.face !== 'none') || cfg.grilleLight === 'rally')
-      out.push({ level: 'error', msg: '沒有車頂架時 IPF 968 圓燈裝在水箱罩前的 JS-001 燈架上，跟換臉套件或 STEDI Rally Bar 佔同一個位置；請加裝車頂架讓圓燈上架，或拿掉其中一樣' });
+      out.push({ level: 'error', msg: say('ipfNoRackConflict', null, '沒有車頂架時 IPF 968 圓燈裝在水箱罩前的 JS-001 燈架上，跟換臉套件或 STEDI Rally Bar 佔同一個位置；請加裝車頂架讓圓燈上架，或拿掉其中一樣') });
     else if (cfg.frontBumper !== 'stock')
-      out.push({ level: 'warn', msg: 'IPF JS-001 圓燈架是照原廠前保桿設計的（要裁切一部分）；換了社外前保桿能不能裝，要向店家確認' });
+      out.push({ level: 'warn', msg: say('ipfBumper', null, 'IPF JS-001 圓燈架是照原廠前保桿設計的（要裁切一部分）；換了社外前保桿能不能裝，要向店家確認') });
   }
   if (cfg.awning && cfg.awning !== 'none' && cfg.roofRack === 'none')
-    out.push({ level: 'error', msg: '車邊帳是鎖在車頂架側軌上的，目前沒有車頂架' });
+    out.push({ level: 'error', msg: say('awningNoRack', null, '車邊帳是鎖在車頂架側軌上的，目前沒有車頂架') });
   const gl = GRILLE_LIGHTS.find(g => g.id === cfg.grilleLight);
   if (gl?.needsBumper && (cfg.frontBumper !== gl.needsBumper || (cfg.face && cfg.face !== 'none')))
-    out.push({ level: 'error', msg: `${gl.label}鎖在 ${FRONT_BUMPERS.find(b => b.id === gl.needsBumper)?.label ?? gl.needsBumper} 的燈孔上，目前沒有裝這支保桿` });
+    out.push({ level: 'error', msg: say('grilleLightBumper', { light: gl.label, bumper: FRONT_BUMPERS.find(b => b.id === gl.needsBumper)?.label ?? gl.needsBumper }, `${gl.label}鎖在 ${FRONT_BUMPERS.find(b => b.id === gl.needsBumper)?.label ?? gl.needsBumper} 的燈孔上，目前沒有裝這支保桿`) });
   // ── ARB BASE Rack accessories (docs/jb74-arb-rack-accessories.json)
   if (cfg.roofRack === 'arb') {
     const rails = ARB_RACK_ACC.filter(a => a.group === 'rail' && cfg[a.key]);
     if (rails.length > 1)
-      out.push({ level: 'error', msg: `ARB 護欄只能選一種：${rails.map(a => a.label).join('、')}不能同時裝，要整圈就選全圍護欄 1780080` });
+      out.push({ level: 'error', msg: say('arbRails', { rails: rails.map(a => a.label).join(sep) }, `ARB 護欄只能選一種：${rails.map(a => a.label).join('、')}不能同時裝，要整圈就選全圍護欄 1780080`) });
     if (cfg.shovel && (cfg.arbJack || cfg.arbShovel))
-      out.push({ level: 'warn', msg: cfg.arbShovel ? '已經裝了 ARB 鏟子架，另一個「車頂架鏟子」不重複畫'
-        : '「車頂架鏟子」的位置被 Hi-Lift 千斤頂架佔走了，沒有畫；要帶鏟子請改用 ARB 鏟子架（1780270）' });
+      out.push({ level: 'warn', msg: cfg.arbShovel ? say('arbShovelDup', null, '已經裝了 ARB 鏟子架，另一個「車頂架鏟子」不重複畫')
+        : say('arbShovelJack', null, '「車頂架鏟子」的位置被 Hi-Lift 千斤頂架佔走了，沒有畫；要帶鏟子請改用 ARB 鏟子架（1780270）') });
     // published weights only: the jack (Hi-Lift), two MAXTRAX (MAXTRAX), the Slimline bar (ARB)
     const kg = (cfg.arbJack ? 12.77 : 0) + (cfg.arbBoards ? 6.8 : 0) + (cfg.arbLights ? 3.07 : 0) + (cfg.arbJerry ? 40 : 0);
     if (kg > 12)
-      out.push({ level: 'warn', msg: `JB74 車頂動態載重 30kg（含車頂架）；貨架上${[cfg.arbJack && 'Hi-Lift 12.77kg', cfg.arbBoards && 'MAXTRAX 兩片 6.8kg', cfg.arbLights && '燈條 3.07kg', cfg.arbJerry && '兩桶油約 40kg'].filter(Boolean).join('、')}，還沒算架子本身（經銷商轉載約 17kg，ARB 未公布）` });
+      out.push({ level: 'warn', msg: t
+        ? t('validate.arbLoad', { items: [cfg.arbJack && 'jack', cfg.arbBoards && 'boards', cfg.arbLights && 'lights', cfg.arbJerry && 'jerry'].filter(Boolean).map(k => t('validate.arbLoad.' + k)).join(sep) })
+        : `JB74 車頂動態載重 30kg（含車頂架）；貨架上${[cfg.arbJack && 'Hi-Lift 12.77kg', cfg.arbBoards && 'MAXTRAX 兩片 6.8kg', cfg.arbLights && '燈條 3.07kg', cfg.arbJerry && '兩桶油約 40kg'].filter(Boolean).join('、')}，還沒算架子本身（經銷商轉載約 17kg，ARB 未公布）` });
   }
   const tent = TENTS.find(t => t.id === cfg.tent);
   if (tent && tent.id !== 'none') {
     if (tent.noRack && cfg.roofRack !== 'none')
-      out.push({ level: 'error', msg: `${tent.label}直接鎖在車頂、不用車頂架，兩者不能同時裝` });
+      out.push({ level: 'error', msg: say('tentNoRackConflict', { tent: tent.label }, `${tent.label}直接鎖在車頂、不用車頂架，兩者不能同時裝`) });
     if (!tent.noRack && cfg.roofRack === 'none')
-      out.push({ level: 'error', msg: `${tent.label}要裝在車頂架上，目前沒有車頂架` });
-    out.push({ level: 'warn', msg: `JB74 車頂載重 30kg（Suzuki 型錄，含車頂架自重）；這頂帳篷本身 ${tent.weight}kg，${tent.noRack ? '' : '還沒算車頂架，'}已經超過` });
+      out.push({ level: 'error', msg: say('tentNeedsRack', { tent: tent.label }, `${tent.label}要裝在車頂架上，目前沒有車頂架`) });
+    out.push({ level: 'warn', msg: say(tent.noRack ? 'tentLoad' : 'tentLoadRack', { kg: tent.weight }, `JB74 車頂載重 30kg（Suzuki 型錄，含車頂架自重）；這頂帳篷本身 ${tent.weight}kg，${tent.noRack ? '' : '還沒算車頂架，'}已經超過`) });
   }
   // ── spare delete and the bare tailgate (docs/jb74-spare-delete.json)
   const pick = (L, k) => (L.find(x => x.id === cfg[k]) ?? L[0]);
@@ -1336,57 +1345,57 @@ export function validate(cfg, { tyre, lift, bodyLift, wheel }) {
   const car = pick(CARRIERS, 'carrier'), hitch = pick(HITCHES, 'hitch');
   const rb = REAR_BUMPERS.find(x => x.id === cfg.rearBumper) ?? {};
   const lad = LADDERS.find(x => x.id === cfg.ladder);
-  const carName = car.label?.split('＋')[0];
+  const carName = car.label?.split(/＋| \+ /)[0];
   if (!off && tg.length)
-    out.push({ level: 'error', msg: `${tg.map(t => t.label).join('、')}裝在拿掉備胎後的背門上，目前備胎還在` });
+    out.push({ level: 'error', msg: say('tgNeedsDelete', { items: tg.map(x => x.label).join(sep) }, `${tg.map(x => x.label).join('、')}裝在拿掉備胎後的背門上，目前備胎還在`) });
   if (off && (cfg.spareBag || cfg.spareCover || (cfg.spareCoverKit && cfg.spareCoverKit !== 'none')))
-    out.push({ level: 'error', msg: '備胎已經拿掉，備胎書包／備胎蓋沒有地方裝' });
+    out.push({ level: 'error', msg: say('spareGone', null, '備胎已經拿掉，備胎書包／備胎蓋沒有地方裝') });
   if (del.centrePlate && tg.length)
-    out.push({ level: 'error', msg: `${del.label}把車牌裝在背門中央，跟${tg.map(t => t.label).join('、')}搶同一個位置` });
+    out.push({ level: 'error', msg: say('centrePlate', { del: del.label, items: tg.map(x => x.label).join(sep) }, `${del.label}把車牌裝在背門中央，跟${tg.map(x => x.label).join('、')}搶同一個位置`) });
   if (del.centrePlate && rb.tgPlate)
-    out.push({ level: 'warn', msg: '這款後保桿已經把車牌移到背門左側，不需要再裝中央車牌移位套件' });
+    out.push({ level: 'warn', msg: say('plateMoved', null, '這款後保桿已經把車牌移到背門左側，不需要再裝中央車牌移位套件') });
   const over = (a, b) => a && b && a[0] < b[1] && b[0] < a[1];
-  for (const t of [del, ...tg]) {
-    if (!t.xSpan) continue;
-    if (lad && lad.id !== 'none' && over(t.xSpan, lad.xSpan))
-      out.push({ level: t.thin ? 'warn' : 'error', msg: `${t.label}延伸到鉸鏈側，跟後爬梯（${lad.label}）位置重疊${t.thin ? '；爬梯固定座要壓在護板上，需現場確認' : ''}` });
-    if (rb.tgPlate && over(t.xSpan, [285, 615]))
-      out.push({ level: 'error', msg: `這款後保桿把車牌移到背門左側（離中心 285–615mm），會被${t.label}蓋住` });
+  for (const t0 of [del, ...tg]) {
+    if (!t0.xSpan) continue;
+    if (lad && lad.id !== 'none' && over(t0.xSpan, lad.xSpan))
+      out.push({ level: t0.thin ? 'warn' : 'error', msg: say(t0.thin ? 'ladderOverlapThin' : 'ladderOverlap', { item: t0.label, ladder: lad.label }, `${t0.label}延伸到鉸鏈側，跟後爬梯（${lad.label}）位置重疊${t0.thin ? '；爬梯固定座要壓在護板上，需現場確認' : ''}`) });
+    if (rb.tgPlate && over(t0.xSpan, [285, 615]))
+      out.push({ level: 'error', msg: say('plateCovered', { item: t0.label }, `這款後保桿把車牌移到背門左側（離中心 285–615mm），會被${t0.label}蓋住`) });
   }
-  const bolted = tg.filter(t => !t.thin);
+  const bolted = tg.filter(x => !x.thin);
   if (bolted.length > 1)
-    out.push({ level: 'error', msg: `${bolted.map(t => t.label).join('、')}都鎖在同一組備胎架孔上，只能擇一` });
+    out.push({ level: 'error', msg: say('tgOneOnly', { items: bolted.map(x => x.label).join(sep) }, `${bolted.map(x => x.label).join('、')}都鎖在同一組備胎架孔上，只能擇一`) });
   if (car.id !== 'none') {
     if (car.needsSpare) {
-      if (off) out.push({ level: 'error', msg: `${carName}是夾在備胎上的，備胎拿掉就裝不上` });
-      if (hitch.id !== 'none') out.push({ level: 'info', msg: '這款車架夾在備胎上，不用拖車座' });
+      if (off) out.push({ level: 'error', msg: say('carrierNeedsSpare', { carrier: carName }, `${carName}是夾在備胎上的，備胎拿掉就裝不上`) });
+      if (hitch.id !== 'none') out.push({ level: 'info', msg: say('carrierNoHitch', null, '這款車架夾在備胎上，不用拖車座') });
     } else {
       if (hitch.id === 'none' && !rb.receiver)
-        out.push({ level: 'error', msg: `${carName}插在拖車座上，目前沒有拖車座（後保桿也沒有自帶接收座）` });
+        out.push({ level: 'error', msg: say('carrierNeedsHitch', { carrier: carName }, `${carName}插在拖車座上，目前沒有拖車座（後保桿也沒有自帶接收座）`) });
       if (car.needsDelete && !off)
-        out.push({ level: 'error', msg: `${carName}的軌道離車尾只有約 470mm，裝著備胎時機車把手會撞到備胎，要先拿掉備胎` });
+        out.push({ level: 'error', msg: say('carrierNeedsDelete', { carrier: carName }, `${carName}的軌道離車尾只有約 470mm，裝著備胎時機車把手會撞到備胎，要先拿掉備胎`) });
       if (car.ball && !hitch.euroBall)
-        out.push({ level: 'error', msg: `${carName}夾在 50mm 歐規拖車球上；這個拖車座沒有標示可換歐規球（グローバルタイト強化型可選）` });
+        out.push({ level: 'error', msg: say('carrierEuroBall', { carrier: carName }, `${carName}夾在 50mm 歐規拖車球上；這個拖車座沒有標示可換歐規球（グローバルタイト強化型可選）`) });
       // a bar's own receiver carries no published vertical rating
       const vl = hitch.id !== 'none' && !rb.receiver ? hitch.vload : null;
-      if (rb.receiver) out.push({ level: 'info', msg: `${rb.label}自帶的接收座沒有公布垂直荷重；日本市售 JB74 拖車座是 75–100kg，照這個範圍估` });
+      if (rb.receiver) out.push({ level: 'info', msg: say('receiverNoRating', { bumper: rb.label }, `${rb.label}自帶的接收座沒有公布垂直荷重；日本市售 JB74 拖車座是 75–100kg，照這個範圍估`) });
       const full = car.weight + (car.load ?? car.cap);
       if (vl && full > vl) out.push(car.load
-        ? { level: 'error', msg: `拖車座垂直荷重 ${vl}kg；示意機車 ${car.load}kg ＋車架 ${car.weight}kg ＝ ${Math.round(full)}kg，超過 ${Math.round(full - vl)}kg。日本市售 JB74 拖車座最高只有 100kg，50–125cc 機車都超過` }
-        : { level: 'warn', msg: `拖車座垂直荷重 ${vl}kg；車架 ${car.weight}kg 加滿載 ${car.cap}kg ＝ ${Math.round(full)}kg，兩台都載到上限會超過` });
-      out.push({ level: 'info', msg: 'JB74 背門是側開的，車架載著車時背門打不開，要先卸車' });
+        ? { level: 'error', msg: say('hitchOverload', { vl, load: car.load, weight: car.weight, full: Math.round(full), over: Math.round(full - vl) }, `拖車座垂直荷重 ${vl}kg；示意機車 ${car.load}kg ＋車架 ${car.weight}kg ＝ ${Math.round(full)}kg，超過 ${Math.round(full - vl)}kg。日本市售 JB74 拖車座最高只有 100kg，50–125cc 機車都超過`) }
+        : { level: 'warn', msg: say('hitchFull', { vl, weight: car.weight, cap: car.cap, full: Math.round(full) }, `拖車座垂直荷重 ${vl}kg；車架 ${car.weight}kg 加滿載 ${car.cap}kg ＝ ${Math.round(full)}kg，兩台都載到上限會超過`) });
+      out.push({ level: 'info', msg: say('tailgateBlocked', null, 'JB74 背門是側開的，車架載著車時背門打不開，要先卸車') });
     }
-    if (lad && lad.id !== 'none') out.push({ level: 'warn', msg: '後爬梯被車架上的車擋住，要先卸車才爬得上去' });
+    if (lad && lad.id !== 'none') out.push({ level: 'warn', msg: say('ladderBlocked', null, '後爬梯被車架上的車擋住，要先卸車才爬得上去') });
   }
   if (hitch.id !== 'none' && rb.receiver)
-    out.push({ level: 'warn', msg: `${rb.label}已經自帶拖車接收座，不需要另外裝拖車座` });
+    out.push({ level: 'warn', msg: say('receiverBuiltIn', { bumper: rb.label }, `${rb.label}已經自帶拖車接收座，不需要另外裝拖車座`) });
   else if (hitch.id !== 'none' && cfg.rearBumper && cfg.rearBumper !== 'stock')
-    out.push({ level: 'info', msg: '拖車座只標原廠後保桿相容；社外後保桿能不能一起裝，請向店家確認' });
+    out.push({ level: 'info', msg: say('hitchStockOnly', null, '拖車座只標原廠後保桿相容；社外後保桿能不能一起裝，請向店家確認') });
   if (cfg.exhaust === 'taniguchi_compe_r' && cfg.rearBumper !== 'stock') {
-    out.push({ level: 'warn', msg: 'TANIGUCHI Compe R 的管口要從後保桿右角穿出；社外後保桿沒有任何一家公布相容性，需實車確認' });
+    out.push({ level: 'warn', msg: say('compeR', null, 'TANIGUCHI Compe R 的管口要從後保桿右角穿出；社外後保桿沒有任何一家公布相容性，需實車確認') });
   }
   if ((cfg.exhaust === 'jaos_zs' || cfg.exhaust === 'showa_links') && cfg.rearBumper !== 'stock') {
-    out.push({ level: 'info', msg: '這套排氣管原廠保桿要局部裁切；換成社外後保桿後是否還需要修改，請向店家確認' });
+    out.push({ level: 'info', msg: say('exhaustTrim', null, '這套排氣管原廠保桿要局部裁切；換成社外後保桿後是否還需要修改，請向店家確認') });
   }
   return out;
 }

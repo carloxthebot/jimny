@@ -8,6 +8,9 @@
 <meta name="description" content="Jimny JB 74：Suzuki Jimny Sierra JB74 的 3D 改裝配置。懸吊、輪框輪胎、保桿、車頂架與燈具都照原廠資料建模，車高與價格即時算。">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Jimny JB 74">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:locale:alternate" content="ja_JP">
 <meta property="og:title" content="Jimny JB 74 · 3D 改裝配置">
 <meta property="og:description" content="Suzuki Jimny Sierra JB74 的 3D 改裝配置：選風格、升高、輪框輪胎與外觀件，看總車高、停車與零件預估。">
 <meta property="og:url" content="https://carloxthebot.github.io/jimny/app.html">
@@ -18,13 +21,47 @@
      downloaded, parsed and run, which on a phone is seconds of an idle
      connection. (The parts themselves are named by the list.) -->
 <link rel="preload" as="fetch" type="model/gltf-binary" href="model/jimny-hq.glb" crossorigin>
-<link rel="preload" as="fetch" type="application/json" href="model/parts/index.json?v=202609290900" crossorigin>
+<link rel="preload" as="fetch" type="application/json" href="model/parts/index.json?v=202609291026" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- The fonts' stylesheet is 100 KB (Noto Sans TC is cut into ~100 ranges
      per weight) and used to hold up the first paint of the boot screen; it
-     now loads alongside, and the text swaps in when it lands (display=swap). -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+     now loads alongside, and the text swaps in when it lands (display=swap).
+     Which CJK face it asks for depends on the language, so the language is
+     settled here, before anything paints: <html lang>, Noto Sans TC for
+     Chinese, Noto Sans JP for Japanese (kanji in Japanese glyph shapes), none
+     for English. The module re-derives the language through i18n/i18n.js;
+     this copy of the rule only keeps the first frame right. -->
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var get = function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  var L = { zh: 'zh-TW', 'zh-tw': 'zh-TW', 'zh-hant': 'zh-TW', en: 'en', ja: 'ja' };
+  var lang = L[(q.get('lang') || '').toLowerCase()] || get('jimny.lang');
+  if (lang !== 'zh-TW' && lang !== 'en' && lang !== 'ja') {
+    var r = (q.get('region') || get('jimny.region') || '').toLowerCase(), tz = '', nl = (navigator.language || '').toLowerCase();
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    // (the render/test tools run the page as zh-TW / Taiwan unless told otherwise)
+    if (!/^(tw|jp|us|au|eu|uk)$/.test(r)) r = navigator.webdriver ? 'tw' : tz === 'Asia/Taipei' ? 'tw' : tz === 'Asia/Tokyo' ? 'jp'
+      : /^(Australia|Europe|America|US)\//.test(tz) || tz === 'Pacific/Honolulu' ? 'us'
+      : /^zh-(tw|hant)/.test(nl) ? 'tw' : /^ja\b/.test(nl) ? 'jp'
+      : /^(en|de|fr|es|it|nl|pt|pl|sv|fi|da|cs|sk|sl|hu|ro|bg|hr|el|et|lv|lt|ga|mt)\b/.test(nl) ? 'us' : 'tw';
+    lang = r === 'tw' ? 'zh-TW' : r === 'jp' ? 'ja' : 'en';
+  }
+  window.__jimnyFont = function (lang) {
+    document.documentElement.lang = lang === 'zh-TW' ? 'zh-Hant' : lang;
+    var href = 'https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600'
+      + (lang === 'ja' ? '&family=Noto+Sans+JP:wght@400;500;700' : lang === 'zh-TW' ? '&family=Noto+Sans+TC:wght@400;500;700' : '') + '&display=swap';
+    var l = document.getElementById('fontcss');
+    if (l && l.getAttribute('href') === href) return;
+    var n = document.createElement('link'); n.rel = 'stylesheet'; n.media = 'print'; n.id = 'fontcss';
+    n.onload = function () { n.media = 'all'; if (l) l.remove(); };
+    n.href = href; document.head.appendChild(n);
+  };
+  window.__jimnyBootLang = lang;
+  window.__jimnyFont(lang);
+})();
+</script>
 <style>
 /* Instrument-cluster layout: the car owns the whole screen, and the UI is a
    set of dark glass pieces laid over it -- gauges along the top, a view
@@ -43,13 +80,19 @@
   --ok:#62cd90; --warn:#f0b64a; --bad:#ff7d66;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --num:"Barlow Condensed","Archivo",sans-serif;
-  --disp:"Archivo","Noto Sans TC","PingFang TC",sans-serif;
-  --body:"Noto Sans TC","PingFang TC",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --cjk:"Noto Sans TC","PingFang TC";
+  --disp:"Archivo",var(--cjk),sans-serif;
+  --body:var(--cjk),-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
   --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px);
   --gut:20px; --dockH:72px; --trayH:min(44vh,360px);
   --blur:blur(16px) saturate(1.25);
 }
+/* Japanese: kanji in Japanese glyph shapes, not the Taiwanese ones; English:
+   the Latin face throughout (the system CJK face covers any stray brand name) */
+:root[lang=ja]{--cjk:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo}
+:root[lang=en]{--disp:"Archivo",-apple-system,BlinkMacSystemFont,sans-serif;
+  --body:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 /* An in-app browser (LINE, Facebook) closes itself on a downward swipe, and
@@ -200,7 +243,7 @@ select:focus-visible,button:focus-visible,input:focus-visible,a:focus-visible{ou
   color:var(--ink2);padding:6px 10px 6px 8px;font-size:0;line-height:0}
 .stagepick button::before{content:"";width:15px;height:15px;background:currentColor;
   -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
-.stagepick button::after{content:attr(data-label);font:500 12px/1 var(--body)}
+.stagepick button::after{content:attr(data-label);font:500 12px/1 var(--body);white-space:nowrap}
 .stagepick button[aria-pressed=true]{background:var(--acc);color:var(--acc-ink)}
 .stagepick button[aria-pressed=true]::after{font-weight:700}
 .stagepick button[disabled]{cursor:progress;opacity:.75}
@@ -231,6 +274,7 @@ select:focus-visible,button:focus-visible,input:focus-visible,a:focus-visible{ou
   display:grid;justify-items:center;align-content:center;gap:3px;color:var(--ink2);-webkit-tap-highlight-color:transparent}
 .dock button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .dock button b{font:600 12.5px/1 var(--body);letter-spacing:.04em;white-space:nowrap}
+.dock button b .ls{display:none}
 .dock button i{font-style:normal;font:500 10px/1 var(--mono);color:var(--ink3);max-width:108px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dock button:hover{background:rgba(255,255,255,.06);color:var(--ink)}
 .dock button[aria-selected=true]{background:rgba(240,160,48,.16);color:var(--acc)}
@@ -282,7 +326,7 @@ body.tray-open .tray{transform:translate(-50%,0);opacity:1;visibility:visible;tr
 
 /* what is fitted right now: one line above the choices */
 .live{margin:0 0 9px;display:flex;gap:8px;align-items:baseline;min-width:0}
-.live::before{content:"現在";flex:none;font:600 10px/1 var(--mono);letter-spacing:.16em;color:var(--acc);padding:3px 6px;border:1px solid var(--acc-line);border-radius:4px}
+.live::before{content:var(--t-live,"現在");flex:none;font:600 10px/1 var(--mono);letter-spacing:.16em;color:var(--acc);padding:3px 6px;border:1px solid var(--acc-line);border-radius:4px}
 .live b{flex:none;font:600 13px/1.4 var(--body);color:var(--ink);max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .live p{margin:0;font:500 12px/1.5 var(--body);color:var(--ink2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .live:has(b:empty){display:none}
@@ -470,7 +514,8 @@ body.tray-open .credit{opacity:0;pointer-events:none}
 @keyframes billIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 .bill-h{display:flex;align-items:center;gap:10px;padding:14px 14px 12px 18px;border-bottom:1px solid var(--edge);flex:none}
 .bill-h h2{margin:0;font:700 17px/1 var(--body);letter-spacing:.08em}
-.bill-h small{font:500 10px/1 var(--mono);color:var(--ink3);letter-spacing:.1em}
+.bill-h small{display:block;margin-top:5px;font:500 10px/1.45 var(--mono);color:var(--ink3);letter-spacing:.1em}
+:root:not([lang=zh-Hant]) .bill-h small{letter-spacing:.02em}
 .bill-b{overflow-y:auto;overscroll-behavior:contain;padding:12px 18px 6px;flex:1;min-height:0}
 .bill-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--edge);border:1px solid var(--edge);border-radius:12px;overflow:hidden;margin-bottom:12px}
 .bill-sum div{background:rgba(12,18,20,.96);padding:9px 11px;display:grid;gap:3px}
@@ -537,6 +582,30 @@ body.tray-open .credit{opacity:0;pointer-events:none}
 @media(hover:none){#card .cx{display:block} #card img{aspect-ratio:16/8}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 
+/* ── language and region ───────────────────────────────────────────────── */
+.locbtn{position:absolute;top:calc(70px + var(--sat));left:calc(var(--gut) + var(--sal));display:flex;align-items:center;gap:6px;
+  padding:5px 11px 5px 7px;border-radius:99px;cursor:pointer;font:500 11px/1 var(--mono);color:var(--ink2);letter-spacing:.03em}
+.locbtn svg{width:16px;height:16px;flex:none}
+.locbtn[aria-expanded=true]{color:var(--acc);border-color:var(--acc-line)}
+.locpop{position:absolute;top:calc(104px + var(--sat));left:calc(var(--gut) + var(--sal));width:280px;padding:12px;border-radius:14px;
+  z-index:6;background:rgba(12,18,20,.94)}
+.lseg{display:flex;gap:2px;padding:2px;border-radius:9px;background:rgba(255,255,255,.05)}
+.lseg button{flex:1;border:0;background:none;cursor:pointer;color:var(--ink2);border-radius:7px;padding:7px 6px;font:500 12.5px/1 var(--body)}
+.lseg button[lang=ja]{font-family:"Noto Sans JP","Hiragino Sans",var(--body)}
+.lseg button[lang=en]{font-family:"Archivo",var(--body)}
+.lseg button[aria-pressed=true]{background:var(--acc);color:var(--acc-ink);font-weight:700}
+.lreg{display:flex;align-items:center;gap:8px;margin-top:8px;font:600 10px/1 var(--mono);letter-spacing:.12em;color:var(--ink3)}
+.lreg select{flex:1;min-width:0;background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--edge2);border-radius:8px;
+  padding:6px 8px;font:500 12.5px/1.2 var(--body)}
+.lreg select option{background:#162024;color:var(--ink)}
+.bill-loc{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:8px;align-items:center;margin-bottom:12px}
+.bill-loc .lreg{margin-top:0}
+.bill-loc .lreg span{display:none}
+/* a part not known to be sold in the viewer's region: shown, with a quiet note */
+.nosale{display:block;width:max-content;max-width:100%;margin-top:3px;padding:1px 5px;border:1px dashed var(--line2);border-radius:4px;
+  font:500 9.5px/1.35 var(--mono);letter-spacing:0;color:var(--ink3);white-space:normal;text-transform:none;font-style:normal}
+.tags .nosale{display:inline-block;margin:0}
+
 /* ── narrower screens ──────────────────────────────────────────────────── */
 @media(max-width:1180px){
   .gauge{max-width:calc(100vw - 440px)}
@@ -548,6 +617,8 @@ body.tray-open .credit{opacity:0;pointer-events:none}
   /* one bar across the top: mark, height, price, advisories */
   .mark{top:calc(8px + var(--sat));left:calc(10px + var(--sal));padding:0;flex-direction:column;align-items:flex-start;gap:0;background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;height:52px;justify-content:center;padding:0 0 0 12px;z-index:2}
   .mark svg{display:none}
+  /* phones reach language and region in the 改裝單 sheet */
+  .locbtn,.locpop{display:none!important}
   .mark b{font-size:15px;line-height:1}
   .mark b span{display:block;font-size:15px}
   .gauge{top:calc(8px + var(--sat));left:calc(8px + var(--sal));right:calc(8px + var(--sar));transform:none;max-width:none;min-height:52px;border-radius:14px;padding-left:62px}
@@ -555,7 +626,7 @@ body.tray-open .credit{opacity:0;pointer-events:none}
   .g-k{display:none}
   .g-h b{font-size:27px}
   .g-h small{font-size:11px}
-  .g-d{flex:1;min-width:0}
+  .g-d{flex:1;min-width:58px}
   .g-d i{font-size:11px;color:var(--acc)}
   .g-d .o{display:none}
   .g-d em{font-size:10.5px;white-space:nowrap}
@@ -600,7 +671,9 @@ body.tray-open .credit{opacity:0;pointer-events:none}
     padding:4px calc(4px + var(--sar)) calc(4px + var(--sab)) calc(4px + var(--sal));gap:0;background:rgba(10,15,17,.92)}
   .dock button{flex:1;min-width:0;padding:4px 1px 3px;border-radius:10px;gap:3px}
   .dock button svg{width:21px;height:21px}
-  .dock button b{font-size:10.5px;letter-spacing:0}
+  .dock button b{font-size:10.5px;letter-spacing:0;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .dock button b .lf{display:none}
+  .dock button b .ls{display:inline}
   .dock button i{display:none}
   .dock .sep{display:none}
   .dock button,.dock .billbtn{flex:1 1 0;min-width:0}
@@ -627,7 +700,8 @@ body.tray-open .credit{opacity:0;pointer-events:none}
   .tr{width:180px}
   .q{width:96px}
   .rh .lbl em{display:none}
-  .credit{left:calc(8px + var(--sal));bottom:calc(var(--dockH) + 8px);max-width:60%;font-size:9px}
+  .credit{left:calc(8px + var(--sal));bottom:calc(var(--dockH) + 8px);max-width:min(60%,300px);font-size:9px}
+  :root[lang=en] .credit{max-width:74%}
   .credit .disc{display:none}
   .bill{left:0;right:0;width:auto;bottom:var(--dockH);border-radius:18px 18px 0 0;max-height:calc(100% - var(--dockH) - 64px - var(--sat))}
   .bill-a .btn{padding:10px 11px;font-size:12.5px}
@@ -672,8 +746,13 @@ if (location.hostname === 'carloxthebot.github.io' && !navigator.webdriver) {
       </svg>
     <span id="bootmsg">載入 3D 模型…</span>
     <div id="bootbar" aria-hidden="true"><i></i></div>
-    <button id="bootretry" type="button" hidden>重新載入</button>
+    <button id="bootretry" type="button" data-t="boot.retry" hidden>重新載入</button>
   </div>
+<script>
+// the boot line in the page's language before the module has loaded
+(function () { var m = { en: 'Loading 3D model…', ja: '3D モデルを読み込み中…' }[window.__jimnyBootLang];
+  if (m) document.getElementById('bootmsg').textContent = m; })();
+</script>
 <div class="app">
   <div class="stage">
     <canvas id="cv"></canvas>
@@ -682,29 +761,35 @@ if (location.hostname === 'carloxthebot.github.io' && !navigator.webdriver) {
   <!-- Everything the reader touches, laid over the car. The shot tools hide
        .panel (and .credit) before rendering card images. -->
   <div class="panel" id="ui">
-    <a class="mark glass" href="app.html" aria-label="Jimny JB 74 首頁">
+    <a class="mark glass" href="app.html" data-ta="aria-label:header.homeAria" aria-label="Jimny JB 74 首頁">
       <svg viewBox="0 0 34 22" aria-hidden="true"><rect x="1" y="1" width="32" height="20" rx="3.5" fill="none" stroke="#f0a030" stroke-width="1.6"/>
         <g fill="#f0a030"><rect x="7.5" y="5" width="2.6" height="12" rx="1"/><rect x="12.3" y="5" width="2.6" height="12" rx="1"/><rect x="19.1" y="5" width="2.6" height="12" rx="1"/><rect x="23.9" y="5" width="2.6" height="12" rx="1"/></g>
         <circle cx="4.2" cy="11" r="1.6" fill="none" stroke="#f0a030" stroke-width="1.2"/><circle cx="29.8" cy="11" r="1.6" fill="none" stroke="#f0a030" stroke-width="1.2"/></svg>
-      <span><b>Jimny <span>JB 74</span></b><small>Suzuki Jimny Sierra JB74 · 3D 改裝配置</small></span>
+      <span><b>Jimny <span>JB 74</span></b><small id="markSub">Suzuki Jimny Sierra JB74 · 3D 改裝配置</small></span>
     </a>
+    <!-- language and region: a globe under the mark on desktop (the same
+         pickers sit in the 改裝單 sheet, which is where phones reach them) -->
+    <button class="locbtn glass" id="locBtn" type="button" aria-expanded="false" aria-controls="locPop" data-ta="aria-label:locale.aria" aria-label="語言與地區">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.3 3.8 5.1 3.8 8.5s-1.2 6.2-3.8 8.5c-2.6-2.3-3.8-5.1-3.8-8.5S9.4 5.8 12 3.5z"/></svg>
+      <span id="locNow"></span></button>
+    <div class="locpop glass" id="locPop" hidden></div>
 
     <!-- gauges: total height is the number people actually ask about -- it
          decides whether the car still fits the mechanical parking most
          Taiwanese buildings use -- so it leads, measured off the built model -->
     <div class="gauge glass" id="gauge">
-      <div class="g-h"><span class="g-k">總車高</span><b><i id="rHeightN">1730</i><small>mm</small></b></div>
-      <div class="g-d"><i id="rHeightDelta">原廠高度</i><em id="rPark"></em><b class="pchip" id="rParkS"></b></div>
-      <div class="g-s stats"><span>舉升 <i id="hLiftN">0</i> · 胎徑 <i id="hTyreN">693</i></span><span>離地 <i id="hClearN">210</i> mm</span></div>
-      <div class="g-p"><span class="g-k">零件預估</span><b id="gPrice">—</b><em id="gCount">原廠</em></div>
+      <div class="g-h"><span class="g-k" data-t="gauge.totalHeight">總車高</span><b><i id="rHeightN">1730</i><small>mm</small></b></div>
+      <div class="g-d"><i id="rHeightDelta" data-t="gauge.stockHeight">原廠高度</i><em id="rPark"></em><b class="pchip" id="rParkS"></b></div>
+      <div class="g-s stats"><span><span data-t="gauge.lift">舉升</span> <i id="hLiftN">0</i> · <span data-t="gauge.tyreDia">胎徑</span> <i id="hTyreN">693</i></span><span><span data-t="gauge.clearance">離地</span> <i id="hClearN">210</i> mm</span></div>
+      <div class="g-p"><span class="g-k" data-t="gauge.partsEstimate">零件預估</span><b id="gPrice">—</b><em id="gCount">原廠</em></div>
       <div class="g-f"><div class="flags" id="flags"></div></div>
     </div>
 
     <!-- phones: the compass and the stage switch fold into this one button -->
-    <button class="vbtn glass" id="viewBtn" type="button" aria-label="視角與場景" aria-expanded="false" aria-controls="viewer">
+    <button class="vbtn glass" id="viewBtn" type="button" data-ta="aria-label:view.buttonAria" aria-label="視角與場景" aria-expanded="false" aria-controls="viewer">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3"/><path d="M12 8.2 14 12l-2 3.8L10 12z" fill="currentColor"/></svg></button>
     <div class="viewer" id="viewer">
-      <div class="compass glass" id="compass" role="group" aria-label="視角：拖曳轉動，或點選固定視角">
+      <div class="compass glass" id="compass" role="group" data-ta="aria-label:view.compassAria" aria-label="視角：拖曳轉動，或點選固定視角">
         <svg class="dial" viewBox="-50 -50 100 100" aria-hidden="true">
           <defs><radialGradient id="coneG" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 0) scale(46)">
             <stop offset="0" stop-color="#f0a030" stop-opacity=".05"/><stop offset="1" stop-color="#f0a030" stop-opacity=".45"/></radialGradient></defs>
@@ -717,7 +802,7 @@ if (location.hostname === 'carloxthebot.github.io' && !navigator.webdriver) {
           <circle class="cam" id="cmpCam" r="4.2" cx="0" cy="-38"/>
         </svg>
       </div>
-      <div class="stagepick glass" id="stagePick" role="group" aria-label="場景">
+      <div class="stagepick glass" id="stagePick" role="group" data-ta="aria-label:stage.aria" aria-label="場景">
         <button data-stage="studio" data-label="車庫" aria-label="車庫" aria-pressed="true">車庫</button><button data-stage="outdoor" data-label="野外" aria-label="野外" aria-pressed="false">野外</button></div>
     </div>
 
@@ -728,205 +813,206 @@ if (location.hostname === 'carloxthebot.github.io' && !navigator.webdriver) {
           <path d="M14 30V9a3.2 3.2 0 0 1 6.4 0v14l.2-3.2a3 3 0 0 1 6 .2v3.4l.2-2.2a3 3 0 0 1 6 .3v3l.3-1.4a2.8 2.8 0 0 1 5.5.6V36c0 7.6-5.3 13-12.8 13h-2.5c-4.4 0-7.2-1.8-9.6-5.2L6.2 35.6a3.1 3.1 0 0 1 4.8-3.9z"
             fill="#fff" stroke="#11181a" stroke-width="1.6" stroke-linejoin="round"/></svg>
       </div>
-      <p>拖曳轉動・滾輪或雙指縮放</p>
+      <p data-t="view.coach">拖曳轉動・滾輪或雙指縮放</p>
     </div>
 
-    <section class="tray glass" id="tray" aria-label="改裝選項">
+    <section class="tray glass" id="tray" data-ta="aria-label:tray.aria" aria-label="改裝選項">
       <div class="tray-h">
         <h2 id="trayTitle">整台風格</h2>
         <div class="subs" id="subs" role="tablist"></div>
-        <button class="tray-x" id="trayX" type="button" aria-label="收起選項">✕</button>
+        <button class="tray-x" id="trayX" type="button" data-ta="aria-label:tray.close" aria-label="收起選項">✕</button>
       </div>
       <div class="body" id="body">
         <!-- 0 ── 整台風格 -->
-        <div class="pane" data-p="0" data-subs="all:全部|kit:廠商全車套件|style:各式風格">
-          <p class="lbl">從一台完整的車開始 <em id="styleCount"></em></p>
+        <div class="pane" data-p="0" data-subs="all:sub.all|kit:sub.makerKit|style:sub.styles">
+          <p class="lbl"><span data-t="style.lead">從一台完整的車開始</span> <em id="styleCount"></em></p>
           <div class="styles rail" id="styles" data-f="all"></div>
-          <p class="styleNote">風格只是起點：選完之後每一項都還能換。金額是照目錄現價把這組零件加起來的概估，<b>不含輪胎、工資與安裝</b>，標「洽詢」的是原廠沒公布價格的品項。</p>
+          <p class="styleNote" data-th="style.note">風格只是起點：選完之後每一項都還能換。金額是照目錄現價把這組零件加起來的概估，<b>不含輪胎、工資與安裝</b>，標「洽詢」的是原廠沒公布價格的品項。</p>
         </div>
 
         <!-- 1 ── 升高 -->
         <div class="pane" data-p="1">
           <div class="live"><b id="liftPick"></b><p id="liftNote"></p></div>
-          <div class="rh"><span class="lbl">懸吊舉升 <em id="liftCount"></em></span></div>
+          <div class="rh"><span class="lbl"><span data-t="lift.label">懸吊舉升</span> <em id="liftCount"></em></span></div>
           <div class="seg" id="liftSeg"></div>
           <div class="cards rail" id="liftCards"></div>
         </div>
 
         <!-- 2 ── 輪框輪胎 -->
-        <div class="pane" data-p="2" data-subs="wheel:輪框|tyre:輪胎尺寸|tread:胎紋">
+        <div class="pane" data-p="2" data-subs="wheel:sub.wheel|tyre:sub.tyre|tread:sub.tread">
           <div class="sub" data-g="wheel" data-keys="wheel rimFinish">
             <div class="live"><b id="wheelPick"></b><p id="wheelNote"></p></div>
-            <div class="rh"><span class="lbl">輪框 <em id="wheelCount"></em></span>
+            <div class="rh"><span class="lbl"><span data-t="wheel.label">輪框</span> <em id="wheelCount"></em></span>
               <div class="chips" id="wSize"></div><div class="chips" id="wKind"></div>
-              <input class="q" id="wQ" type="search" placeholder="搜尋輪框…" aria-label="搜尋輪框"></div>
+              <input class="q" id="wQ" type="search" placeholder="搜尋輪框…" aria-label="搜尋輪框" data-ta="placeholder:wheel.search,aria-label:wheel.searchAria"></div>
             <div class="wgrid rail" id="wheelGrid"></div>
-            <div class="row"><span class="lbl">輪框顏色 <em>只列這款原廠有賣的顏色</em></span>
+            <div class="row"><span class="lbl"><span data-t="wheel.colourLabel">輪框顏色</span> <em data-t="wheel.colourSub">只列這款原廠有賣的顏色</em></span>
               <div class="swatches" id="rimSw"></div><span class="swn" id="rimName"></span></div>
-            <p class="hint" id="flareNote">標「輪胎外凸」的輪框，offset 讓輪胎超出原廠葉子板；台灣驗車要求輪胎不得凸出車身，
+            <p class="hint" id="flareNote" data-t="wheel.flareNote">標「輪胎外凸」的輪框，offset 讓輪胎超出原廠葉子板；台灣驗車要求輪胎不得凸出車身，
               所以要一併裝寬版輪弧（俗稱爆龜）把它蓋住。ET+20 那幾顆是 JB64 的配置，反而會往內縮。</p>
           </div>
           <div class="sub" data-g="tyre" data-keys="tyre">
             <div class="live"><b id="tyrePick"></b><p id="tyreNote"></p></div>
-            <div class="rh"><span class="lbl">輪胎尺寸 <em id="tyreEcho"></em></span></div>
+            <div class="rh"><span class="lbl"><span data-t="tyre.label">輪胎尺寸</span> <em id="tyreEcho"></em></span></div>
             <div class="ladder rail" id="tyreLadder"></div>
           </div>
           <div class="sub" data-g="tread" data-keys="tread owl">
             <div class="tabs" id="patTabs"></div>
             <div class="treads rail" id="treadList"></div>
             <button class="tg solo" id="tgOwl" aria-pressed="false">
-              <span class="nm">白字胎邊<i id="owlNote">Outlined White Letters</i></span><span class="st">關閉</span></button>
+              <span class="nm"><span data-t="tyre.owl">白字胎邊</span><i id="owlNote">Outlined White Letters</i></span><span class="st">關閉</span></button>
           </div>
         </div>
 
         <!-- 3 ── 外觀件 -->
-        <div class="pane" data-p="3" data-subs="color:車色|kit:全車套件|frontBumper:前保桿|grille:水箱護罩|hood:引擎蓋|rearBumper:後保桿|fender:寬體葉子板|sideStep:側踏滑桿|snorkel:呼吸管|exhaust:排氣管|mirrors:後照鏡|mudFlap:擋泥板|sideMould:側飾條|stripe:拉花|bits:小改">
+        <div class="pane" data-p="3" data-subs="color:sub.color|kit:sub.kit|frontBumper:sub.frontBumper|grille:sub.grille|hood:sub.hood|rearBumper:sub.rearBumper|fender:sub.fender|sideStep:sub.sideStep|snorkel:sub.snorkel|exhaust:sub.exhaust|mirrors:sub.mirrors|mudFlap:sub.mudFlap|sideMould:sub.sideMould|stripe:sub.stripe|bits:sub.bits">
           <div class="sub" data-g="color" data-keys="color twoTone split paintFlares">
             <div class="live"><b id="colPick"></b><p id="colNote"></p></div>
-            <div class="row" style="margin-top:0"><span class="lbl">車身配色 <em id="colName"></em></span>
+            <div class="row" style="margin-top:0"><span class="lbl"><span data-t="colour.label">車身配色</span> <em id="colName"></em></span>
               <div class="swatches" id="colSw"></div></div>
-            <select id="selColor" hidden aria-label="車身配色"></select>
+            <select id="selColor" hidden aria-label="車身配色" data-ta="aria-label:colour.label"></select>
             <div class="row"><button class="tg" id="tgTwo" aria-pressed="false">
-              <span class="nm">雙色車頂<i id="twoNote">黑頂 ZJ3</i></span><span class="st">關閉</span></button>
+              <span class="nm"><span data-t="colour.twoTone">雙色車頂</span><i id="twoNote">黑頂 ZJ3</i></span><span class="st">關閉</span></button>
               <button class="tg" id="tgFlare" aria-pressed="false">
-              <span class="nm">輪弧烤成車身色<i>分色時跟下半同色，黑色塑膠件就不見了</i></span><span class="st">原廠黑</span></button></div>
-            <div class="row"><span class="lbl">下半車身分色 <em>窗線以下重烤或貼膜</em></span>
+              <span class="nm"><span data-t="colour.paintFlares">輪弧烤成車身色</span><i data-t="colour.paintFlaresSub">分色時跟下半同色，黑色塑膠件就不見了</i></span><span class="st">原廠黑</span></button></div>
+            <div class="row"><span class="lbl"><span data-t="colour.splitLabel">下半車身分色</span> <em data-t="colour.splitSub">窗線以下重烤或貼膜</em></span>
               <div class="swatches" id="splitSw"></div><span class="swn" id="splitName"></span></div>
-            <select id="selSplit" hidden aria-label="下半車身分色"></select><p class="hint" id="hSplit"></p>
+            <select id="selSplit" hidden aria-label="下半車身分色" data-ta="aria-label:colour.splitLabel"></select><p class="hint" id="hSplit"></p>
           </div>
-          <div class="sub" data-g="kit" data-keys="kit"><div class="fam" data-fam="kit"></div><select id="selKit" hidden aria-label="全車套件"></select><p class="hint" id="hKit"></p></div>
+          <div class="sub" data-g="kit" data-keys="kit"><div class="fam" data-fam="kit"></div><select id="selKit" hidden aria-label="全車套件" data-ta="aria-label:part.kit"></select><p class="hint" id="hKit"></p></div>
           <!-- face kits come only as part of a maker kit (全車套件); no separate picker -->
-          <div class="sub" data-g="face" data-keys="face" hidden><div class="fam" data-fam="face"></div><select id="selFace" hidden aria-label="換臉套件"></select><p class="hint" id="hFace"></p></div>
-          <div class="sub" data-g="frontBumper" data-keys="frontBumper"><div class="fam" data-fam="frontBumper"></div><select id="selBumper" hidden aria-label="前保桿"></select><p class="hint" id="hBumper"></p></div>
-          <div class="sub" data-g="grille" data-keys="grille"><div class="fam" data-fam="grille"></div><select id="selGrille" hidden aria-label="水箱護罩"></select><p class="hint" id="hGrille"></p></div>
-          <div class="sub" data-g="hood" data-keys="hood"><div class="fam" data-fam="hood"></div><select id="selHood" hidden aria-label="引擎蓋"></select><p class="hint" id="hHood"></p></div>
-          <div class="sub" data-g="rearBumper" data-keys="rearBumper"><div class="fam" data-fam="rearBumper"></div><select id="selRear" hidden aria-label="後保桿"></select><p class="hint" id="hRear"></p></div>
-          <div class="sub" data-g="fender" data-keys="fender"><div class="fam" data-fam="fender"></div><select id="selFender" hidden aria-label="寬體葉子板"></select><p class="hint" id="hFender"></p></div>
-          <div class="sub" data-g="sideStep" data-keys="sideStep"><div class="fam" data-fam="sideStep"></div><select id="selStep" hidden aria-label="側踏"></select><p class="hint" id="hStep"></p></div>
-          <div class="sub" data-g="snorkel" data-keys="snorkel"><div class="fam" data-fam="snorkel"></div><select id="selSnorkel" hidden aria-label="呼吸管"></select><p class="hint" id="hSnorkel"></p></div>
-          <div class="sub" data-g="exhaust" data-keys="exhaust"><div class="fam" data-fam="exhaust"></div><select id="selExhaust" hidden aria-label="排氣管"></select><p class="hint" id="hExhaust"></p></div>
-          <div class="sub" data-g="mirrors" data-keys="mirrors"><div class="fam" data-fam="mirrors"></div><select id="selMirror" hidden aria-label="後照鏡"></select><p class="hint" id="hMirror"></p></div>
-          <div class="sub" data-g="mudFlap" data-keys="mudFlap"><div class="fam" data-fam="mudFlap"></div><select id="selMudFlap" hidden aria-label="擋泥板"></select><p class="hint" id="hMudFlap"></p></div>
-          <div class="sub" data-g="sideMould" data-keys="sideMould"><div class="fam" data-fam="sideMould"></div><select id="selSideMould" hidden aria-label="側飾條"></select><p class="hint" id="hSideMould"></p></div>
-          <div class="sub" data-g="stripe" data-keys="stripe"><div class="fam" data-fam="stripe"></div><select id="selStripe" hidden aria-label="車身拉花"></select><p class="hint" id="hStripe"></p></div>
+          <div class="sub" data-g="face" data-keys="face" hidden><div class="fam" data-fam="face"></div><select id="selFace" hidden aria-label="換臉套件" data-ta="aria-label:part.face"></select><p class="hint" id="hFace"></p></div>
+          <div class="sub" data-g="frontBumper" data-keys="frontBumper"><div class="fam" data-fam="frontBumper"></div><select id="selBumper" hidden aria-label="前保桿" data-ta="aria-label:part.frontBumper"></select><p class="hint" id="hBumper"></p></div>
+          <div class="sub" data-g="grille" data-keys="grille"><div class="fam" data-fam="grille"></div><select id="selGrille" hidden aria-label="水箱護罩" data-ta="aria-label:part.grille"></select><p class="hint" id="hGrille"></p></div>
+          <div class="sub" data-g="hood" data-keys="hood"><div class="fam" data-fam="hood"></div><select id="selHood" hidden aria-label="引擎蓋" data-ta="aria-label:part.hood"></select><p class="hint" id="hHood"></p></div>
+          <div class="sub" data-g="rearBumper" data-keys="rearBumper"><div class="fam" data-fam="rearBumper"></div><select id="selRear" hidden aria-label="後保桿" data-ta="aria-label:part.rearBumper"></select><p class="hint" id="hRear"></p></div>
+          <div class="sub" data-g="fender" data-keys="fender"><div class="fam" data-fam="fender"></div><select id="selFender" hidden aria-label="寬體葉子板" data-ta="aria-label:part.fender"></select><p class="hint" id="hFender"></p></div>
+          <div class="sub" data-g="sideStep" data-keys="sideStep"><div class="fam" data-fam="sideStep"></div><select id="selStep" hidden aria-label="側踏" data-ta="aria-label:part.sideStep"></select><p class="hint" id="hStep"></p></div>
+          <div class="sub" data-g="snorkel" data-keys="snorkel"><div class="fam" data-fam="snorkel"></div><select id="selSnorkel" hidden aria-label="呼吸管" data-ta="aria-label:part.snorkel"></select><p class="hint" id="hSnorkel"></p></div>
+          <div class="sub" data-g="exhaust" data-keys="exhaust"><div class="fam" data-fam="exhaust"></div><select id="selExhaust" hidden aria-label="排氣管" data-ta="aria-label:part.exhaust"></select><p class="hint" id="hExhaust"></p></div>
+          <div class="sub" data-g="mirrors" data-keys="mirrors"><div class="fam" data-fam="mirrors"></div><select id="selMirror" hidden aria-label="後照鏡" data-ta="aria-label:part.mirrors"></select><p class="hint" id="hMirror"></p></div>
+          <div class="sub" data-g="mudFlap" data-keys="mudFlap"><div class="fam" data-fam="mudFlap"></div><select id="selMudFlap" hidden aria-label="擋泥板" data-ta="aria-label:part.mudFlap"></select><p class="hint" id="hMudFlap"></p></div>
+          <div class="sub" data-g="sideMould" data-keys="sideMould"><div class="fam" data-fam="sideMould"></div><select id="selSideMould" hidden aria-label="側飾條" data-ta="aria-label:part.sideMould"></select><p class="hint" id="hSideMould"></p></div>
+          <div class="sub" data-g="stripe" data-keys="stripe"><div class="fam" data-fam="stripe"></div><select id="selStripe" hidden aria-label="車身拉花" data-ta="aria-label:part.stripe"></select><p class="hint" id="hStripe"></p></div>
           <div class="sub" data-g="bits" data-keys="flares sideSkirt decals gullwing">
-            <p class="lbl">小改 <em>開關式的小件</em></p>
+            <p class="lbl"><span data-t="bits.label">小改</span> <em data-t="bits.sub">開關式的小件</em></p>
             <div class="toggles" id="togglesBody"></div>
           </div>
         </div>
 
         <!-- 4 ── 車頂與後方 -->
-        <div class="pane" data-p="4" data-subs="roofRack:車頂架|awning:車邊帳|spoiler:車頂尾翼|cage:外掛防滾籠|ladder:後爬梯|spare:備胎|spareDelete:拿掉備胎|tgPanel:背門護板|tgBag:背門書包|tgFrame:背門框架|hitch:拖車座|carrier:二輪車架|guards:鐵窗掛載">
+        <div class="pane" data-p="4" data-subs="roofRack:sub.roofRack|awning:sub.awning|spoiler:sub.spoiler|cage:sub.cage|ladder:sub.ladder|spare:sub.spare|spareDelete:sub.spareDelete|tgPanel:sub.tgPanel|tgBag:sub.tgBag|tgFrame:sub.tgFrame|hitch:sub.hitch|carrier:sub.carrier|guards:sub.guards">
           <div class="sub" data-g="roofRack" data-keys="roofRack rackPaint rackShift shovel">
-            <div class="fam" data-fam="roofRack"></div><select id="selRack" hidden aria-label="車頂架"></select><p class="hint" id="hRack"></p>
+            <div class="fam" data-fam="roofRack"></div><select id="selRack" hidden aria-label="車頂架" data-ta="aria-label:part.roofRack"></select><p class="hint" id="hRack"></p>
             <div class="cols">
-              <div><p class="lbl">車頂架顏色 <em>淺色要另外烤漆</em></p><div class="swatches" id="rackSw"></div>
-                <select id="selRackPaint" hidden aria-label="車頂架顏色"></select></div>
-              <div class="sides" id="rackMove"><div class="side-row"><span class="nm">前後位置<i id="rackPos">置中</i></span>
-                <span class="pick" id="rackNudge"><button data-d="1" aria-label="車頂架往車頭移">往車頭</button><button data-d="-1" aria-label="車頂架往車尾移">往車尾</button></span></div></div>
+              <div><p class="lbl"><span data-t="rack.colourLabel">車頂架顏色</span> <em data-t="rack.colourSub">淺色要另外烤漆</em></p><div class="swatches" id="rackSw"></div>
+                <select id="selRackPaint" hidden aria-label="車頂架顏色" data-ta="aria-label:part.rackPaint"></select></div>
+              <div class="sides" id="rackMove"><div class="side-row"><span class="nm"><span data-t="rack.position">前後位置</span><i id="rackPos">置中</i></span>
+                <span class="pick" id="rackNudge"><button data-d="1" aria-label="車頂架往車頭移" data-t="rack.towardFront" data-ta="aria-label:rack.towardFrontAria">往車頭</button><button data-d="-1" aria-label="車頂架往車尾移" data-t="rack.towardRear" data-ta="aria-label:rack.towardRearAria">往車尾</button></span></div></div>
             </div>
             <div class="toggles" id="togglesRack" style="margin-top:10px"></div>
-            <div id="arbAcc"><p class="lbl" style="margin-top:14px">ARB 車頂架配件 <em>卡進貨架燕尾槽</em></p>
+            <div id="arbAcc"><p class="lbl" style="margin-top:14px"><span data-t="rack.arbAcc">ARB 車頂架配件</span> <em data-t="rack.arbAccSub">卡進貨架燕尾槽</em></p>
               <div class="toggles" id="arbToggles"></div></div>
           </div>
           <div class="sub" data-g="awning" data-keys="awning awningSide">
-            <div class="fam" data-fam="awning"></div><select id="selAwning" hidden aria-label="車邊帳"></select><p class="hint" id="hAwning"></p>
+            <div class="fam" data-fam="awning"></div><select id="selAwning" hidden aria-label="車邊帳" data-ta="aria-label:part.awning"></select><p class="hint" id="hAwning"></p>
             <button class="tg solo" id="tgAwnSide" aria-pressed="false">
-              <span class="nm">車邊帳安裝側<i>台灣左駕，一般裝副駕（右）側</i></span><span class="st">左側</span></button>
+              <span class="nm"><span data-t="awning.side">車邊帳安裝側</span><i data-t="awning.sideSub">台灣左駕，一般裝副駕（右）側</i></span><span class="st">左側</span></button>
           </div>
-          <div class="sub" data-g="spoiler" data-keys="spoiler"><div class="fam" data-fam="spoiler"></div><select id="selSpoiler" hidden aria-label="車頂尾翼"></select><p class="hint" id="hSpoiler"></p></div>
-          <div class="sub" data-g="cage" data-keys="cage"><div class="fam" data-fam="cage"></div><select id="selCage" hidden aria-label="外掛防滾籠"></select><p class="hint" id="hCage"></p></div>
-          <div class="sub" data-g="ladder" data-keys="ladder"><div class="fam" data-fam="ladder"></div><select id="selLadder" hidden aria-label="後爬梯"></select><p class="hint" id="hLadder"></p></div>
+          <div class="sub" data-g="spoiler" data-keys="spoiler"><div class="fam" data-fam="spoiler"></div><select id="selSpoiler" hidden aria-label="車頂尾翼" data-ta="aria-label:part.spoiler"></select><p class="hint" id="hSpoiler"></p></div>
+          <div class="sub" data-g="cage" data-keys="cage"><div class="fam" data-fam="cage"></div><select id="selCage" hidden aria-label="外掛防滾籠" data-ta="aria-label:part.cage"></select><p class="hint" id="hCage"></p></div>
+          <div class="sub" data-g="ladder" data-keys="ladder"><div class="fam" data-fam="ladder"></div><select id="selLadder" hidden aria-label="後爬梯" data-ta="aria-label:part.ladder"></select><p class="hint" id="hLadder"></p></div>
           <div class="sub" data-g="spare" data-keys="spareCoverKit spareBag spareCover">
-            <div class="fam" data-fam="spareCoverKit"></div><select id="selSpareKit" hidden aria-label="備胎蓋"></select><p class="hint" id="hSpareKit"></p>
+            <div class="fam" data-fam="spareCoverKit"></div><select id="selSpareKit" hidden aria-label="備胎蓋" data-ta="aria-label:part.spareCover"></select><p class="hint" id="hSpareKit"></p>
             <div class="toggles" id="togglesSpare" style="margin-top:10px"></div>
           </div>
-          <div class="sub" data-g="spareDelete" data-keys="spareDelete"><div class="fam" data-fam="spareDelete" data-note="背門空出來，可以另外裝護板、書包、框架或載二輪車"></div><select id="selSpareDel" hidden aria-label="拿掉備胎"></select><p class="hint" id="hSpareDel"></p></div>
-          <div class="sub" data-g="tgPanel" data-keys="tgPanel"><div class="fam" data-fam="tgPanel"></div><select id="selTgPanel" hidden aria-label="背門護板"></select><p class="hint" id="hTgPanel"></p></div>
-          <div class="sub" data-g="tgBag" data-keys="tgBag"><div class="fam" data-fam="tgBag"></div><select id="selTgBag" hidden aria-label="背門書包"></select><p class="hint" id="hTgBag"></p></div>
-          <div class="sub" data-g="tgFrame" data-keys="tgFrame"><div class="fam" data-fam="tgFrame"></div><select id="selTgFrame" hidden aria-label="背門框架"></select><p class="hint" id="hTgFrame"></p></div>
-          <div class="sub" data-g="hitch" data-keys="hitch"><div class="fam" data-fam="hitch" data-note="二輪車架插在這裡"></div><select id="selHitch" hidden aria-label="拖車座"></select><p class="hint" id="hHitch"></p></div>
-          <div class="sub" data-g="carrier" data-keys="carrier"><div class="fam" data-fam="carrier" data-note="車上的腳踏車／機車是示意"></div><select id="selCarrier" hidden aria-label="二輪車架"></select><p class="hint" id="hCarrier"></p></div>
+          <div class="sub" data-g="spareDelete" data-keys="spareDelete"><div class="fam" data-fam="spareDelete" data-note="fam.note.spareDelete"></div><select id="selSpareDel" hidden aria-label="拿掉備胎" data-ta="aria-label:part.spareDelete"></select><p class="hint" id="hSpareDel"></p></div>
+          <div class="sub" data-g="tgPanel" data-keys="tgPanel"><div class="fam" data-fam="tgPanel"></div><select id="selTgPanel" hidden aria-label="背門護板" data-ta="aria-label:part.tgPanel"></select><p class="hint" id="hTgPanel"></p></div>
+          <div class="sub" data-g="tgBag" data-keys="tgBag"><div class="fam" data-fam="tgBag"></div><select id="selTgBag" hidden aria-label="背門書包" data-ta="aria-label:part.tgBag"></select><p class="hint" id="hTgBag"></p></div>
+          <div class="sub" data-g="tgFrame" data-keys="tgFrame"><div class="fam" data-fam="tgFrame"></div><select id="selTgFrame" hidden aria-label="背門框架" data-ta="aria-label:part.tgFrame"></select><p class="hint" id="hTgFrame"></p></div>
+          <div class="sub" data-g="hitch" data-keys="hitch"><div class="fam" data-fam="hitch" data-note="fam.note.hitch"></div><select id="selHitch" hidden aria-label="拖車座" data-ta="aria-label:part.hitch"></select><p class="hint" id="hHitch"></p></div>
+          <div class="sub" data-g="carrier" data-keys="carrier"><div class="fam" data-fam="carrier" data-note="fam.note.carrier"></div><select id="selCarrier" hidden aria-label="二輪車架" data-ta="aria-label:part.carrier"></select><p class="hint" id="hCarrier"></p></div>
           <div class="sub" data-g="guards" data-keys="windowGuards guardCan guardAxe guardBoard extinguisher">
             <div class="toggles" id="togglesGuard"></div>
             <div class="cols">
-              <div><p class="lbl">鐵窗掛載 <em>需先裝鐵窗</em></p><div class="sides" id="sides"></div></div>
-              <div><p class="lbl">滅火器</p>
-                <div class="sides"><div class="side-row"><span class="nm">1kg 乾粉瓶<i id="extNote"></i></span>
+              <div><p class="lbl"><span data-t="guard.label">鐵窗掛載</span> <em data-t="guard.sub">需先裝鐵窗</em></p><div class="sides" id="sides"></div></div>
+              <div><p class="lbl" data-t="ext.label">滅火器</p>
+                <div class="sides"><div class="side-row"><span class="nm"><span data-t="ext.bottle">1kg 乾粉瓶</span><i id="extNote"></i></span>
                   <span class="pick" data-key="extinguisher" id="extPick"></span></div></div></div>
             </div>
           </div>
         </div>
 
         <!-- 5 ── 燈: every lamp on the car in one place -->
-        <div class="pane" data-p="5" data-subs="lightBar:車頂燈條|roofLights:圓燈|grilleLight:車頭燈條|lampCover:大燈罩|pods:A 柱小燈">
-          <div class="sub" data-g="lightBar" data-keys="lightBar"><div class="fam" data-fam="lightBar" data-note="裝在車頂最前緣；車頂架前緣也到最前緣時才鎖在架子上"></div><select id="selLightBar" hidden aria-label="車頂燈條"></select><p class="hint" id="hLightBar"></p></div>
-          <div class="sub" data-g="roofLights" data-keys="roofLights"><div class="fam" data-fam="roofLights" data-note="裝在車頂最前緣；車頂架前緣也到最前緣時才夾在架子上"></div><select id="selRoofLights" hidden aria-label="圓燈"></select><p class="hint" id="hRoofLights"></p></div>
-          <div class="sub" data-g="grilleLight" data-keys="grilleLight"><div class="fam" data-fam="grilleLight"></div><select id="selGrilleLight" hidden aria-label="車頭燈條"></select><p class="hint" id="hGrilleLight"></p></div>
-          <div class="sub" data-g="lampCover" data-keys="lampCover"><div class="fam" data-fam="lampCover"></div><select id="selLampCover" hidden aria-label="大燈罩"></select><p class="hint" id="hLampCover"></p></div>
-          <div class="sub" data-g="pods" data-keys="pillarPods"><p class="lbl">小燈</p><div class="toggles" id="lightToggles"></div></div>
+        <div class="pane" data-p="5" data-subs="lightBar:sub.lightBar|roofLights:sub.roofLights|grilleLight:sub.grilleLight|lampCover:sub.lampCover|pods:sub.pods">
+          <div class="sub" data-g="lightBar" data-keys="lightBar"><div class="fam" data-fam="lightBar" data-note="fam.note.lightBar"></div><select id="selLightBar" hidden aria-label="車頂燈條" data-ta="aria-label:part.lightBar"></select><p class="hint" id="hLightBar"></p></div>
+          <div class="sub" data-g="roofLights" data-keys="roofLights"><div class="fam" data-fam="roofLights" data-note="fam.note.roofLights"></div><select id="selRoofLights" hidden aria-label="圓燈" data-ta="aria-label:part.roofLights"></select><p class="hint" id="hRoofLights"></p></div>
+          <div class="sub" data-g="grilleLight" data-keys="grilleLight"><div class="fam" data-fam="grilleLight"></div><select id="selGrilleLight" hidden aria-label="車頭燈條" data-ta="aria-label:part.grilleLight"></select><p class="hint" id="hGrilleLight"></p></div>
+          <div class="sub" data-g="lampCover" data-keys="lampCover"><div class="fam" data-fam="lampCover"></div><select id="selLampCover" hidden aria-label="大燈罩" data-ta="aria-label:part.lampCover"></select><p class="hint" id="hLampCover"></p></div>
+          <div class="sub" data-g="pods" data-keys="pillarPods"><p class="lbl" data-t="lights.small">小燈</p><div class="toggles" id="lightToggles"></div></div>
         </div>
 
         <!-- camping: off the menu for now (owner, 2026-09-27). The markup stays,
              hidden, so camp.js and its controls keep working when it returns. -->
         <div class="pane" data-p="camp" hidden><span id="sum4" hidden></span>
-          <div class="sides"><div class="side-row"><span class="nm">看展開後的樣子<i>之後每一項都還能改</i></span>
-            <span class="pick" id="campDemos"><button data-demo="rack">車頂帳＋車邊帳</button><button data-demo="norack">免車頂架</button><button data-demo="rear">車尾帳</button></span></div></div>
-          <select id="selTent" aria-label="車頂帳"></select><p class="hint" id="hTent"></p>
+          <div class="sides"><div class="side-row"><span class="nm"><span data-t="camp.demoRow">看展開後的樣子</span><i data-t="camp.demoRowSub">之後每一項都還能改</i></span>
+            <span class="pick" id="campDemos"><button data-demo="rack" data-t="camp.demo.rack">車頂帳＋車邊帳</button><button data-demo="norack" data-t="camp.demo.norack">免車頂架</button><button data-demo="rear" data-t="camp.demo.rear">車尾帳</button></span></div></div>
+          <select id="selTent" aria-label="車頂帳" data-ta="aria-label:part.tent"></select><p class="hint" id="hTent"></p>
           <button class="tg solo" id="tgTentOpen" aria-pressed="false">
-            <span class="nm">帳篷展開<i>關掉就是行車時收合在車頂的樣子</i></span><span class="st">收合</span></button>
+            <span class="nm"><span data-t="camp.tentOpen">帳篷展開</span><i data-t="camp.tentOpenSub">關掉就是行車時收合在車頂的樣子</i></span><span class="st">收合</span></button>
           <p class="hint" id="campAwn"></p>
           <button class="tg solo" id="tgAwnOpen" aria-pressed="false">
-            <span class="nm">車邊帳展開<i>布面、支臂與立腳照廠方尺寸</i></span><span class="st">收合</span></button>
+            <span class="nm"><span data-t="camp.awningOpen">車邊帳展開</span><i data-t="camp.awningOpenSub">布面、支臂與立腳照廠方尺寸</i></span><span class="st">收合</span></button>
           <button class="tg solo" id="tgRoom" aria-pressed="false">
-            <span class="nm">ARB Deluxe 帳房 813108<i>掛在 ARB 2500×2500 車邊帳下 · AUD 431</i></span><span class="st">未裝</span></button>
-          <select id="selCampExtra" aria-label="車尾車側帳"></select><p class="hint" id="hCampExtra"></p>
+            <span class="nm"><span data-t="camp.room">ARB Deluxe 帳房 813108</span><i data-t="camp.roomSub">掛在 ARB 2500×2500 車邊帳下 · AUD 431</i></span><span class="st">未裝</span></button>
+          <select id="selCampExtra" aria-label="車尾車側帳" data-ta="aria-label:part.campExtra"></select><p class="hint" id="hCampExtra"></p>
         </div>
       </div>
     </section>
 
-    <nav class="dock glass" id="steps" role="tablist" aria-label="改裝分類">
-      <button role="tab" data-s="0" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 15.5 5.2 10a2 2 0 0 1 1.9-1.3h9.8a2 2 0 0 1 1.9 1.3l2.2 5.5v3H3z"/><circle cx="7.5" cy="18.5" r="1.8"/><circle cx="16.5" cy="18.5" r="1.8"/><path d="M12 2.5l1 2.2 2.3.3-1.7 1.6.4 2.3L12 7.8l-2 1.1.4-2.3L8.7 5l2.3-.3z"/></svg><b>整台風格</b><i id="sumStyle">未選</i></button>
-      <button role="tab" data-s="1" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 3v9M8.5 6.5 12 3l3.5 3.5"/><path d="M4 15h16M6 15v2.5m12-2.5v2.5"/><path d="M6 20.5l1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5"/></svg><b>升高</b><i id="sum0">原廠</i></button>
-      <button role="tab" data-s="2" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 3v5.8M12 15.2V21M3 12h5.8M15.2 12H21"/></svg><b>輪框輪胎</b><i id="sum1">原廠</i></button>
-      <button role="tab" data-s="3" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="10" rx="2"/><path d="M7 9v4M10.3 9v4M13.7 9v4M17 9v4"/><path d="M3.5 19h17"/></svg><b>外觀件</b><i id="sum2">原廠</i></button>
-      <button role="tab" data-s="4" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 17l2-6h14l2 6v2H3z"/><path d="M5 8h14M7 8V6m10 2V6M12 8V6"/><circle cx="7.5" cy="19" r="1.5"/><circle cx="16.5" cy="19" r="1.5"/></svg><b>車頂與後方</b><i id="sum3">無</i></button>
-      <button role="tab" data-s="5" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M9 6.5a5.5 5.5 0 0 0 0 11h1.5v-11z"/><path d="M14 8l6.5-2M14 12h7M14 16l6.5 2"/></svg><b>燈</b><i id="sum5">無</i></button>
+    <nav class="dock glass" id="steps" role="tablist" data-ta="aria-label:dock.aria" aria-label="改裝分類">
+      <button role="tab" data-s="0" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 15.5 5.2 10a2 2 0 0 1 1.9-1.3h9.8a2 2 0 0 1 1.9 1.3l2.2 5.5v3H3z"/><circle cx="7.5" cy="18.5" r="1.8"/><circle cx="16.5" cy="18.5" r="1.8"/><path d="M12 2.5l1 2.2 2.3.3-1.7 1.6.4 2.3L12 7.8l-2 1.1.4-2.3L8.7 5l2.3-.3z"/></svg><b><span class="lf" data-t="tab.style">整台風格</span><span class="ls" data-t="tabShort.style">整台風格</span></b><i id="sumStyle">未選</i></button>
+      <button role="tab" data-s="1" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 3v9M8.5 6.5 12 3l3.5 3.5"/><path d="M4 15h16M6 15v2.5m12-2.5v2.5"/><path d="M6 20.5l1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5"/></svg><b><span class="lf" data-t="tab.lift">升高</span><span class="ls" data-t="tabShort.lift">升高</span></b><i id="sum0">原廠</i></button>
+      <button role="tab" data-s="2" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 3v5.8M12 15.2V21M3 12h5.8M15.2 12H21"/></svg><b><span class="lf" data-t="tab.wheels">輪框輪胎</span><span class="ls" data-t="tabShort.wheels">輪框輪胎</span></b><i id="sum1">原廠</i></button>
+      <button role="tab" data-s="3" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="10" rx="2"/><path d="M7 9v4M10.3 9v4M13.7 9v4M17 9v4"/><path d="M3.5 19h17"/></svg><b><span class="lf" data-t="tab.body">外觀件</span><span class="ls" data-t="tabShort.body">外觀件</span></b><i id="sum2">原廠</i></button>
+      <button role="tab" data-s="4" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 17l2-6h14l2 6v2H3z"/><path d="M5 8h14M7 8V6m10 2V6M12 8V6"/><circle cx="7.5" cy="19" r="1.5"/><circle cx="16.5" cy="19" r="1.5"/></svg><b><span class="lf" data-t="tab.roofRear">車頂與後方</span><span class="ls" data-t="tabShort.roofRear">車頂與後方</span></b><i id="sum3">無</i></button>
+      <button role="tab" data-s="5" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M9 6.5a5.5 5.5 0 0 0 0 11h1.5v-11z"/><path d="M14 8l6.5-2M14 12h7M14 16l6.5 2"/></svg><b><span class="lf" data-t="tab.lights">燈</span><span class="ls" data-t="tabShort.lights">燈</span></b><i id="sum5">無</i></button>
       <span class="sep" aria-hidden="true"></span>
-      <button class="billbtn" id="btnBill" type="button" aria-expanded="false" aria-controls="bill"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 9h6M9 12.5h6M9 16h4"/></svg><b>改裝單</b><i id="gTotal">原廠</i><span class="cnt" id="billN"></span></button>
+      <button class="billbtn" id="btnBill" type="button" aria-expanded="false" aria-controls="bill"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 9h6M9 12.5h6M9 16h4"/></svg><b><span class="lf" data-t="dock.bill">改裝單</span><span class="ls" data-t="tabShort.bill">改裝單</span></b><i id="gTotal">原廠</i><span class="cnt" id="billN"></span></button>
     </nav>
 
-    <div class="credit">3D 模型 “2023 Suzuki Jimny Sierra” by tonielpro520,
+    <div class="credit"><span data-t="disclaimer.modelCredit">3D 模型 “2023 Suzuki Jimny Sierra” by tonielpro520,</span>
       <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a><br>
-      <b class="ai">資訊跟價格皆由 AI 搜尋公開網路，詳情請洽官網或各通路。</b><br>
-      <span class="disc">個人非營利專案，與 Suzuki 及各改裝品牌無關聯；資訊整理自公開網路資料，以官方為準。<br>
-      商標屬各自所有者。</span>如有不妥請<a href="https://github.com/carloxthebot/jimny/issues" target="_blank" rel="noopener">告知</a><span class="disc">，將儘速修正或移除</span>。— @Carlos</div>
+      <b class="ai" data-t="disclaimer.ai">資訊跟價格皆由 AI 搜尋公開網路，詳情請洽官網或各通路。</b><br>
+      <span class="disc"><span data-t="disclaimer.personal">個人非營利專案，與 Suzuki 及各改裝品牌無關聯；資訊整理自公開網路資料，以官方為準。</span><br>
+      <span data-t="disclaimer.trademarks">商標屬各自所有者。</span></span> <span class="report">如有不妥請<a href="https://github.com/carloxthebot/jimny/issues" target="_blank" rel="noopener">告知</a>，將儘速修正或移除。</span>— @Carlos</div>
 
     <!-- 改裝單: every non-stock choice, its price and where to buy it -->
-    <section class="bill glass" id="bill" hidden aria-label="改裝單">
-      <div class="bill-h"><div><h2>改裝單</h2><small>資訊跟價格皆由 AI 搜尋公開網路，詳情請洽官網或各通路</small></div>
-        <button class="tray-x" id="billX" type="button" aria-label="關閉改裝單">✕</button></div>
+    <section class="bill glass" id="bill" hidden data-ta="aria-label:bill.title" aria-label="改裝單">
+      <div class="bill-h"><div><h2 data-t="bill.title">改裝單</h2><small data-t="disclaimer.aiShort">資訊跟價格皆由 AI 搜尋公開網路，詳情請洽官網或各通路</small></div>
+        <button class="tray-x" id="billX" type="button" data-ta="aria-label:bill.close" aria-label="關閉改裝單">✕</button></div>
       <div class="bill-b">
+        <div class="bill-loc" id="billLoc"></div>
         <div class="bill-sum">
-          <div><span>總車高</span><b id="bH">—</b></div>
-          <div><span>舉升</span><b id="bLift">—</b></div>
-          <div><span>離地</span><b id="bClear">—</b></div>
-          <div class="wide"><span>車色</span><b id="hCol">—</b></div>
+          <div><span data-t="bill.totalHeight">總車高</span><b id="bH">—</b></div>
+          <div><span data-t="bill.lift">舉升</span><b id="bLift">—</b></div>
+          <div><span data-t="bill.clearance">離地</span><b id="bClear">—</b></div>
+          <div class="wide"><span data-t="bill.colour">車色</span><b id="hCol">—</b></div>
         </div>
         <p class="bill-park" id="bPark"></p>
         <ul class="bl" id="bList"></ul>
-        <div class="bill-tot"><span>零件合計<br><em id="bOpen" style="font:500 11px var(--mono);color:var(--ink3);font-style:normal"></em></span><b id="bTotal">—</b></div>
-        <p class="bill-note">輪框以四顆計；輪胎、工資與安裝不在內。外幣照概估匯率換算，日本標價含稅。</p>
+        <div class="bill-tot"><span><span data-t="bill.partsTotal">零件合計</span><br><em id="bOpen" style="font:500 11px var(--mono);color:var(--ink3);font-style:normal"></em></span><b id="bTotal">—</b></div>
+        <p class="bill-note"><span data-t="bill.note">輪框以四顆計；輪胎、工資與安裝不在內。外幣照概估匯率換算，日本標價含稅。</span> <span id="rateNote"></span></p>
         <pre id="out"></pre>
-        <div class="bill-f">個人非營利專案，與 Suzuki 及各改裝品牌無關聯；資訊整理自公開網路資料，以官方為準。商標屬各自所有者。
-          如有不妥請<a href="https://github.com/carloxthebot/jimny/issues" target="_blank" rel="noopener">告知</a>，將儘速修正或移除。— @Carlos<br>
+        <div class="bill-f"><span data-t="disclaimer.personal">個人非營利專案，與 Suzuki 及各改裝品牌無關聯；資訊整理自公開網路資料，以官方為準。</span><span data-t="disclaimer.trademarks">商標屬各自所有者。</span>
+          <span class="report">如有不妥請<a href="https://github.com/carloxthebot/jimny/issues" target="_blank" rel="noopener">告知</a>，將儘速修正或移除。</span>— @Carlos<br>
           <span id="hVer"></span></div>
       </div>
       <div class="bill-a">
-        <button class="btn pri" type="button" id="btnExport">產生改裝單</button>
-        <button class="btn" type="button" id="btnReset">回到原廠</button>
-        <button class="btn" type="button" id="btnDemo">看一台範例</button>
-        <a class="btn ln" href="parts.html">零件目錄 →</a>
+        <button class="btn pri" type="button" id="btnExport" data-t="bill.export">產生改裝單</button>
+        <button class="btn" type="button" id="btnReset" data-t="bill.reset">回到原廠</button>
+        <button class="btn" type="button" id="btnDemo" data-t="bill.demo">看一台範例</button>
+        <a class="btn ln" href="parts.html" id="catLink" data-t="bill.catalogue">零件目錄 →</a>
       </div>
     </section>
   </div>
@@ -952,15 +1038,32 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { rigJimny, applyConfig, updateSplit, loadFinishes } from './rig.js?v=202609290900';
-import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609290900';
-import { buildAccessory, initParts, ensureParts, prefetchParts, takeMissing, partNames, getPart, allParts } from './accessories.js?v=202609290900';
-import { openAwning, roofTent, campExtra } from './camp.js?v=202609290900';
-import { buildWheel, loadTreadMasks } from './wheels.js?v=202609290900';
-import { priceLabel, toTWD, FX_NOTE } from './fx.js?v=202609290900';
+import { rigJimny, applyConfig, updateSplit, loadFinishes } from './rig.js?v=202609291026';
+import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609291026';
+import { buildAccessory, initParts, ensureParts, prefetchParts, takeMissing, partNames, getPart, allParts } from './accessories.js?v=202609291026';
+import { openAwning, roofTent, campExtra } from './camp.js?v=202609291026';
+import { buildWheel, loadTreadMasks } from './wheels.js?v=202609291026';
+import * as PARTS from './parts.js?v=202609291026';
+import { t as T, setLang, getLang, detectLang, detectRegion, setRegion, localizeCatalogue, zhOf, price, toRegion, formatTotal,
+  currencyOf, roundApprox, money as fmtMoney, available, marketName, parkingApplies, REGIONS, REGION_IDS, LANGS, FX } from './i18n/i18n.js?v=202609291026';
 // Written by stamp.sh on each deploy; shown in the HUD so a stale cached copy
 // is obvious at a glance.
-const BUILD = '202609290900';
+const BUILD = '202609291026';
+
+/* ═══ language and region ════════════════════════════════════════════════
+   Two settings (i18n/i18n.js): the language of every word on the page, and
+   the region whose currency the prices are shown in (and whose market name
+   the car goes by, and whether the mechanical-parking advice applies).
+   ?lang=zh|en|ja and ?region=tw|jp|us|au|eu|uk set them for a shared link;
+   otherwise the viewer's last pick, else the time zone / browser language.
+   English and Japanese load their catalogue text on demand (~200 KB each);
+   zh-TW loads nothing extra. */
+const Q0 = new URLSearchParams(location.search);
+const LANG_Q = { zh: 'zh-TW', 'zh-tw': 'zh-TW', 'zh-hant': 'zh-TW', en: 'en', ja: 'ja' }[(Q0.get('lang') ?? '').toLowerCase()];
+// (under automation -- the shot tools -- the fallback is Taiwan, so they run in zh-TW)
+let REGION = REGIONS[(Q0.get('region') ?? '').toLowerCase()] ? Q0.get('region').toLowerCase() : navigator.webdriver ? 'tw' : detectRegion();
+const LANG0 = LANG_Q ?? detectLang(REGION);
+const langReady = setLang(LANG0).catch(() => setLang('zh-TW')).then((l) => { localizeCatalogue(PARTS, l); return l; });
 
 const cv = document.getElementById('cv');
 // The backdrop is CSS behind a transparent canvas: a background texture in
@@ -1332,7 +1435,7 @@ async function setStage(name) {
   const tok = ++stageTok;
   const btns = [...document.querySelectorAll('[data-stage]')].filter(b => stageKey(b.dataset.stage) === name);
   if (!P.sky) {
-    for (const b of btns) { b.disabled = true; b.dataset.label ??= b.textContent; b.textContent = '載入中…'; }
+    for (const b of btns) { b.disabled = true; b.dataset.label ??= b.textContent; b.textContent = T('stage.loading'); }
     const done = () => { for (const b of btns) { b.disabled = false; b.textContent = b.dataset.label; } };
     try { await loadStage(P); } catch { done(); return; }
     done();
@@ -1494,8 +1597,8 @@ function resize() { const w = cv.clientWidth, h = cv.clientHeight; if (!w || !h)
   renderer.setSize(w, h, false); composer?.setSize(w, h); outline?.setSize(w, h); cam.aspect = w / h; applyView(); invalidate(false); }
 addEventListener('resize', resize);
 // the compass's snap points: [tooltip, az, el, dist]
-const VIEWS = [['車頭斜看', .8, .18, 9], ['側身', Math.PI / 2, .08, 8.6], ['車尾斜看', 2.4, .18, 9],
-  ['正臉', 0, .1, 8], ['鳥瞰', .6, 1.0, 10]];
+const VIEWS = [['view.frontQuarter', .8, .18, 9], ['view.side', Math.PI / 2, .08, 8.6], ['view.rearQuarter', 2.4, .18, 9],
+  ['view.front', 0, .1, 8], ['view.top', .6, 1.0, 10]];
 
 const DEF = { color: 'ZVL', twoTone: false, lift: 'stock', bodyLift: 'none', wheel: 'oem', tyre: 't195',
   tread: 'toyo_at3', owl: false, rimFinish: 'GM',
@@ -1505,10 +1608,10 @@ const DEF = { color: 'ZVL', twoTone: false, lift: 'stock', bodyLift: 'none', whe
   roofLights: 'none', grilleLight: 'none', exhaust: 'stock', extinguisher: 'none', guardCan: 'none', guardAxe: 'none', guardBoard: 'none', shovel: false, flares: false, decals: false, sideSkirt: false, stripe: 'none', cage: 'none', fender: 'none', face: 'none', spoiler: 'none', mudFlap: 'none', sideMould: 'none', rackShift: 0, split: 'none', paintFlares: false, lampCover: 'none', rackPaint: 'none', spareDelete: 'none', tgPanel: 'none', tgBag: 'none', tgFrame: 'none', hitch: 'none', carrier: 'none', tent: 'none', tentOpen: false, awningOpen: false, awningRoom: false, campExtra: 'none',
   ...Object.fromEntries(ARB_RACK_ACC.map(a => [a.key, false])) };
 // spare delete and the tailgate: [state key, select, hint, list, name]
-const TG_UI = [['spareDelete', 'selSpareDel', 'hSpareDel', SPARE_DELETES, '拿掉備胎'],
-  ['tgPanel', 'selTgPanel', 'hTgPanel', TG_PANELS, '背門護板'], ['tgBag', 'selTgBag', 'hTgBag', TG_BAGS, '背門書包'],
-  ['tgFrame', 'selTgFrame', 'hTgFrame', TG_FRAMES, '背門框架'], ['hitch', 'selHitch', 'hHitch', HITCHES, '拖車座'],
-  ['carrier', 'selCarrier', 'hCarrier', CARRIERS, '二輪車架']];
+const TG_UI = [['spareDelete', 'selSpareDel', 'hSpareDel', SPARE_DELETES, 'part.spareDelete'],
+  ['tgPanel', 'selTgPanel', 'hTgPanel', TG_PANELS, 'part.tgPanel'], ['tgBag', 'selTgBag', 'hTgBag', TG_BAGS, 'part.tgBag'],
+  ['tgFrame', 'selTgFrame', 'hTgFrame', TG_FRAMES, 'part.tgFrame'], ['hitch', 'selHitch', 'hHitch', HITCHES, 'part.hitch'],
+  ['carrier', 'selCarrier', 'hCarrier', CARRIERS, 'part.carrier']];
 // 50 mm a press, 200 mm either way: the gutter feet clamp anywhere along the
 // drip rail, but past that the rack's end legs run off the roof panel
 const RACK_STEP = 50, RACK_MAX = 200;
@@ -1544,12 +1647,40 @@ const find = (l, id) => l.find(x => x.id === id) || l[0];
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-/* ── prices: NT$ up front, the maker's own currency underneath ─────────── */
-function money(o) { const p = priceLabel(o); return p.main === '原廠' ? '' : ' — ' + p.main + (p.sub ? `（${p.sub}）` : ''); }
-function priceCell(o) {
-  const p = priceLabel(o);
-  return `<span class="pr">${p.main}${p.sub ? `<em>${p.sub}</em>` : ''}</span>`;
+/* ── prices: the region's currency up front, the maker's own figure under it ──
+   A price in another currency is converted at the dated FRB H.10 rates
+   (i18n/markets.js) and marked approximate; `sub` keeps the maker's figure. */
+function PL(o, amount) {
+  const r = price(o, REGION, { amount });
+  if (r.kind === 'stock') return { main: r.text, sub: '', stock: true };
+  if (r.kind === 'ask') return { main: r.text, sub: '', ask: true };
+  return { main: r.text, sub: r.approx ? r.original.text : '', approx: r.approx };
 }
+// a bracketed aside, in the punctuation of the language
+const paren = (s) => (getLang() === 'en' ? ` (${s})` : `（${s}）`);
+const DOT = () => (getLang() === 'en' ? ' · ' : '・');
+function money(o) { const p = PL(o); return p.stock ? '' : ' — ' + p.main + (p.sub ? paren(p.sub) : ''); }
+function priceCell(o) {
+  const p = PL(o);
+  return `<span class="pr">${esc(p.main)}${p.sub ? `<em>${esc(p.sub)}</em>` : ''}</span>`;
+}
+/** A price in the region's currency, unrounded; null when unpriced. */
+const conv = (amount, cur) => toRegion(amount, cur, REGION);
+const isForeign = (cur) => (cur ?? 'TWD') !== currencyOf(REGION);
+/** A sum in the region's currency, full digits, approximate if converted. */
+const fmtAmt = (v, approx, compact) => approx
+  ? T(compact ? 'price.converted' : 'price.approx', compact ? { amount: fmtMoney(roundApprox(v, currencyOf(REGION)), currencyOf(REGION), REGION) }
+    : { price: fmtMoney(roundApprox(v, currencyOf(REGION)), currencyOf(REGION), REGION) })
+  : fmtMoney(v, currencyOf(REGION), REGION);
+/** The gauge's short total: 萬 / 万 where the language counts that way. */
+const fmtTotal = (v, approx) => (approx ? T('price.converted', { amount: formatTotal(roundApprox(v, currencyOf(REGION)), REGION) }) : formatTotal(v, REGION));
+
+/* ── availability: a part not known to be sold in the region keeps its place
+   in every list, with a quiet note under it ('unknown' shows nothing) */
+const LIST_OF = new Map();
+for (const [n, v] of Object.entries(PARTS)) if (Array.isArray(v)) for (const it of v) if (it && typeof it === 'object' && !LIST_OF.has(it)) LIST_OF.set(it, n);
+const noSale = (it, list) => { const l = list ?? LIST_OF.get(it) ?? it?.__list; return !!l && !!it && available(it, REGION, l) === false; };
+const noSaleTag = (it, list) => (noSale(it, list) ? `<span class="nosale">${esc(T('avail.maybeNot'))}</span>` : '');
 
 const loader = new GLTFLoader();
 const draco = new DRACOLoader();
@@ -1711,6 +1842,8 @@ const drawCar = (k) => {
 function loadBody(tries = 0) {
   loader.load(tries ? `model/jimny-hq.glb?retry=${tries}` : 'model/jimny-hq.glb', async (g) => {
   await firstFrame;
+  await langReady;
+  applyLocale();
   // the model is in; whatever the progress events did or did not report, the
   // car is now complete on screen
   drawCar(1);
@@ -1729,7 +1862,8 @@ function loadBody(tries = 0) {
     update: () => update(), setOrbit: (o) => { Object.assign(orbit, o); applyCam(); },
     set: (k, v) => { S[k] = v; buildUI(); update(); },
     // resolves when every part the current settings draw is on the car
-    partsSettled: () => partsSettled() };
+    partsSettled: () => partsSettled(),
+    locale: () => ({ lang: getLang(), region: REGION }), setLocale: (l, r) => switchLocale(l, r) };
   await yieldFrame();
   // one stock render first, to line the model's measured height up with the
   // catalogue's 1730 mm before anything is bolted to it
@@ -1764,7 +1898,7 @@ function loadBody(tries = 0) {
   // the style's parts popped on, which looked broken. Only the parts this car
   // wears are fetched here (most are already in, from guessParts); the shot
   // tools get the whole library up front, since they fit part after part.
-  $('bootmsg').textContent = '組裝零件…';
+  $('bootmsg').textContent = T('boot.assemblingParts');
   if (navigator.webdriver) await ensureParts(partNames());
   buildStyles();
   // A first-time reader gets the style step; anyone who has been here before
@@ -1779,7 +1913,7 @@ function loadBody(tries = 0) {
   // and wait for what that car wears, and for the stage it stands on
   await partsSettled();
   accessoriesIn = true;
-  $('hVer').textContent = `版本 ${BUILD}`;
+  $('hVer').textContent = T('misc.version', { build: BUILD });
   await stageBoot.catch(() => {});
   await yieldFrame(); await yieldFrame();
   // Open on a high three-quarter and swing down to the working view while
@@ -1805,16 +1939,17 @@ function loadBody(tries = 0) {
   }, (p) => { if (!p.total) return;
     const k = p.loaded / p.total;
     drawCar(k);
-    $('bootmsg').textContent = k < 1 ? `載入 3D 模型… ${Math.round(k * 100)}%` : '組裝中…';
+    $('bootmsg').textContent = k < 1 ? T('boot.progress', { pct: Math.round(k * 100) }, LANG0) : T('boot.assembling', null, LANG0);
     if (k >= 1) $('boot').classList.add('assembling');
   }, (e) => {
     if (tries < 2) {
-      $('bootmsg').textContent = '連線不穩，重新下載…';
+      $('bootmsg').textContent = T('boot.unstable', null, LANG0);
       drawCar(0);
       setTimeout(() => loadBody(tries + 1), 800 * (tries + 1));
       return;
     }
-    $('bootmsg').innerHTML = `模型載入失敗<br><span class="err">${esc(String(e?.message || e))}</span>`;
+    $('bootmsg').innerHTML = `${esc(T('boot.failed', null, LANG0))}<br><span class="err">${esc(String(e?.message || e))}</span>`;
+    $('bootretry').textContent = T('boot.retry', null, LANG0);
     $('bootbar').hidden = true;
     $('bootretry').hidden = false;
   });
@@ -2081,7 +2216,7 @@ function update() {
     if (S.awningOpen && aw.open) add(openAwning(THREE, aw, S.awningSide, groundY, S.awningRoom && aw.room), 'awningOpen');
     if (ex.id !== 'none') add(campExtra(THREE, ex, ex.shape === 'tarp' ? tentSide : S.awningSide, groundY), 'campExtra');
     const n = (tent.id !== 'none') + (ex.id !== 'none') + (S.awningOpen && !!aw.open);
-    $('sum4').textContent = n ? `${n} 項` : '無';
+    $('sum4').textContent = n ? T('dock.items', { n }) : T('dock.none');
   }
   // ARB's clip-on accessories: only on the ARB rack, and they ride with it
   // (with a KC bar hung on the bare front rail, the Slimline moves under the
@@ -2121,8 +2256,8 @@ function update() {
   for (const n of settling) settleIn(n);
   $('arbAcc').hidden = S.roofRack !== 'arb';
   $('rackMove').hidden = S.roofRack === 'none';
-  $('rackPos').textContent = (!S.rackShift ? '置中' : `往車${S.rackShift > 0 ? '頭' : '尾'} ${Math.abs(S.rackShift)}mm`)
-    + (mastOff ? '（要拆天線桿）' : '');
+  $('rackPos').textContent = (!S.rackShift ? T('rack.centre') : T(S.rackShift > 0 ? 'rack.shiftFront' : 'rack.shiftRear', { mm: Math.abs(S.rackShift) }))
+    + (mastOff ? T('rack.mast') : '');
   $('rackNudge').querySelectorAll('button').forEach(b =>
     b.disabled = Math.abs(S.rackShift + (+b.dataset.d) * RACK_STEP) > RACK_MAX);
 
@@ -2144,13 +2279,13 @@ function update() {
   countTo($('hClearN'), 210 + total + Math.round((ty.dia - 693) / 2));
   const st = ALL_STYLES.find(x => x.id === styleAt);
   const drift = styleDrift();
-  $('sumStyle').textContent = !st ? '未選' : drift ? `${st.label}・改 ${drift}` : st.label;
+  $('sumStyle').textContent = !st ? T('dock.unset') : drift ? T('dock.styleDrift', { style: st.label, n: drift }) : st.label;
   $('hCol').textContent = col.name;
-  $('hVer').textContent = accessoriesIn ? `版本 ${BUILD}` : `版本 ${BUILD} · 配件載入中…`;
+  $('hVer').textContent = T(accessoriesIn ? 'misc.version' : 'misc.versionLoading', { build: BUILD });
   prevS = { ...S };
   syncChrome();
   invalidate();
-  renderFlags(validate(S, { tyre: ty, lift, bodyLift: bl, wheel: wh }));
+  renderFlags(validate(S, { tyre: ty, lift, bodyLift: bl, wheel: wh }, T));
   syncSummary(total, ty, col);
   syncRails();
   // a rack, a tent or a lift changes the car's size: refit it
@@ -2167,7 +2302,7 @@ function update() {
  * next time they change a wheel.
  */
 let flagsOpen = false;
-const LEVELS = { error: '不相容', warn: '注意', info: '提醒' };
+const LEVEL = (lv) => T('flags.level.' + lv);
 function renderFlags(fl) {
   const box = $('flags');
   if (!fl.length) { box.className = 'flags'; box.innerHTML = ''; return; }
@@ -2175,11 +2310,11 @@ function renderFlags(fl) {
   const worst = n('error') ? 'error' : n('warn') ? 'warn' : 'info';
   const parts = [['error', 'bad'], ['warn', 'wrn'], ['info', '']]
     .filter(([lv]) => n(lv))
-    .map(([lv, cls]) => `<i class="${cls}">${n(lv)} ${LEVELS[lv]}</i>`).join('<span>·</span>');
+    .map(([lv, cls]) => `<i class="${cls}">${n(lv)} ${esc(LEVEL(lv))}</i>`).join('<span>·</span>');
   box.className = 'flags' + (flagsOpen ? ' open' : '');
   box.innerHTML = `<button type="button" class="flagbar ${worst}" aria-expanded="${flagsOpen}">`
     + `${parts}<em>\u25be</em></button><div class="flaglist glass">`
-    + fl.map(f => `<div class="flag ${f.level}"><b>${LEVELS[f.level]}</b>${esc(f.msg)}</div>`).join('') + '</div>';
+    + fl.map(f => `<div class="flag ${f.level}"><b>${esc(LEVEL(f.level))}</b>${esc(f.msg)}</div>`).join('') + '</div>';
 }
 // a click anywhere else folds the list back into its chip
 addEventListener('pointerdown', (e) => {
@@ -2208,11 +2343,11 @@ function syncOwl() {
   const b = $('tgOwl');
   b.disabled = !ok;
   b.setAttribute('aria-pressed', S.owl);
-  b.querySelector('.st').textContent = !ok ? '無此尺寸' : S.owl ? '開啟' : '關閉';
-  $('owlNote').textContent = !tm.owl ? `${tm.brand} 這條原廠全尺寸都沒有白字`
-    : !sized ? '此型號部分尺寸有白字，實際請向通路確認'
-    : tm.owlSizes.includes(t.id) ? `${t.label} 原廠有白字版本`
-    : `白字只有 ${tm.owlSizes.map(id => find(TYRES, id).label).join('、')}`;
+  b.querySelector('.st').textContent = !ok ? T('tyre.owl.noSize') : T(S.owl ? 'toggle.on' : 'toggle.off');
+  $('owlNote').textContent = !tm.owl ? T('tyre.owl.none', { brand: tm.brand })
+    : !sized ? T('tyre.owl.partial')
+    : tm.owlSizes.includes(t.id) ? T('tyre.owl.has', { size: t.label })
+    : T('tyre.owl.only', { sizes: tm.owlSizes.map(id => find(TYRES, id).label).join(T('tyre.listSep')) });
   return ok;
 }
 
@@ -2439,7 +2574,8 @@ const STOCK_H = 1730;
 let HEIGHT_CAL = null;
 // Mechanical parking in Taiwan is sold by height class; these are the three
 // classes a車位 is normally advertised as.
-const PARK = [[1550, '一般機械車位（1550mm）'], [1800, '休旅機械車位（1800mm）'], [2050, '大型機械車位（2050mm）']];
+// (Only where that kind of parking exists: parkingApplies(REGION), Taiwan and Japan.)
+const PARK = [[1550, 'normal'], [1800, 'suv'], [2050, 'large']];
 // The roof antenna is the tallest thing on the car (1849 mm in this model,
 // 200 mm above the roof) and no published height includes it, so the sweep
 // skips masts: anything less than 40 mm across cannot be what a car park's
@@ -2461,7 +2597,8 @@ function showHeight() {
   const h = Math.round((measuredHeight() + (HEIGHT_CAL ?? 0)) / 5) * 5;
   const d = h - STOCK_H;
   countTo($('rHeightN'), h);
-  $('rHeightDelta').innerHTML = d === 0 ? `原廠 ${STOCK_H}mm` : `<span class="o">原廠 ${STOCK_H}mm　</span>${d > 0 ? '+' : '−'}${Math.abs(d)}mm`;
+  const stockMm = esc(T('gauge.stockMm', { mm: STOCK_H }));
+  $('rHeightDelta').innerHTML = d === 0 ? stockMm : `<span class="o">${stockMm}　</span>${d > 0 ? '+' : '−'}${Math.abs(d)}mm`;
   const cls = PARK.find(([limit]) => h <= limit - 30);
   const tight = PARK.find(([limit]) => h <= limit);
   const el = $('rPark');
@@ -2469,10 +2606,13 @@ function showHeight() {
   const now = cls ? '' : tight ? 'tight' : 'over';
   el.dataset.cls = now;
   el.className = now;
-  el.textContent = cls ? '可進 ' + cls[1] : tight ? '幾乎頂到 ' + tight[1] : '超過 2050mm，機械車位進不去';
+  el.textContent = cls ? T('parking.fits', { cls: T('parking.class.' + cls[1]) }) : tight ? T('parking.tight', { cls: T('parking.class.' + tight[1]) }) : T('parking.over');
   // the phone's gauge strip has room for a chip, not the sentence;
-  // four characters at most, so it never truncates: 可進休旅／可進大型／幾乎頂到／進不去
-  $('rParkS').textContent = cls ? '可進' + cls[1].slice(0, 2) : tight ? '幾乎頂到' : '進不去';
+  // four characters at most in zh, so it never truncates: 可進休旅／可進大型／幾乎頂到／進不去
+  $('rParkS').textContent = cls ? T('parking.short.' + cls[1]) : tight ? T('parking.short.tight') : T('parking.short.over');
+  // elsewhere the height stands alone
+  const pk = parkingApplies(REGION);
+  el.hidden = !pk; $('rParkS').hidden = !pk;
   $('rParkS').title = el.textContent;
   $('rParkS').className = 'pchip ' + now;
   // crossing into a tighter class is worth noticing
@@ -2498,8 +2638,10 @@ let styleAt = null;
 // kit on an otherwise stock car; our own combinations follow.
 const KIT_STYLES = KITS.filter(k => k.id !== 'none').map(k => ({
   // each on the maker's own demo colour, wheels and tyres where they publish
-  // them (k.demo), so the card is a car and not a grey stock body with panels
-  id: `kit_${k.id}`, kitOf: k, label: k.label, brand: k.brand, desc: [k.demoNote, k.note].filter(Boolean).join('。'),
+  // them (k.demo), so the card is a car and not a grey stock body with panels.
+  // The text is read through, so it follows the catalogue's language.
+  id: `kit_${k.id}`, kitOf: k, get label() { return k.label; }, get brand() { return k.brand; },
+  get desc() { return [k.demoNote, k.note].filter(Boolean).join(getLang() === 'en' ? '. ' : '。'); },
   set: { kit: k.id, ...k.set, ...(k.demo ?? {}) } }));
 const ALL_STYLES = [...KIT_STYLES, ...STYLES];
 
@@ -2515,20 +2657,19 @@ function styleCost(st) {
   let sum = 0, open = 0;
   for (const [k, v] of Object.entries(st.set)) {
     const acc = ARB_RACK_ACC.find(a => a.key === k);
-    if (acc && v) { sum += toTWD(acc.price, acc.cur) ?? 0; continue; }
+    if (acc && v) { sum += conv(acc.price, acc.cur) ?? 0; continue; }
     const list = ALL_LISTS[k];
     if (list) {
       const it = list.find(x => x.id === v);
       if (!it || it.price === 0) continue;                     // stock costs nothing
       const price = k === 'wheel' ? wheelPrice(it, st.set.rimFinish) : it.price;
-      const n = price == null ? null : toTWD(price, it.cur);
+      const n = price == null ? null : conv(price, it.cur);
       if (n == null) { open++; continue; }
       sum += n * (QTY[k] ?? 1);
     }
   }
   return { sum, open };
 }
-const wan = (n) => (n / 10000).toFixed(n >= 100000 ? 0 : 1).replace(/\.0$/, '');
 
 /** How far the current configuration has drifted from the style it started
  *  from. Counting it is what lets the style be a starting point rather than
@@ -2541,21 +2682,21 @@ function styleDrift() {
 }
 
 function buildStyles() {
-  $('styleCount').textContent = `${KIT_STYLES.length} 套廠商套件・${STYLES.length} 種風格`;
+  $('styleCount').textContent = T('style.count', { kits: KIT_STYLES.length, styles: STYLES.length });
   const card = (st) => {
     let price;
     if (st.kitOf) {                                     // a maker's kit is priced as the kit, not as its panels
-      const k = st.kitOf, p = priceLabel(k);
-      price = k.price == null ? '套件價洽詢' : `套件 ${p.main}${p.sub ? `（${p.sub}）` : ''}`;
+      const k = st.kitOf, p = PL(k);
+      price = k.price == null ? T('style.kitPriceAsk') : p.sub ? T('style.kitPriceSub', { price: p.main, sub: p.sub }) : T('style.kitPrice', { price: p.main });
     } else {
       const { sum, open } = styleCost(st);
-      price = sum ? `零件約 NT$${wan(sum)} 萬・不含胎${open ? `・${open} 項洽詢` : ''}` : '洽詢';
+      price = sum ? T(open ? 'style.partsApproxOpen' : 'style.partsApprox', { amount: formatTotal(sum, REGION), open }) : T('price.ask');
     }
     return `<button class="style${st.kitOf ? ' kit' : ''}" data-style="${st.id}" aria-pressed="${st.id === styleAt}">
       <img src="model/shots/style-${st.id}.webp?v=${BUILD}" alt="" loading="lazy" onerror="this.remove()">
-      ${st.brand ? `<i class="sb">${esc(st.brand)}</i>` : `<i class="sb">各式風格</i>`}<b>${esc(st.label)}</b>
+      ${st.brand ? `<i class="sb">${esc(st.brand)}</i>` : `<i class="sb">${esc(T('style.eyebrow'))}</i>`}<b>${esc(st.label)}</b>
       <span class="ds">${esc(st.desc)}</span>
-      <span class="pr">${esc(price)}</span></button>`;
+      <span class="pr">${esc(price)}</span>${st.kitOf ? noSaleTag(st.kitOf, 'KITS') : ''}</button>`;
   };
   // the makers' complete kits (each whole kit on an otherwise stock car)
   // first, then the cars we put together; the sub row filters between them
@@ -2597,7 +2738,8 @@ $('styles').addEventListener('click', (e) => {
    sub-groups picks which family the tray shows. Nothing here closes on a
    downward swipe: that gesture belongs to LINE's and Facebook's in-app
    browsers, which shut themselves on it. */
-const CAT_NAMES = ['整台風格', '升高', '輪框輪胎', '外觀件', '車頂與後方', '燈'];
+const CAT_KEYS = ['tab.style', 'tab.lift', 'tab.wheels', 'tab.body', 'tab.roofRear', 'tab.lights'];
+const catName = (c) => T(CAT_KEYS[c]);
 // which category and sub-group each setting lives in, read off the markup
 // (a catalogue link opens the tray there; the dock counts by it)
 const GROUP = { lift: [1, null], bodyLift: [1, null] };
@@ -2619,9 +2761,9 @@ function openTray(c, g) {
   $('steps').querySelector('.hint-me')?.classList.remove('hint-me');
   const pane = paneOf(c);
   document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p === pane));
-  $('trayTitle').textContent = CAT_NAMES[c];
+  $('trayTitle').textContent = catName(c);
   const subs = (pane.dataset.subs ?? '').split('|').filter(Boolean).map(s => s.split(':'));
-  $('subs').innerHTML = subs.map(([id, l]) => `<button role="tab" type="button" data-g="${id}">${esc(l)}</button>`).join('');
+  $('subs').innerHTML = subs.map(([id, l]) => `<button role="tab" type="button" data-g="${id}">${esc(T(l))}</button>`).join('');
   showSub(g ?? subAt[c] ?? subs[0]?.[0]);
   frame(true);
 }
@@ -2742,7 +2884,7 @@ addEventListener('resize', () => frame(false));
   box.insertAdjacentHTML('beforeend', VIEWS.map(([name, az], i) => {
     const top = i === 4;
     const pos = top ? 'left:50%;top:50%' : `left:${(50 - Math.sin(az) * 46).toFixed(1)}%;top:${(50 - Math.cos(az) * 46).toFixed(1)}%`;
-    return `<button class="snap${top ? ' top' : ''}" type="button" data-v="${i}" style="${pos}" data-tip="${name}" aria-label="${name}">${top ? EYE_SVG : CAM_SVG}</button>`;
+    return `<button class="snap${top ? ' top' : ''}" type="button" data-v="${i}" style="${pos}" data-tip="${T(name)}" aria-label="${T(name)}">${top ? EYE_SVG : CAM_SVG}</button>`;
   }).join(''));
   const camDot = $('cmpCam'), cone = box.querySelector('.cone'), grad = $('coneG');
   // radius on the disc for an elevation: the rim is eye level, the centre straight down
@@ -2807,85 +2949,90 @@ function coach() {
 }
 
 /* ═══ 改裝單: every non-stock choice, what it costs, where to buy it ════════ */
-// the switches that carry no catalogue entry of their own
-const TG_NAMES = { windowGuards: '鐵窗（WLM）', shovel: '車頂架鏟子', flares: '輪弧鉚釘', sideSkirt: '側裙飾板（SHOWA）',
-  decals: '車門貼字', spareBag: '備胎書包', spareCover: '備胎硬殼蓋', gullwing: '鷗翼窗（URNIETA 1970）', pillarPods: 'A 柱小圓燈' };
+// the switches that carry no catalogue entry of their own (string keys)
+const TG_NAMES = { windowGuards: 'bits.windowGuards', shovel: 'bits.shovel', flares: 'bits.flares', sideSkirt: 'bits.sideSkirt',
+  decals: 'bits.decals', spareBag: 'bits.spareBag', spareCover: 'bits.spareCover', gullwing: 'bits.gullwing', pillarPods: 'bits.pillarPods' };
+const GUARD_ITEM = { guardCan: 'guard.can', guardAxe: 'guard.axe', guardBoard: 'guard.board' };
+const sideName = (v) => T('side.' + v);
 /** One line per thing that differs from a stock car, in the dock's order.
- *  `twd` is a number when priced, null when the maker publishes no price,
- *  and undefined for things nobody sells as a priced part (paint, a switch). */
+ *  `val` is the price in the region's currency when priced, null when the
+ *  maker publishes no price, and undefined for things nobody sells as a
+ *  priced part (paint, a switch). `approx` marks a converted figure. */
 function billLines() {
   const out = [];
   const kit = S.kit !== 'none' ? find(KITS, S.kit) : null;
   const inKit = (k) => kit?.set && k in kit.set && S[k] === kit.set[k];
-  const push = (cat, name, it, extra = {}) => {
+  const push = (cat, nameKey, it, extra = {}) => {
     const qty = extra.qty ?? 1, price = extra.price !== undefined ? extra.price : it?.price;
     const priced = it && 'price' in it;
-    const one = priced ? toTWD(price, it.cur) : undefined;
-    const p = it && priced ? priceLabel({ ...it, price }) : null;
-    out.push({ cat, name, label: extra.label ?? `${it?.brand && it.brand !== '—' ? it.brand + ' ' : ''}${it?.label ?? ''}`.trim(),
-      twd: one == null ? one : one * qty, main: p?.main ?? '—', sub: p?.sub ?? '', qty, url: it?.url ?? null });
+    const one = priced ? conv(price, it.cur) : undefined;
+    const p = it && priced ? PL({ ...it, price }) : null;
+    out.push({ cat, name: T(nameKey), item: it, list: extra.list, label: extra.label ?? `${it?.brand && it.brand !== '—' ? it.brand + ' ' : ''}${it?.label ?? ''}`.trim(),
+      val: one == null ? one : one * qty, approx: priced && price ? isForeign(it.cur) : false,
+      main: p?.main ?? '—', sub: p?.sub ?? '', qty, url: it?.url ?? null });
   };
+  const plain = (cat, nameKey, label, main = '—') => out.push({ cat, name: T(nameKey), label, val: undefined, main, sub: '' });
   const L = (k, list, name, cat, extra) => { if (S[k] !== DEF[k] && !inKit(k)) push(cat, name, find(list, S[k]), extra?.()); };
   // 升高 / 輪框輪胎
-  L('lift', LIFTS, '懸吊舉升', 1);
+  L('lift', LIFTS, 'part.lift', 1);
   if (S.wheel !== DEF.wheel || S.rimFinish !== DEF.rimFinish) {
     const w = find(WHEELS, S.wheel);
-    push(2, '輪框', w, { qty: 4, price: wheelPrice(w, S.rimFinish), label: `${w.brand ?? ''} ${w.label}・${wheelFinish(w, S.rimFinish).name}`.trim() });
+    push(2, 'part.wheel', w, { qty: 4, price: wheelPrice(w, S.rimFinish), label: `${w.brand ?? ''} ${w.label}${DOT()}${wheelFinish(w, S.rimFinish).name}`.trim() });
   }
   if (S.tyre !== DEF.tyre || S.tread !== DEF.tread || S.owl) {
     const t = find(TYRES, S.tyre), tm = find(TYRE_MODELS, S.tread);
-    out.push({ cat: 2, name: '輪胎', label: `${t.label} ${tm.brand ?? ''} ${tm.label}${S.owl ? '（白字）' : ''}`, twd: undefined, main: '不計價', sub: '', url: tm.url ?? null });
+    out.push({ cat: 2, name: T('part.tyre'), item: tm, label: `${t.label} ${tm.brand ?? ''} ${tm.label}${S.owl ? T('bill.owlSuffix') : ''}`, val: undefined, main: T('bill.noPrice'), sub: '', url: tm.url ?? null });
   }
   // 外觀件
-  if (S.twoTone) out.push({ cat: 3, name: '雙色車頂', label: '黑頂 ZJ3（原廠選配）', twd: undefined, main: '—', sub: '' });
-  if (S.split !== 'none') out.push({ cat: 3, name: '下半車身分色', label: find(SPLIT_PAINTS, S.split).label, twd: undefined, main: '依烤漆廠', sub: '' });
-  if (S.paintFlares) out.push({ cat: 3, name: '輪弧烤成車身色', label: '輪弧烤漆', twd: undefined, main: '依烤漆廠', sub: '' });
-  if (kit) push(3, '全車套件', kit);
-  for (const [k, list, name] of [['face', FACES, '換臉套件'], ['frontBumper', FRONT_BUMPERS, '前保桿'], ['grille', GRILLES, '水箱護罩'],
-    ['hood', HOODS, '引擎蓋'], ['rearBumper', REAR_BUMPERS, '後保桿'], ['fender', FENDERS, '寬體葉子板'], ['sideStep', SIDE_STEPS, '側踏／滑桿'],
-    ['snorkel', SNORKELS, '呼吸管'], ['exhaust', EXHAUSTS, '排氣管'], ['mirrors', MIRRORS, '後照鏡'], ['mudFlap', MUD_FLAPS, '擋泥板'],
-    ['sideMould', SIDE_MOULDINGS, '側飾條'], ['stripe', STRIPES, '車身拉花']]) L(k, list, name, 3);
-  for (const k of ['flares', 'sideSkirt', 'decals', 'gullwing']) if (S[k]) out.push({ cat: 3, name: '小改', label: TG_NAMES[k], twd: undefined, main: '—', sub: '' });
+  if (S.twoTone) plain(3, 'part.twoTone', T('bill.twoToneLabel'));
+  if (S.split !== 'none') plain(3, 'part.split', find(SPLIT_PAINTS, S.split).label, T('bill.byPaintShop'));
+  if (S.paintFlares) plain(3, 'part.paintFlares', T('bill.flarePaint'), T('bill.byPaintShop'));
+  if (kit) push(3, 'part.kit', kit);
+  for (const [k, list, name] of [['face', FACES, 'part.face'], ['frontBumper', FRONT_BUMPERS, 'part.frontBumper'], ['grille', GRILLES, 'part.grille'],
+    ['hood', HOODS, 'part.hood'], ['rearBumper', REAR_BUMPERS, 'part.rearBumper'], ['fender', FENDERS, 'part.fender'], ['sideStep', SIDE_STEPS, 'part.sideStepSlider'],
+    ['snorkel', SNORKELS, 'part.snorkel'], ['exhaust', EXHAUSTS, 'part.exhaust'], ['mirrors', MIRRORS, 'part.mirrors'], ['mudFlap', MUD_FLAPS, 'part.mudFlap'],
+    ['sideMould', SIDE_MOULDINGS, 'part.sideMould'], ['stripe', STRIPES, 'part.stripe']]) L(k, list, name, 3);
+  for (const k of ['flares', 'sideSkirt', 'decals', 'gullwing']) if (S[k]) plain(3, 'part.bits', T(TG_NAMES[k]));
   // 車頂與後方
-  L('roofRack', ROOF_RACKS, '車頂架', 4, () => ({ label: `${find(ROOF_RACKS, S.roofRack).brand ?? ''} ${find(ROOF_RACKS, S.roofRack).label}`
-    + (S.rackPaint !== 'none' ? `・${find(RACK_PAINTS, S.rackPaint).label}` : '') + (S.rackShift ? `・往車${S.rackShift > 0 ? '頭' : '尾'} ${Math.abs(S.rackShift)}mm` : '') }));
-  if (S.roofRack === 'arb') for (const a of ARB_RACK_ACC) if (S[a.key]) push(4, 'ARB 配件', { ...a, id: a.key, part: a.pn });
-  if (S.shovel) out.push({ cat: 4, name: '車頂架', label: TG_NAMES.shovel, twd: undefined, main: '—', sub: '' });
-  L('awning', AWNINGS, '車邊帳', 4, () => ({ label: `${find(AWNINGS, S.awning).brand ?? ''} ${find(AWNINGS, S.awning).label}（${S.awningSide === 'left' ? '左' : '右'}側）` }));
-  L('spoiler', SPOILERS, '車頂尾翼', 4); L('cage', CAGES, '外掛防滾籠', 4); L('ladder', LADDERS, '後爬梯', 4);
-  L('spareCoverKit', SPARE_COVERS, '備胎蓋', 4);
-  for (const k of ['spareBag', 'spareCover']) if (S[k]) out.push({ cat: 4, name: '備胎', label: TG_NAMES[k], twd: undefined, main: '—', sub: '' });
+  L('roofRack', ROOF_RACKS, 'part.roofRack', 4, () => ({ label: `${find(ROOF_RACKS, S.roofRack).brand ?? ''} ${find(ROOF_RACKS, S.roofRack).label}`
+    + (S.rackPaint !== 'none' ? `${DOT()}${find(RACK_PAINTS, S.rackPaint).label}` : '')
+    + (S.rackShift ? `${DOT()}${T(S.rackShift > 0 ? 'rack.shiftFront' : 'rack.shiftRear', { mm: Math.abs(S.rackShift) })}` : '') }));
+  if (S.roofRack === 'arb') for (const a of ARB_RACK_ACC) if (S[a.key]) push(4, 'part.arbAcc', { ...a, id: a.key, part: a.pn, __list: 'ARB_RACK_ACC' });
+  if (S.shovel) plain(4, 'part.roofRack', T(TG_NAMES.shovel));
+  L('awning', AWNINGS, 'part.awning', 4, () => ({ label: `${find(AWNINGS, S.awning).brand ?? ''} ${find(AWNINGS, S.awning).label}${T('awning.sideSuffix', { side: sideName(S.awningSide) })}` }));
+  L('spoiler', SPOILERS, 'part.spoiler', 4); L('cage', CAGES, 'part.cage', 4); L('ladder', LADDERS, 'part.ladder', 4);
+  L('spareCoverKit', SPARE_COVERS, 'part.spareCover', 4);
+  for (const k of ['spareBag', 'spareCover']) if (S[k]) plain(4, 'part.spare', T(TG_NAMES[k]));
   for (const [k, , , list, name] of TG_UI) L(k, list, name, 4);
-  if (S.windowGuards) out.push({ cat: 4, name: '鐵窗', label: TG_NAMES.windowGuards, twd: undefined, main: '—', sub: '' });
-  for (const k of SIDED) if (S[k] !== 'none')
-    out.push({ cat: 4, name: '鐵窗掛載', label: `${S[k] === 'left' ? '左' : '右'}鐵窗${{ guardCan: '油桶', guardAxe: '斧頭', guardBoard: '脫困板' }[k]}`, twd: undefined, main: '—', sub: '' });
-  L('extinguisher', EXTINGUISHERS, '滅火器', 4);
+  if (S.windowGuards) plain(4, 'part.windowGuards', T(TG_NAMES.windowGuards));
+  for (const k of SIDED) if (S[k] !== 'none') plain(4, 'part.guardMounts', T('guard.item', { side: sideName(S[k]), item: T(GUARD_ITEM[k]) }));
+  L('extinguisher', EXTINGUISHERS, 'part.extinguisher', 4);
   // 燈
-  L('lightBar', LIGHT_BARS, '車頂燈條', 5); L('roofLights', ROOF_LIGHTS, '圓燈', 5);
-  L('grilleLight', GRILLE_LIGHTS, '車頭燈條', 5); L('lampCover', LAMP_COVERS, '大燈罩', 5);
-  if (S.pillarPods) out.push({ cat: 5, name: '小燈', label: TG_NAMES.pillarPods, twd: undefined, main: '—', sub: '' });
+  L('lightBar', LIGHT_BARS, 'part.lightBar', 5); L('roofLights', ROOF_LIGHTS, 'part.roofLights', 5);
+  L('grilleLight', GRILLE_LIGHTS, 'part.grilleLight', 5); L('lampCover', LAMP_COVERS, 'part.lampCover', 5);
+  if (S.pillarPods) plain(5, 'part.lights', T(TG_NAMES.pillarPods));
   return out;
 }
 function billTotal(lines) {
-  let sum = 0, open = 0;
-  for (const l of lines) { if (typeof l.twd === 'number') sum += l.twd; else if (l.twd === null) open++; }
-  return { sum, open };
+  let sum = 0, open = 0, approx = false;
+  for (const l of lines) { if (typeof l.val === 'number') { sum += l.val; approx ||= l.approx; } else if (l.val === null) open++; }
+  return { sum, open, approx };
 }
-const ntd = (n) => 'NT$' + n.toLocaleString('en-US');
 /** The gauge strip's price and count, the dock's per-category summaries and
  *  the build-sheet badge, all from the same list the sheet prints. */
 function syncSummary(total, ty, col) {
-  const lines = billLines(), { sum, open } = billTotal(lines);
-  $('gPrice').textContent = sum ? `NT$${wan(sum)} 萬` : lines.length ? '洽詢' : '原廠';
-  $('gCount').textContent = lines.length ? `${lines.length} 項${open ? `・${open} 項洽詢` : ''}` : '未改裝';
-  $('gTotal').textContent = sum ? `NT$${wan(sum)} 萬` : lines.length ? `${lines.length} 項` : '原廠';
+  const lines = billLines(), { sum, open, approx } = billTotal(lines);
+  $('gPrice').textContent = sum ? fmtTotal(sum, approx) : lines.length ? T('bill.ask') : T('bill.stock');
+  $('gCount').textContent = lines.length ? T(open ? 'bill.countOpen' : 'bill.count', { n: lines.length, open }) : T('bill.notModified');
+  $('gTotal').textContent = sum ? fmtTotal(sum, approx) : lines.length ? T('bill.count', { n: lines.length }) : T('bill.stock');
   $('billN').textContent = lines.length || '';
   const n = (c) => lines.filter(l => l.cat === c).length;
-  $('sum0').textContent = total ? total + 'mm 舉升' : '原廠';
+  $('sum0').textContent = total ? T('dock.liftMm', { mm: total }) : T('dock.stock');
   $('sum1').textContent = ty.label;
-  $('sum2').textContent = col.name.split('（')[0] + (n(3) ? ` · ${n(3)} 項` : '');
-  $('sum3').textContent = n(4) ? `${n(4)} 項` : '無';
-  $('sum5').textContent = n(5) ? `${n(5)} 項` : '無';
+  const colour = col.name.split(/[（(]/)[0].trim();
+  $('sum2').textContent = n(3) ? T('dock.colourItems', { colour, n: n(3) }) : colour;
+  $('sum3').textContent = n(4) ? T('dock.items', { n: n(4) }) : T('dock.none');
+  $('sum5').textContent = n(5) ? T('dock.items', { n: n(5) }) : T('dock.none');
   if (!$('bill').hidden) renderBill(lines);
 }
 function renderBill(lines = billLines()) {
@@ -2894,17 +3041,27 @@ function renderBill(lines = billLines()) {
   $('bH').innerHTML = `${esc($('rHeightN').textContent)}<small>mm</small>`;
   $('bLift').innerHTML = `${total}<small>mm</small>`;
   $('bClear').innerHTML = `${210 + total + Math.round((ty.dia - 693) / 2)}<small>mm</small>`;
-  $('hCol').textContent = `${col.code} ${col.name}${S.twoTone ? '・雙色黑頂' : ''}`;
+  $('hCol').textContent = `${col.code} ${col.name}${S.twoTone ? T('bill.colourTwoTone') : ''}`;
   $('bPark').textContent = $('rPark').textContent;
   $('bPark').className = 'bill-park ' + ($('rPark').dataset.cls ?? '');
-  $('bList').innerHTML = lines.length ? lines.map(l => `<li><span class="k">${esc(CAT_NAMES[l.cat])}・${esc(l.name)}</span>
-      <span class="n">${esc(l.label)}${l.qty > 1 ? ` <i>× ${l.qty}</i>` : ''}</span>
-      <span class="p">${typeof l.twd === 'number' && l.qty > 1 ? ntd(l.twd) : esc(l.main)}${typeof l.twd === 'number' && (l.qty > 1 || l.sub) ? `<em>${l.qty > 1 ? `單顆 ${esc(l.main)}` : esc(l.sub)}</em>` : ''}</span>
-      ${l.url ? `<a href="${esc(l.url)}" target="_blank" rel="noopener">看產品頁 ↗</a>` : ''}</li>`).join('')
-    : '<li><span class="empty">目前是原廠車。從下方的分類開始改，或先看一台範例。</span></li>';
-  const { sum, open } = billTotal(lines);
-  $('bTotal').textContent = sum ? ntd(sum) : '—';
-  $('bOpen').textContent = open ? `另有 ${open} 項未公布價格` : '';
+  $('bPark').hidden = !parkingApplies(REGION);
+  // a priced line: the region's figure, and under it the maker's own (or,
+  // for a set of four, the price of one)
+  const priceOf = (l) => {
+    if (typeof l.val !== 'number') return esc(l.main);
+    const head = l.qty > 1 ? esc(fmtAmt(l.val, l.approx)) : esc(l.main);
+    const under = l.qty > 1 ? T('bill.each', { price: l.sub || l.main }) : l.sub;
+    return head + (under ? `<em>${esc(under)}</em>` : '');
+  };
+  $('bList').innerHTML = lines.length ? lines.map(l => `<li><span class="k">${esc(T('bill.lineKey', { cat: catName(l.cat), name: l.name }))}</span>
+      <span class="n">${esc(l.label)}${l.qty > 1 ? ` <i>× ${l.qty}</i>` : ''}${l.item ? noSaleTag(l.item) : ''}</span>
+      <span class="p">${priceOf(l)}</span>
+      ${l.url ? `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(T('bill.productPage'))}</a>` : ''}</li>`).join('')
+    : `<li><span class="empty">${esc(T('bill.empty'))}</span></li>`;
+  const { sum, open, approx } = billTotal(lines);
+  $('bTotal').textContent = sum ? fmtAmt(sum, approx) : '—';
+  $('bOpen').textContent = open ? T('bill.openCount', { n: open }) : '';
+  $('rateNote').textContent = T('price.rateNote', { date: FX.date, source: FX.sourceShort });
 }
 function openBill() {
   closeTray();
@@ -2921,11 +3078,11 @@ $('btnBill').onclick = () => { if ($('bill').hidden) openBill(); else closeBill(
 $('billX').onclick = closeBill;
 
 /* ═══ 1 · lift: pick the height first, then the kit ══════════════════════ */
-const INC = { spring:'彈簧', shock:'避震', hose:'長油管', caster:'Caster 修正', panhard:'橫拉桿', body:'車身墊高' };
+const INC = ['spring', 'shock', 'hose', 'caster', 'panhard', 'body'];   // lift.inc.<k>
 // What a kit ships with, read off the note each entry already carries. Cheaper
 // than a new data field and it cannot drift out of sync with the description.
 function includes(l) {
-  const t = (l.note || '') + ' ' + (l.label || '');
+  const t = (zhOf(l, 'note') || '') + ' ' + (zhOf(l, 'label') || '');   // the zh text, whatever is showing
   return { spring: /彈簧/.test(t) || l.lift > 0, shock: /避震/.test(t), hose: /油管/.test(t),
     caster: /Caster|caster/.test(t), panhard: /橫拉桿|Panhard|拉桿/.test(t), body: (l.body ?? 0) > 0 };
 }
@@ -2939,25 +3096,25 @@ function renderLiftSeg() {
     return `<button data-i="${esc(i)}" aria-pressed="${i === liftInch}">
       <b>${esc(i)}</b><i>${lo === hi ? lo : lo + '–' + hi}mm</i></button>`;
   }).join('');
-  $('liftCount').textContent = `${LIFTS.length} 組`;
+  $('liftCount').textContent = T('lift.count', { n: LIFTS.length });
 }
 function renderLiftCards() {
   const list = LIFTS.filter(l => l.inch === liftInch);
   $('liftCards').innerHTML = list.map(l => {
     const inc = includes(l);
-    const tags = l.id === 'stock' ? '' : '<span class="inc">' + Object.keys(INC).map(k =>
-      `<span class="tag ${inc[k] ? 'on' : 'no'}">${INC[k]}</span>`).join('') + '</span>';
+    const tags = l.id === 'stock' ? '' : '<span class="inc">' + INC.map(k =>
+      `<span class="tag ${inc[k] ? 'on' : 'no'}">${esc(T('lift.inc.' + k))}</span>`).join('') + '</span>';
     return `<div class="pcw"><button class="card" data-l="${esc(l.id)}" aria-pressed="${l.id === S.lift}">
       <span class="nm"><span class="brand">${esc(l.brand ?? '')}</span>${esc(l.label)}</span>
-      ${priceCell(l)}${tags}</button>${l.id === 'stock' ? '' : infoBtn(l)}</div>`;
+      ${priceCell(l)}${tags}${noSaleTag(l, 'LIFTS')}</button>${l.id === 'stock' ? '' : infoBtn(l)}</div>`;
   }).join('');
   syncLift();
 }
 function syncLift() {
   const l = find(LIFTS, S.lift), total = l.lift + (l.body ?? 0);
-  $('liftPick').textContent = `${l.brand ?? ''} ${l.label} — 舉升 ${total}mm`.trim();
-  $('liftNote').textContent = [l.note, l.uncertain ? '（規格或價格未完全查證）' : ''].filter(Boolean).join(' ');
-  $('tyreEcho').textContent = `目前舉升 ${total}mm`;
+  $('liftPick').textContent = `${l.brand ?? ''} ${T('lift.pick', { name: l.label, mm: total })}`.trim();
+  $('liftNote').textContent = [l.note, l.uncertain ? T('lift.unverified') : ''].filter(Boolean).join(' ');
+  $('tyreEcho').textContent = T('tyre.echo', { mm: total });
 }
 $('liftSeg').onclick = e => { const b = e.target.closest('[data-i]'); if (!b) return;
   liftInch = b.dataset.i;
@@ -2972,26 +3129,28 @@ $('liftCards').onclick = e => { const b = e.target.closest('[data-l]'); if (!b) 
 // Grouping for the filter chips: parts.js marks the OEM and retro wheels
 // (`kind`); anything else is an off-road wheel. 台灣製 is its own filter and
 // only counts wheels with Made-in-Taiwan evidence (`mit: true`).
-const wKind = (w) => w.kind ?? '越野';
+// (`kind` is matched on its zh text, which is what parts.js writes)
+const KIND_ID = { '原廠': 'oem', '越野': 'offroad', '復古': 'retro' };
+const wKind = (w) => KIND_ID[zhOf(w, 'kind')] ?? 'offroad';
 let wSize = 'all', wKindF = 'all', wQ = '';
 const wList = () => WHEELS.filter(w =>
-  (wSize === 'all' || w.rim === +wSize) && (wKindF === 'all' || (wKindF === '台灣製' ? w.mit === true : wKind(w) === wKindF))
+  (wSize === 'all' || w.rim === +wSize) && (wKindF === 'all' || (wKindF === 'mit' ? w.mit === true : wKind(w) === wKindF))
   && (!wQ || [w.brand, w.label, w.note].join(' ').toLowerCase().includes(wQ)));
 function renderWChips() {
-  $('wSize').innerHTML = [['all','全部尺寸'],['15','15 吋'],['16','16 吋'],['18','18 吋']].map(([v, l]) =>
-    `<button class="chip" data-ws="${v}" aria-pressed="${wSize === v}">${l}</button>`).join('');
-  $('wKind').innerHTML = [['all','全部風格'],['原廠','原廠'],['越野','越野'],['復古','復古'],['台灣製','台灣製']].map(([v, l]) =>
-    `<button class="chip" data-wk="${esc(v)}" aria-pressed="${wKindF === v}">${l}</button>`).join('');
+  $('wSize').innerHTML = [['all', T('wheel.sizeAll')], ...['15', '16', '18'].map(n => [n, T('wheel.size', { n })])].map(([v, l]) =>
+    `<button class="chip" data-ws="${v}" aria-pressed="${wSize === v}">${esc(l)}</button>`).join('');
+  $('wKind').innerHTML = ['all', 'oem', 'offroad', 'retro', 'mit'].map(v =>
+    `<button class="chip" data-wk="${v}" aria-pressed="${wKindF === v}">${esc(T(v === 'all' ? 'wheel.kindAll' : 'wheel.kind.' + v))}</button>`).join('');
 }
 function renderWheels() {
   const list = wList();
-  $('wheelCount').textContent = `${WHEELS.length} 款 → ${list.length} 款`;
-  $('wheelGrid').innerHTML = list.map(w => { const p = priceLabel({ ...w, price: wheelPrice(w, S.rimFinish) });
+  $('wheelCount').textContent = T('wheel.count', { all: WHEELS.length, shown: list.length });
+  $('wheelGrid').innerHTML = list.map(w => { const p = PL({ ...w, price: wheelPrice(w, S.rimFinish) });
     return `<div class="pcw"><button class="wcard" data-w="${esc(w.id)}" aria-pressed="${w.id === S.wheel}">
-      <img src="model/wheels/${esc(w.id)}.webp?v=${BUILD}" alt="${esc(w.label)} 輪框面" loading="lazy" width="120" height="120">
+      <img src="model/wheels/${esc(w.id)}.webp?v=${BUILD}" alt="${esc(T('wheel.alt', { label: w.label }))}" loading="lazy" width="120" height="120">
       <span class="wn" title="${esc((w.brand ?? '') + ' ' + w.label)}">${esc(w.label)}</span>
-      <span class="wm">${w.rim}×${w.width}J ET${w.offset > 0 ? '+' : w.offset < 0 ? '−' : ''}${Math.abs(w.offset)}${w.mit === true ? ' · 台灣製' : ''}${w.needsFlares ? '<br><b>輪胎外凸</b>' : ''}</span>
-      <span class="wp">${p.main === '原廠' ? '原廠' : '單顆 ' + p.main}</span>
+      <span class="wm">${w.rim}×${w.width}J ET${w.offset > 0 ? '+' : w.offset < 0 ? '−' : ''}${Math.abs(w.offset)}${w.mit === true ? ' · ' + esc(T('wheel.kind.mit')) : ''}${w.needsFlares ? `<br><b>${esc(T('wheel.poke'))}</b>` : ''}</span>
+      <span class="wp">${esc(p.stock ? p.main : T('wheel.each', { price: p.main }))}</span>${noSaleTag(w, 'WHEELS')}
     </button>${infoBtn(w)}</div>`; }).join('');
   syncWheel();
 }
@@ -3004,14 +3163,14 @@ function renderRimSw() {
       style="background:${f.hex2 == null ? hx(f.hex) : `radial-gradient(circle, ${hx(f.hex)} 0 52%, ${hx(f.hex2)} 56%)`}"></button>`).join('');
 }
 function syncWheel() {
-  const w = find(WHEELS, S.wheel), p = priceLabel({ ...w, price: wheelPrice(w, S.rimFinish) });
+  const w = find(WHEELS, S.wheel), p = PL({ ...w, price: wheelPrice(w, S.rimFinish) });
   const f = wheelFinish(w, S.rimFinish);
-  $('rimName').textContent = `${f.name}` + (w.finishes.length > 1 ? `（這款共 ${w.finishes.length} 色）` : '（這款只有這個顏色）');
+  $('rimName').textContent = `${f.name}` + (w.finishes.length > 1 ? T('wheel.finishCount', { n: w.finishes.length }) : T('wheel.finishOnly'));
   $('wheelPick').textContent = `${w.brand ?? ''} ${w.label}`.trim()
-    + (p.main === '原廠' ? '' : ` · 單顆 ${p.main}${p.sub ? `（${p.sub}）` : ''}`);
+    + (p.stock ? '' : ` · ${T('wheel.each', { price: p.main })}${p.sub ? paren(p.sub) : ''}`);
   $('wheelNote').textContent = [
-    w.needsFlares ? `ET${w.offset > 0 ? '+' : '−'}${Math.abs(w.offset)}：輪胎會凸出原廠葉子板，需加寬版輪弧（爆龜）覆蓋。` : '',
-    w.note, w.uncertain ? '（規格或價格未完全查證）' : ''].filter(Boolean).join(' ');
+    w.needsFlares ? T('wheel.flareHint', { offset: `${w.offset > 0 ? '+' : '−'}${Math.abs(w.offset)}` }) : '',
+    w.note, w.uncertain ? T('lift.unverified') : ''].filter(Boolean).join(' ');
 }
 $('wSize').onclick = e => { const b = e.target.closest('[data-ws]'); if (!b) return;
   wSize = b.dataset.ws; renderWChips(); renderWheels(); };
@@ -3036,10 +3195,10 @@ function renderLadder() {
     const need = (t.needLift ?? 0) + (t.needBody ?? 0);
     const rimOK = t.rim === rim;
     const cls = !rimOK ? 'warn' : total < need ? 'bad' : t.legal ? 'ok' : 'warn';
-    const txt = !rimOK ? `需 ${t.rim} 吋框` : total < need ? `需 ${need}mm 舉升`
-      : t.legal ? '可裝' : '可裝 · 超法規';
+    const txt = esc(!rimOK ? T('tyre.needRim', { rim: t.rim }) : total < need ? T('tyre.needLift', { mm: need })
+      : t.legal ? T('tyre.fits') : T('tyre.fitsIllegal'));
     return `<button class="trow" data-t="${esc(t.id)}" aria-pressed="${t.id === S.tyre}">
-      <span class="sz">${esc(t.label)}<em>${t.rim} 吋框 · ${t.width}mm 寬</em></span>
+      <span class="sz">${esc(t.label)}<em>${esc(T('tyre.spec', { rim: t.rim, width: t.width }))}</em></span>
       <span class="bar"><i style="width:${pc.toFixed(1)}%"></i></span>
       <span class="fit ${cls}">Ø${t.dia}<br>${txt}</span></button>`;
   }).join('');
@@ -3051,8 +3210,8 @@ function syncTyre() {
   const need = (t.needLift ?? 0) + (t.needBody ?? 0), gap = need - total;
   $('tyrePick').textContent = `${t.label} · ${tm.label}`;
   $('tyreNote').textContent = [
-    gap > 0 ? `還差 ${gap}mm 舉升才裝得下。` : `目前 ${total}mm 舉升夠。`,
-    `估離地 ${210 + total + Math.round((t.dia - 693) / 2)}mm。`,
+    gap > 0 ? T('tyre.gap', { mm: gap }) : T('tyre.enough', { mm: total }),
+    T('tyre.clearance', { mm: 210 + total + Math.round((t.dia - 693) / 2) }),
     tyreSwap, t.note,
   ].filter(Boolean).join(' ');
   syncOwl();
@@ -3062,7 +3221,7 @@ $('tyreLadder').onclick = e => { const b = e.target.closest('[data-t]'); if (!b)
   S.tyre = t.id; tyreSwap = '';
   if (find(WHEELS, S.wheel).rim !== t.rim) {
     const nw = wList().find(w => w.rim === t.rim) || WHEELS.find(w => w.rim === t.rim);
-    if (nw) { S.wheel = nw.id; normFinish(S); tyreSwap = `輪框已一併換成 ${nw.label}。`; renderWheels(); renderRimSw(); }
+    if (nw) { S.wheel = nw.id; normFinish(S); tyreSwap = T('tyre.wheelSwapped', { label: nw.label }); renderWheels(); renderRimSw(); }
   }
   renderLadder(); update(); };
 
@@ -3089,17 +3248,17 @@ function swatch(cv2, pat) {
   }
   x.fillStyle = 'rgba(0,0,0,.45)'; x.fillRect(W / 2 - 1.5, 0, 3, H);
 }
-const PATS = [['ht', 'H/T', '公路'], ['at', 'A/T', '全地形'], ['rt', 'R/T', '混合地形'], ['mt', 'M/T', '泥地']];
+const PATS = [['ht', 'H/T'], ['at', 'A/T'], ['rt', 'R/T'], ['mt', 'M/T']];   // name: tyre.pattern.<id>
 function renderTabs() {
   const cur = find(TYRE_MODELS, S.tread).pattern;
-  $('patTabs').innerHTML = PATS.map(([id, n, d]) =>
-    `<button data-p="${id}" aria-pressed="${id === cur}"><b>${n}</b><i>${d}</i></button>`).join('');
+  $('patTabs').innerHTML = PATS.map(([id, n]) =>
+    `<button data-p="${id}" aria-pressed="${id === cur}"><b>${n}</b><i>${esc(T('tyre.pattern.' + id))}</i></button>`).join('');
   const list = TYRE_MODELS.filter(t => t.pattern === cur);
   $('treadList').innerHTML = list.map(t => `<div class="pcw">
     <button class="tr" data-tr="${esc(t.id)}" aria-pressed="${t.id === S.tread}"${t.unavailable ? ' disabled' : ''}>
       <canvas data-pat="${t.pattern}" aria-hidden="true"></canvas>
       <span><span class="tb">${esc(t.brand ?? '')}</span><span class="tn">${esc(t.label)}</span></span>
-      ${t.owl ? '<span class="tag on">有白字</span>' : t.unavailable ? '<span class="tag">裝不上</span>' : ''}
+      ${t.owl ? `<span class="tag on">${esc(T('tyre.tag.owl'))}</span>` : t.unavailable ? `<span class="tag">${esc(T('tyre.tag.unavailable'))}</span>` : ''}${noSaleTag(t, 'TYRE_MODELS')}
     </button>${infoBtn(t)}</div>`).join('');
   $('treadList').querySelectorAll('canvas').forEach(c => swatch(c, c.dataset.pat));
 }
@@ -3117,15 +3276,15 @@ $('tgOwl').onclick = e => { if (e.currentTarget.disabled) return;
 const TOGGLE_BOXES = ['togglesBody', 'togglesRack', 'togglesSpare', 'togglesGuard'];
 /** The details button on a card: on touch there is no hover, so this (or a
  *  long press) is the way to the price, the notes and the maker's page. */
-const infoBtn = (it) => `<button class="pinfo" type="button" data-info="${esc(it.id)}" aria-label="${esc(it.label)}：詳細資料與產品頁">i</button>`;
+const infoBtn = (it) => `<button class="pinfo" type="button" data-info="${esc(it.id)}" aria-label="${esc(T('card.infoAria', { label: it.label }))}">i</button>`;
 function syncToggles() {
   if (!$('togglesBody')) return;
   const aw = $('tgAwnSide');
   aw.setAttribute('aria-pressed', S.awningSide === 'right');
-  aw.querySelector('.st').textContent = S.awningSide === 'left' ? '左側' : '右側';
+  aw.querySelector('.st').textContent = T(S.awningSide === 'left' ? 'toggle.left' : 'toggle.right');
   document.querySelectorAll('.toggles [data-k]').forEach(b => {
     b.setAttribute('aria-pressed', !!S[b.dataset.k]);
-    b.querySelector('.st').textContent = S[b.dataset.k] ? '已裝' : '未裝';
+    b.querySelector('.st').textContent = T(S[b.dataset.k] ? 'toggle.fitted' : 'toggle.notFitted');
   });
   $('sides').classList.toggle('off', !S.windowGuards);
   document.querySelectorAll('.sides .pick').forEach(g =>
@@ -3133,13 +3292,13 @@ function syncToggles() {
   document.querySelectorAll('[data-c]').forEach(b => b.setAttribute('aria-pressed', b.dataset.c === S.color));
   document.querySelectorAll('[data-r]').forEach(b => b.setAttribute('aria-pressed', b.dataset.r === S.rimFinish));
   const owl = $('tgOwl');
-  if (!owl.disabled) { owl.setAttribute('aria-pressed', S.owl); owl.querySelector('.st').textContent = S.owl ? '開啟' : '關閉'; }
-  const fl = $('tgFlare'); fl.setAttribute('aria-pressed', S.paintFlares); fl.querySelector('.st').textContent = S.paintFlares ? '車身色' : '原廠黑';
+  if (!owl.disabled) { owl.setAttribute('aria-pressed', S.owl); owl.querySelector('.st').textContent = T(S.owl ? 'toggle.on' : 'toggle.off'); }
+  const fl = $('tgFlare'); fl.setAttribute('aria-pressed', S.paintFlares); fl.querySelector('.st').textContent = T(S.paintFlares ? 'colour.flares.body' : 'colour.flares.stock');
   document.querySelectorAll('[data-rp]').forEach(b => b.setAttribute('aria-pressed', b.dataset.rp === S.rackPaint));
   document.querySelectorAll('[data-sp]').forEach(b => b.setAttribute('aria-pressed', b.dataset.sp === S.split));
   $('splitName').textContent = find(SPLIT_PAINTS, S.split).label;
   const two = $('tgTwo'); two.setAttribute('aria-pressed', S.twoTone);
-  two.querySelector('.st').textContent = S.twoTone ? '開啟' : '關閉';
+  two.querySelector('.st').textContent = T(S.twoTone ? 'toggle.on' : 'toggle.off');
 }
 
 function buildUI() {
@@ -3160,42 +3319,40 @@ function buildUI() {
     ['selFace', FACES, S.face], ['selSpoiler', SPOILERS, S.spoiler], ['selMudFlap', MUD_FLAPS, S.mudFlap], ['selSideMould', SIDE_MOULDINGS, S.sideMould], ['selTent', TENTS, S.tent], ['selCampExtra', CAMP_EXTRAS, S.campExtra], ['selLampCover', LAMP_COVERS, S.lampCover], ['selFender', FENDERS, S.fender], ['selCage', CAGES, S.cage], ['selStripe', STRIPES, S.stripe],
     ...TG_UI.map(([k, sel, , L]) => [sel, L, S[k]])]) opt(id, L, cur);
   $('extPick').innerHTML = EXTINGUISHERS.map(e =>
-    `<button data-v="${e.id}" aria-pressed="${S.extinguisher === e.id}">${esc(e.label.replace('掛', ''))}</button>`).join('');
+    `<button data-v="${e.id}" aria-pressed="${S.extinguisher === e.id}">${esc(e.label.replace(T('ext.dropWord'), ''))}</button>`).join('');
 
   renderLiftSeg(); renderLiftCards();
   renderWChips(); renderWheels(); renderLadder(); renderTabs();
 
   $('selRackPaint').innerHTML = RACK_PAINTS.map(p => `<option value="${p.id}"${p.id === S.rackPaint ? ' selected' : ''}>${esc(p.label)}</option>`).join('');
   $('selSplit').innerHTML = SPLIT_PAINTS.map(p => `<option value="${p.id}"${p.id === S.split ? ' selected' : ''}>${esc(p.label)}</option>`).join('');
-  $('selColor').innerHTML = [['台灣在售', c => c.tw], ['日規專屬', c => !c.tw && !c.wrap], ['改色膜（非原廠色）', c => c.wrap]].map(([g, f]) => {
+  $('selColor').innerHTML = [['colour.group.tw', c => c.tw], ['colour.group.jp', c => !c.tw && !c.wrap], ['colour.group.wrap', c => c.wrap]].map(([g, f]) => {
     const list = COLORS.filter(f); if (!list.length) return '';
-    return `<optgroup label="${g}">` + list.map(c =>
+    return `<optgroup label="${esc(T(g))}">` + list.map(c =>
       `<option value="${c.code}"${c.code === S.color ? ' selected' : ''}>${esc(c.name)}　${c.code}</option>`).join('') + '</optgroup>';
   }).join('');
   // a ring marks the Japan-only colours so the Taiwan range reads as a set
   $('colSw').innerHTML = COLORS.map(c =>
-    `<button class="sw${c.tw || c.wrap ? '' : ' jp'}" data-c="${c.code}" title="${esc(c.name)}${c.tw ? '' : c.wrap ? '（改色膜）' : '（日規）'}"
+    `<button class="sw${c.tw || c.wrap ? '' : ' jp'}" data-c="${c.code}" title="${esc(c.name + (c.tw ? '' : T(c.wrap ? 'colour.titleWrap' : 'colour.titleJp')))}"
       aria-pressed="${c.code === S.color}" style="background:#${c.hex.toString(16).padStart(6, '0')}"></button>`).join('');
   renderRimSw();
-  const SIDE_ITEMS = [['guardCan', '油桶', '7.5L 扁桶'], ['guardAxe', '斧頭', '直立、頭朝上，皮套包刃'],
-    ['guardBoard', '脫困板', '約半個鐵窗高']];
+  const SIDE_ITEMS = [['guardCan', 'guard.can', 'guard.canNote'], ['guardAxe', 'guard.axe', 'guard.axeNote'],
+    ['guardBoard', 'guard.board', 'guard.boardNote']];
   $('sides').innerHTML = SIDE_ITEMS.map(([k, n, d]) => `
-    <div class="side-row"><span class="nm">${n}<i>${d}</i></span>
-      <span class="pick" data-key="${k}">${[['none', '不裝'], ['left', '左'], ['right', '右']].map(([v, l]) =>
-        `<button data-v="${v}" aria-pressed="${S[k] === v}">${l}</button>`).join('')}</span></div>`).join('');
-  const TG = [['windowGuards','鐵窗（WLM）'],['shovel','車頂架鏟子'],
-    ['flares','輪弧鉚釘'],['sideSkirt','側裙飾板（SHOWA）'],
-    ['decals','車門貼字'],['spareBag','備胎書包'],
-    ['spareCover','備胎硬殼蓋'],['gullwing','鷗翼窗（URNIETA 1970）']];
-  $('arbToggles').innerHTML = ARB_RACK_ACC.map(a =>
-    `<button class="tg" data-k="${a.key}" aria-pressed="false"><span class="nm">${esc(a.label)}<i>${esc(priceLabel(a).main)}${priceLabel(a).sub ? `（${priceLabel(a).sub}）` : ''}</i></span><span class="st">未裝</span></button>`).join('');
-  $('lightToggles').innerHTML = [['pillarPods', 'A 柱小圓燈']].map(([k, l]) =>
-    `<button class="tg" data-k="${k}" aria-pressed="false"><span class="nm">${l}</span><span class="st">未裝</span></button>`).join('');
+    <div class="side-row"><span class="nm">${esc(T(n))}<i>${esc(T(d))}</i></span>
+      <span class="pick" data-key="${k}">${['none', 'left', 'right'].map(v =>
+        `<button data-v="${v}" aria-pressed="${S[k] === v}">${esc(T('side.' + v))}</button>`).join('')}</span></div>`).join('');
+  const TG = ['windowGuards', 'shovel', 'flares', 'sideSkirt', 'decals', 'spareBag', 'spareCover', 'gullwing'].map(k => [k, esc(T(TG_NAMES[k]))]);
+  const off = esc(T('toggle.notFitted'));
+  $('arbToggles').innerHTML = ARB_RACK_ACC.map(a => { const p = PL(a);
+    return `<button class="tg" data-k="${a.key}" aria-pressed="false"><span class="nm">${esc(a.label)}<i>${esc(p.main)}${p.sub ? esc(paren(p.sub)) : ''}</i>${noSaleTag(a, 'ARB_RACK_ACC')}</span><span class="st">${off}</span></button>`; }).join('');
+  $('lightToggles').innerHTML = [['pillarPods', esc(T(TG_NAMES.pillarPods))]].map(([k, l]) =>
+    `<button class="tg" data-k="${k}" aria-pressed="false"><span class="nm">${l}</span><span class="st">${off}</span></button>`).join('');
   // the switches live with the part of the car they belong to
   const TG_AT = { windowGuards: 'togglesGuard', shovel: 'togglesRack', flares: 'togglesBody', sideSkirt: 'togglesBody',
     decals: 'togglesBody', gullwing: 'togglesBody', spareBag: 'togglesSpare', spareCover: 'togglesSpare' };
   for (const box of TOGGLE_BOXES) $(box).innerHTML = TG.filter(([k]) => TG_AT[k] === box).map(([k, l]) =>
-    `<button class="tg" data-k="${k}" aria-pressed="false"><span class="nm">${l}</span><span class="st">未裝</span></button>`).join('');
+    `<button class="tg" data-k="${k}" aria-pressed="false"><span class="nm">${l}</span><span class="st">${off}</span></button>`).join('');
   // rack paint and the lower-body split as colour chips over their (hidden) selects
   const hx = (h) => '#' + h.toString(16).padStart(6, '0');
   $('rackSw').innerHTML = RACK_PAINTS.map(p => `<button class="sw${p.hex == null ? ' none' : ''}" data-rp="${p.id}" title="${esc(p.label)}" aria-label="${esc(p.label)}"
@@ -3207,7 +3364,7 @@ function buildUI() {
 
 function hints() {
   const n = o => [o.brand && o.brand !== '—' ? o.brand : '', o.note || '',
-    o.uncertain ? '（未完全查證）' : ''].filter(Boolean).join(' · ');
+    o.uncertain ? T('hint.unverified') : ''].filter(Boolean).join(' · ');
   for (const [id, L, cur] of [['hKit', KITS, S.kit], ['hBumper', FRONT_BUMPERS, S.frontBumper],
     ['hGrille', GRILLES, S.grille], ['hRear', REAR_BUMPERS, S.rearBumper], ['hHood', HOODS, S.hood],
     ['hSpareKit', SPARE_COVERS, S.spareCoverKit], ['hSnorkel', SNORKELS, S.snorkel],
@@ -3217,15 +3374,15 @@ function hints() {
     ['hRoofLights', ROOF_LIGHTS, S.roofLights], ['hGrilleLight', GRILLE_LIGHTS, S.grilleLight],
     ['hFace', FACES, S.face], ['hSpoiler', SPOILERS, S.spoiler], ['hMudFlap', MUD_FLAPS, S.mudFlap], ['hSideMould', SIDE_MOULDINGS, S.sideMould], ['hTent', TENTS, S.tent], ['hCampExtra', CAMP_EXTRAS, S.campExtra], ['hLampCover', LAMP_COVERS, S.lampCover], ['hFender', FENDERS, S.fender], ['hCage', CAGES, S.cage], ['hStripe', STRIPES, S.stripe],
     ...TG_UI.map(([k, , h, L]) => [h, L, S[k]])]) $(id).textContent = n(find(L, cur));
-  $('extNote').textContent = n(find(EXTINGUISHERS, S.extinguisher)) || '市面沒有 JB74 尾梯專用架';
+  $('extNote').textContent = n(find(EXTINGUISHERS, S.extinguisher)) || T('ext.noLadderMount');
   const c = COLORS.find(x => x.code === S.color) || COLORS[0];
-  $('colName').textContent = c.code + (c.tw ? '' : c.wrap ? ' · 改色膜' : ' · 日規');
-  $('colPick').textContent = c.name + (S.twoTone && c.twoTone ? `　雙色 ${c.twoTone}` : '');
-  $('colNote').textContent = [c.tw === '雙色' ? '台灣只有雙色版，請開啟下方雙色車頂。' : '',
-    c.tw || c.wrap ? '' : '台灣未導入。', c.note].filter(Boolean).join(' ');
+  $('colName').textContent = c.code + (c.tw ? '' : T(c.wrap ? 'colour.codeWrap' : 'colour.codeJp'));
+  $('colPick').textContent = c.name + (S.twoTone && c.twoTone ? T('colour.pickTwoTone', { code: c.twoTone }) : '');
+  $('colNote').textContent = [c.tw === '雙色' ? T('colour.twoOnly') : '',
+    c.tw || c.wrap ? '' : T('colour.notInTw'), c.note].filter(Boolean).join(' ');
   { const sp = find(SPLIT_PAINTS, S.split);
-    $('hSplit').textContent = sp.id === 'none' ? '整台同一個顏色' : `窗線以下 ${sp.label}${sp.note ? '・' + sp.note : ''}。非原廠選項：要整車下半重烤或貼膜，價格依烤漆廠報價` ; }
-  $('twoNote').textContent = c.twoTone ? `黑頂 ZJ3　台灣組合代碼 ${c.twoTone}` : '此色無原廠雙色組合';
+    $('hSplit').textContent = sp.id === 'none' ? T('colour.splitNone') : sp.note ? T('colour.splitHintNote', { label: sp.label, note: sp.note }) : T('colour.splitHint', { label: sp.label }); }
+  $('twoNote').textContent = c.twoTone ? T('colour.twoToneCode', { code: c.twoTone }) : T('colour.noTwoTone');
 }
 
 /* ═══ the hover card ═════════════════════════════════════════════════════ */
@@ -3317,24 +3474,23 @@ function showCard(item, anchor, thumb) {
   if (!item || item.id === 'none' || item.id === 'stock') { hideCard(); return; }
   clearTimeout(cardTimer); clearTimeout(cardPend);
   cardAnchor = anchor;
-  const p = priceLabel(item);
+  const p = PL(item);
   const tags = [
-    item.photo ? '已依實照校正' : '',
-    item.cur === 'TWD' ? '台灣有售' : '',
-    item.uncertain ? '規格待查證' : '',
-    item.needsFlares ? '輪胎外凸' : '',
-    item.part ? '' : '',
-  ].filter(Boolean).map(t => `<span class="tag">${t}</span>`).join('');
+    item.photo ? T('card.tag.photo') : '',
+    item.cur === 'TWD' ? T('card.tag.tw') : '',
+    item.uncertain ? T('card.tag.unverified') : '',
+    item.needsFlares ? T('card.tag.poke') : '',
+  ].filter(Boolean).map(x => `<span class="tag">${esc(x)}</span>`).join('');
   cardEl.innerHTML = [
     thumb ? `<img src="${esc(thumb)}" alt="" onerror="this.remove()">` : '',
     item.brand ? `<div class="b">${esc(item.brand)}</div>` : '',
     `<h4>${esc(item.label ?? item.name ?? '')}</h4>`,
-    p.main === '原廠' ? '' : `<div class="p"><b>${p.main}</b>${p.sub ? `<em>${p.sub}</em>` : ''}</div>`,
-    item.part ? `<div class="pn">P/N ${esc(item.part)}</div>` : '',
-    tags ? `<div class="tags">${tags}</div>` : '',
+    p.stock ? '' : `<div class="p"><b>${esc(p.main)}</b>${p.sub ? `<em>${esc(p.sub)}</em>` : ''}</div>`,
+    item.part ? `<div class="pn">${esc(T('card.partNo', { part: item.part }))}</div>` : '',
+    tags || noSale(item) ? `<div class="tags">${tags}${noSaleTag(item)}</div>` : '',
     item.note ? `<div class="n">${esc(item.note)}</div>` : '',
-    item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noopener">看產品頁 ↗</a>` : '',
-    '<button class="cx" type="button" aria-label="關閉">✕</button>',
+    item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noopener">${esc(T('card.productPage'))}</a>` : '',
+    `<button class="cx" type="button" aria-label="${esc(T('card.close'))}">✕</button>`,
   ].filter(Boolean).join('');
   cardEl.hidden = false;
   const r = anchor.getBoundingClientRect(), c = cardEl.getBoundingClientRect();
@@ -3510,17 +3666,17 @@ const FAM = { kit: [KITS, 'selKit'], face: [FACES, 'selFace'], frontBumper: [FRO
   ...Object.fromEntries(TG_UI.map(([k, sel, , L]) => [k, [L, sel]])) };
 const famF = {};                                   // key -> { b: brand filter, q: search }
 const isNone = (it) => it.id === 'none' || it.id === 'stock';
-const brandKey = (it) => (it.brand && it.brand !== '—' ? it.brand : '其他');
+const brandKey = (it) => (it.brand && it.brand !== '—' ? it.brand : T('fam.otherBrand'));
 // a maker's kit is pictured by its style card: the whole kit on the car
 // (the lamp covers have no renders yet: tools/partshots.mjs does not shoot them)
 const famShot = (key, it) => key === 'lampCover' ? null : key !== 'kit' ? shotFor(key, it)
   : isNone(it) ? null : `model/shots/style-kit_${it.id}.webp?v=${BUILD}`;
 function pcard(key, it) {
-  const none = isNone(it), src = none ? null : famShot(key, it), p = priceLabel(it);
+  const none = isNone(it), src = none ? null : famShot(key, it), p = PL(it);
   const mark = (it.brand ?? '').split(/[\s（(×・]/)[0].slice(0, 9);
   return `<div class="pcw"><button class="pc${none ? ' none' : ''}" type="button" data-id="${esc(it.id)}" aria-pressed="${String(S[key]) === String(it.id)}">
     <span class="ph">${src ? `<img src="${src}" alt="" loading="lazy" draggable="false" onerror="this.remove()">` : ''}<span class="ph0">${none ? '∅' : esc(mark)}</span></span>
-    <span class="pt"><i>${none ? '原廠狀態' : esc(it.brand ?? '')}</i><b>${esc(it.label)}</b>${none ? '' : `<em>${esc(p.main)}${p.sub ? `<small>${esc(p.sub)}</small>` : ''}</em>`}</span></button>
+    <span class="pt"><i>${esc(none ? T('fam.stockState') : it.brand ?? '')}</i><b>${esc(it.label)}</b>${none ? '' : `<em>${esc(p.main)}${p.sub ? `<small>${esc(p.sub)}</small>` : ''}</em>${noSaleTag(it)}`}</span></button>
     ${none ? '' : infoBtn(it)}</div>`;
 }
 function renderFam(key) {
@@ -3533,10 +3689,11 @@ function renderFam(key) {
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
     const name = $(sel).getAttribute('aria-label');
     // long lists get a brand row, the longest a search box too
-    box.innerHTML = `<div class="rh"><span class="lbl">${esc(name)} <em>${real.length} 款${box.dataset.note ? `・${esc(box.dataset.note)}` : ''}</em></span>`
-      + (L.length > 9 && brands.length > 2 ? `<div class="fchips">${[['all', '全部品牌', 0], ...brands.map(([b, n]) => [b, b, n])].map(([v, l, n]) =>
+    const note = box.dataset.note ? T(box.dataset.note) : '';
+    box.innerHTML = `<div class="rh"><span class="lbl">${esc(name)} <em>${esc(T(note ? 'fam.countNote' : 'fam.count', { n: real.length, note }))}</em></span>`
+      + (L.length > 9 && brands.length > 2 ? `<div class="fchips">${[['all', T('fam.allBrands'), 0], ...brands.map(([b, n]) => [b, b, n])].map(([v, l, n]) =>
         `<button class="chip" type="button" data-b="${esc(v)}" aria-pressed="${f.b === v}">${esc(l)}${n ? `<em>${n}</em>` : ''}</button>`).join('')}</div>` : '')
-      + (L.length > 14 ? `<input class="q" type="search" placeholder="搜尋${esc(name)}…" aria-label="搜尋${esc(name)}">` : '')
+      + (L.length > 14 ? `<input class="q" type="search" placeholder="${esc(T('fam.search', { name }))}" aria-label="${esc(T('fam.search', { name }).replace('…', ''))}">` : '')
       + `</div><div class="rail" data-rail="${key}"></div>`;
     box.dataset.built = '1';
     const rail = box.querySelector('.rail');
@@ -3641,7 +3798,7 @@ $('selSplit').onchange = e => { S.split = e.target.value; if (S.split !== 'none'
 $('tgFlare').onclick = () => { S.paintFlares = !S.paintFlares; syncToggles(); update(); };
 $('tgTwo').onclick = e => { S.twoTone = !S.twoTone;
   e.currentTarget.setAttribute('aria-pressed', S.twoTone);
-  e.currentTarget.querySelector('.st').textContent = S.twoTone ? '開啟' : '關閉'; update(); };
+  e.currentTarget.querySelector('.st').textContent = T(S.twoTone ? 'toggle.on' : 'toggle.off'); update(); };
 $('tgAwnSide').onclick = () => { S.awningSide = S.awningSide === 'left' ? 'right' : 'left'; syncToggles(); update(); };
 document.querySelectorAll('.sides').forEach(el => el.onclick = e => {
   const b = e.target.closest('[data-v]'); if (!b) return;
@@ -3659,16 +3816,16 @@ function syncCamp() {
   if (!aw.open) S.awningOpen = false;
   if (!aw.room || !S.awningOpen) S.awningRoom = false;
   const set = (id, on, txt) => { const b = $(id); b.setAttribute('aria-pressed', on); b.querySelector('.st').textContent = txt; };
-  set('tgTentOpen', S.tentOpen, S.tentOpen ? '展開' : '收合');
+  set('tgTentOpen', S.tentOpen, T(S.tentOpen ? 'toggle.open' : 'toggle.closed'));
   $('tgTentOpen').disabled = S.tent === 'none';
-  set('tgAwnOpen', S.awningOpen, S.awningOpen ? '展開' : '收合');
+  set('tgAwnOpen', S.awningOpen, T(S.awningOpen ? 'toggle.open' : 'toggle.closed'));
   $('tgAwnOpen').disabled = !aw.open;
-  set('tgRoom', S.awningRoom, S.awningRoom ? '已裝' : '未裝');
+  set('tgRoom', S.awningRoom, T(S.awningRoom ? 'toggle.fitted' : 'toggle.notFitted'));
   $('tgRoom').disabled = !(aw.room && S.awningOpen);
-  $('campAwn').textContent = aw.id === 'none' ? '還沒選車邊帳。' :
-    `${aw.brand ?? ''} ${aw.label}（${S.awningSide === 'left' ? '左' : '右'}側）` +
-    (aw.open?.kind === 'fan' ? `：以車尾端為軸展開 ${aw.open.sweep ?? 270}°，半徑約 ${aw.open.radius}mm` :
-     aw.open ? `：外伸 ${aw.open.projection}mm、沿車 ${aw.open.along}mm` : '');
+  $('campAwn').textContent = aw.id === 'none' ? T('camp.noAwning') :
+    `${aw.brand ?? ''} ${aw.label}${T('awning.sideSuffix', { side: sideName(S.awningSide) })}` +
+    (aw.open?.kind === 'fan' ? T('camp.fan', { deg: aw.open.sweep ?? 270, mm: aw.open.radius }) :
+     aw.open ? T('camp.out', { proj: aw.open.projection, along: aw.open.along }) : '');
 }
 // Three camping set-ups, all opened out. They use only parts in the
 // catalogue: a Front Runner fold-out on an ARB rack with the ARB 2500 awning
@@ -3698,7 +3855,7 @@ $('arbToggles').addEventListener('pointerover', (e) => {
   if (!matchMedia('(hover: hover)').matches) return;
   const b = e.target.closest('[data-k]'); if (!b) return;
   const a = ARB_RACK_ACC.find(x => x.key === b.dataset.k);
-  if (a) hoverCard({ ...a, id: a.key, part: a.pn }, b, shotFor('arbAcc', { id: a.key }));
+  if (a) hoverCard({ ...a, id: a.key, part: a.pn, __list: 'ARB_RACK_ACC' }, b, shotFor('arbAcc', { id: a.key }));
 });
 $('arbToggles').addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') hideCard(); });
 $('lightToggles').onclick = e => {
@@ -3731,66 +3888,151 @@ $('btnExport').onclick = () => {
   const lift = find(LIFTS, S.lift), bl = { body: lift.body ?? 0 };
   const wh = find(WHEELS, S.wheel), ty = find(TYRES, S.tyre);
   const col = COLORS.find(c => c.code === S.color) || COLORS[3];
+  const X = (key, it) => `${T(key)} ${it.label}`;
   const acc = [
-    S.kit !== 'none' && '全車套件 ' + find(KITS, S.kit).label,
-    S.frontBumper !== 'stock' && '前保桿 ' + find(FRONT_BUMPERS, S.frontBumper).label,
-    S.grille !== 'stock' && '水箱護罩 ' + find(GRILLES, S.grille).label,
-    S.rearBumper !== 'stock' && '後保桿 ' + find(REAR_BUMPERS, S.rearBumper).label,
-    S.face !== 'none' && '換臉套件 ' + find(FACES, S.face).label,
-    S.lampCover !== 'none' && '大燈罩 ' + find(LAMP_COVERS, S.lampCover).label,
-    S.rackPaint !== 'none' && '車頂架 ' + find(RACK_PAINTS, S.rackPaint).label,
-    S.split !== 'none' && '下半車身分色 ' + find(SPLIT_PAINTS, S.split).label,
-    S.paintFlares && '輪弧烤成車身色',
-    S.spoiler !== 'none' && '車頂尾翼 ' + find(SPOILERS, S.spoiler).label,
-    S.fender !== 'none' && '寬體葉子板 ' + find(FENDERS, S.fender).label,
-    S.mudFlap !== 'none' && '擋泥板 ' + find(MUD_FLAPS, S.mudFlap).label,
-    S.sideMould !== 'none' && '側飾條 ' + find(SIDE_MOULDINGS, S.sideMould).label,
-    S.cage !== 'none' && '外掛防滾籠 ' + find(CAGES, S.cage).label,
-    S.stripe !== 'none' && '車身拉花 ' + find(STRIPES, S.stripe).label,
-    S.hood !== 'stock' && '引擎蓋 ' + find(HOODS, S.hood).label,
-    S.spareCoverKit !== 'none' && '備胎蓋 ' + find(SPARE_COVERS, S.spareCoverKit).label,
-    S.mirrors !== 'stock' && '後照鏡 ' + find(MIRRORS, S.mirrors).label,
-    ...TG_UI.filter(([k]) => S[k] !== 'none').map(([k, , , L, name]) => `${name} ${find(L, S[k]).label}`),
-    S.roofRack !== 'none' && '車頂架 ' + find(ROOF_RACKS, S.roofRack).label,
-    S.awning !== 'none' && '車邊帳 ' + find(AWNINGS, S.awning).label + (S.awningSide === 'left' ? '（左）' : '（右）'),
-    S.sideStep !== 'none' && '側踏 ' + find(SIDE_STEPS, S.sideStep).label,
-    S.ladder !== 'none' && '後爬梯 ' + find(LADDERS, S.ladder).label,
-    S.snorkel !== 'none' && '呼吸管 ' + find(SNORKELS, S.snorkel).label,
-    S.exhaust !== 'stock' && '排氣管 ' + find(EXHAUSTS, S.exhaust).label,
-    S.lightBar !== 'none' && '車頂燈條 ' + find(LIGHT_BARS, S.lightBar).label,
-    S.roofLights !== 'none' && '車頂圓燈 ' + find(ROOF_LIGHTS, S.roofLights).label,
-    S.grilleLight !== 'none' && '車頭燈條 ' + find(GRILLE_LIGHTS, S.grilleLight).label,
-    S.extinguisher !== 'none' && '滅火器 ' + find(EXTINGUISHERS, S.extinguisher).label,
-    S.pillarPods && 'A 柱小圓燈', S.windowGuards && '鐵窗',
-    ...SIDED.map(k => S[k] !== 'none' && `${S[k] === 'left' ? '左' : '右'}鐵窗${{ guardCan: '油桶', guardAxe: '斧頭', guardBoard: '脫困板' }[k]}`),
+    S.kit !== 'none' && X('part.kit', find(KITS, S.kit)),
+    S.frontBumper !== 'stock' && X('part.frontBumper', find(FRONT_BUMPERS, S.frontBumper)),
+    S.grille !== 'stock' && X('part.grille', find(GRILLES, S.grille)),
+    S.rearBumper !== 'stock' && X('part.rearBumper', find(REAR_BUMPERS, S.rearBumper)),
+    S.face !== 'none' && X('part.face', find(FACES, S.face)),
+    S.lampCover !== 'none' && X('part.lampCover', find(LAMP_COVERS, S.lampCover)),
+    S.rackPaint !== 'none' && X('part.roofRack', find(RACK_PAINTS, S.rackPaint)),
+    S.split !== 'none' && X('part.split', find(SPLIT_PAINTS, S.split)),
+    S.paintFlares && T('part.paintFlares'),
+    S.spoiler !== 'none' && X('part.spoiler', find(SPOILERS, S.spoiler)),
+    S.fender !== 'none' && X('part.fender', find(FENDERS, S.fender)),
+    S.mudFlap !== 'none' && X('part.mudFlap', find(MUD_FLAPS, S.mudFlap)),
+    S.sideMould !== 'none' && X('part.sideMould', find(SIDE_MOULDINGS, S.sideMould)),
+    S.cage !== 'none' && X('part.cage', find(CAGES, S.cage)),
+    S.stripe !== 'none' && X('part.stripe', find(STRIPES, S.stripe)),
+    S.hood !== 'stock' && X('part.hood', find(HOODS, S.hood)),
+    S.spareCoverKit !== 'none' && X('part.spareCover', find(SPARE_COVERS, S.spareCoverKit)),
+    S.mirrors !== 'stock' && X('part.mirrors', find(MIRRORS, S.mirrors)),
+    ...TG_UI.filter(([k]) => S[k] !== 'none').map(([k, , , L, name]) => X(name, find(L, S[k]))),
+    S.roofRack !== 'none' && X('part.roofRack', find(ROOF_RACKS, S.roofRack)),
+    S.awning !== 'none' && X('part.awning', find(AWNINGS, S.awning)) + T('awning.sideShortSuffix', { side: sideName(S.awningSide) }),
+    S.sideStep !== 'none' && X('part.sideStep', find(SIDE_STEPS, S.sideStep)),
+    S.ladder !== 'none' && X('part.ladder', find(LADDERS, S.ladder)),
+    S.snorkel !== 'none' && X('part.snorkel', find(SNORKELS, S.snorkel)),
+    S.exhaust !== 'stock' && X('part.exhaust', find(EXHAUSTS, S.exhaust)),
+    S.lightBar !== 'none' && X('part.lightBar', find(LIGHT_BARS, S.lightBar)),
+    S.roofLights !== 'none' && X('part.roofLightsLong', find(ROOF_LIGHTS, S.roofLights)),
+    S.grilleLight !== 'none' && X('part.grilleLight', find(GRILLE_LIGHTS, S.grilleLight)),
+    S.extinguisher !== 'none' && X('part.extinguisher', find(EXTINGUISHERS, S.extinguisher)),
+    S.pillarPods && T(TG_NAMES.pillarPods), S.windowGuards && T('part.windowGuards'),
+    ...SIDED.map(k => S[k] !== 'none' && T('guard.item', { side: sideName(S[k]), item: T(GUARD_ITEM[k]) })),
     ...(S.roofRack === 'arb' ? ARB_RACK_ACC.filter(a => S[a.key]).map(a => 'ARB ' + a.label) : []),
-    S.tent !== 'none' && '車頂帳 ' + find(TENTS, S.tent).label,
-    S.campExtra !== 'none' && '車尾／車側帳 ' + find(CAMP_EXTRAS, S.campExtra).label,
-    S.awningRoom && 'ARB Deluxe 帳房 813108',
-    S.shovel && '車頂鏟子', S.flares && '輪弧鉚釘',
-    S.sideSkirt && '側裙飾板', S.decals && '車門貼字',
-    S.spareBag && '備胎書包', S.spareCover && '備胎硬殼蓋',
-    S.gullwing && '鷗翼窗'].filter(Boolean);
-  const fl = validate(S, { tyre: ty, lift, bodyLift: bl, wheel: wh });
+    S.tent !== 'none' && X('part.tent', find(TENTS, S.tent)),
+    S.campExtra !== 'none' && X('part.campExtraSlash', find(CAMP_EXTRAS, S.campExtra)),
+    S.awningRoom && T('camp.room'),
+    S.shovel && T('bits.shovelShort'), S.flares && T('bits.flares'),
+    S.sideSkirt && T('bits.sideSkirtShort'), S.decals && T('bits.decals'),
+    S.spareBag && T('bits.spareBag'), S.spareCover && T('bits.spareCover'),
+    S.gullwing && T('bits.gullwingShort')].filter(Boolean);
+  const fl = validate(S, { tyre: ty, lift, bodyLift: bl, wheel: wh }, T);
   const total = lift.lift + bl.body;
-  const pr = (o) => { const p = priceLabel(o); return p.main === '原廠' ? '' : `  ${p.main}${p.sub ? `（${p.sub}）` : ''}`; };
+  const pr = (o) => { const p = PL(o); return p.stock ? '' : `  ${p.main}${p.sub ? paren(p.sub) : ''}`; };
+  const pk = parkingApplies(REGION);
   const o = $('out');
-  o.textContent = ['Jimny JB 74 改裝單（Suzuki Jimny Sierra JB74）', '─'.repeat(30),
-    `車色    ${col.code} ${col.name}${S.twoTone ? '（雙色黑頂）' : ''}`,
-    `懸吊    ${lift.brand ?? ''} ${lift.label}${pr(lift)}`,
-    `輪框    ${wh.brand ?? ''} ${wh.label}  ${wh.rim}×${wh.width}J ET${wh.offset > 0 ? '+' : wh.offset < 0 ? '−' : ''}${Math.abs(wh.offset)}${pr(wh)}`,
-    `輪胎    ${ty.label} Ø${ty.dia}mm · ${find(TYRE_MODELS, S.tread).label}`, '',
-    `總車高  ${$('rHeightN').textContent}mm　（原廠 ${STOCK_H}mm）`,
-    `總舉升  ${total}mm`,
-    `估離地  ${210 + total + Math.round((ty.dia - 693) / 2)}mm`,
-    `停車    ${$('rPark').textContent}`, '',
-    acc.length ? '配件\n' + acc.map(a => '  · ' + a).join('\n') : '配件    無',
-    (() => { const { sum, open } = billTotal(billLines()); return sum ? `\n零件合計  約 ${ntd(sum)}${open ? `（另有 ${open} 項未公布價格）` : ''}，輪框以四顆計、不含輪胎與工資` : null; })(),
-    fl.length ? '\n注意\n' + fl.map(f => '  ! ' + f.msg).join('\n') : '',
-    '', `※ ${FX_NOTE}`, '※ 價格為概略值，實際以代理商報價為準。'].filter(x => x !== null).join('\n');
+  o.textContent = [T('export.header', { car: marketName(REGION) }), '─'.repeat(30),
+    T('export.colour', { code: col.code, name: col.name }) + (S.twoTone ? T('export.twoTone') : ''),
+    T('export.lift', { name: `${lift.brand ?? ''} ${lift.label}`.trim() }) + pr(lift),
+    T('export.wheel', { name: `${wh.brand ?? ''} ${wh.label}  ${wh.rim}×${wh.width}J ET${wh.offset > 0 ? '+' : wh.offset < 0 ? '−' : ''}${Math.abs(wh.offset)}`.trim() }) + pr({ ...wh, price: wheelPrice(wh, S.rimFinish) }),
+    T('export.tyre', { size: ty.label, dia: ty.dia, tread: find(TYRE_MODELS, S.tread).label }), '',
+    T('export.height', { mm: $('rHeightN').textContent, stock: STOCK_H }),
+    T('export.totalLift', { mm: total }),
+    T('export.clearance', { mm: 210 + total + Math.round((ty.dia - 693) / 2) }),
+    pk ? T('export.parking', { text: $('rPark').textContent }) : null, '',
+    acc.length ? T('export.accessories') + '\n' + acc.map(a => '  · ' + a).join('\n') : T('export.accessoriesNone'),
+    (() => { const { sum, open } = billTotal(billLines()); return sum ? '\n' + T(open ? 'export.totalOpen' : 'export.total', { amount: fmtAmt(sum, false), open }) : null; })(),
+    fl.length ? '\n' + T('export.warnings') + '\n' + fl.map(f => '  ! ' + f.msg).join('\n') : '',
+    '', `※ ${T('price.rateNote', { date: FX.date, source: FX.sourceShort })}`, T('export.priceNote')].filter(x => x !== null).join('\n');
   o.classList.add('on'); o.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   navigator.clipboard?.writeText(o.textContent).catch(() => {});
 };
+
+/* ═══ language and region: the switch ═══════════════════════════════════
+   Everything a switch touches is re-rendered in place: the fixed words of the
+   page (data-t / data-th / data-ta in the markup), the catalogue objects'
+   text, and every card, rail and total built from them. The car is not
+   touched. A pick is remembered and written into the address bar, so a link
+   copied from it opens the same way. */
+const LANG_URL = { 'zh-TW': 'zh', en: 'en', ja: 'ja' };
+const setMeta = (sel, v) => document.querySelector(sel)?.setAttribute('content', v);
+function localeMarkup() {
+  const lang = getLang();
+  return `<div class="lseg" role="group" aria-label="${esc(T('lang.label'))}">${LANGS.map(l =>
+      `<button type="button" data-lang="${l}" lang="${l === 'zh-TW' ? 'zh-Hant' : l}" aria-pressed="${l === lang}">${esc(T('lang.' + l))}</button>`).join('')}</div>`
+    + `<label class="lreg"><span>${esc(T('region.label'))}</span><select data-region>${REGION_IDS.map(r =>
+      `<option value="${r}"${r === REGION ? ' selected' : ''}>${esc(T('region.' + r))} · ${REGIONS[r].currency}</option>`).join('')}</select></label>`;
+}
+function applyLocale() {
+  const lang = getLang();
+  window.__jimnyFont?.(lang);
+  document.title = T('meta.app.title');
+  setMeta('meta[name=description]', T('meta.app.description'));
+  setMeta('meta[property="og:title"]', T('meta.app.title'));
+  setMeta('meta[property="og:description"]', T('meta.app.ogDescription'));
+  setMeta('meta[property="og:locale"]', { 'zh-TW': 'zh_TW', en: 'en_US', ja: 'ja_JP' }[lang]);
+  document.documentElement.style.setProperty('--t-live', JSON.stringify(T('gauge.live')));
+  for (const el of document.querySelectorAll('[data-t]')) el.textContent = T(el.dataset.t);
+  for (const el of document.querySelectorAll('[data-th]')) el.innerHTML = T(el.dataset.th);
+  for (const el of document.querySelectorAll('[data-ta]'))
+    for (const pair of el.dataset.ta.split(',')) { const [a, k] = pair.split(':'); el.setAttribute(a, T(k)); }
+  const link = `<a href="https://github.com/carloxthebot/jimny/issues" target="_blank" rel="noopener">${esc(T('disclaimer.reportLink'))}</a>`;
+  for (const el of document.querySelectorAll('.report')) el.innerHTML = T('disclaimer.report', { link });
+  $('markSub').textContent = T('header.subtitle', { car: marketName(REGION) });
+  for (const b of document.querySelectorAll('[data-stage]')) {
+    const k = stageKey(b.dataset.stage) === 'garage' ? 'stage.studio' : 'stage.outdoor';
+    b.dataset.label = T(k); b.setAttribute('aria-label', T(k)); if (!b.disabled) b.textContent = T(k);
+  }
+  $('compass').querySelectorAll('.snap').forEach((b, i) => { b.dataset.tip = T(VIEWS[i][0]); b.setAttribute('aria-label', T(VIEWS[i][0])); });
+  $('catLink').href = `parts.html?lang=${LANG_URL[lang]}&region=${REGION}`;
+  $('locNow').textContent = `${T('lang.' + lang)} · ${REGIONS[REGION].currency}`;
+  $('billLoc').innerHTML = localeMarkup();
+  if (!$('locPop').hidden) $('locPop').innerHTML = localeMarkup();
+  if (rig) $('rateNote').textContent = T('price.rateNote', { date: FX.date, source: FX.sourceShort });
+}
+/** Re-render what the catalogue text and the prices went into. */
+function relocalize() {
+  applyLocale();
+  if (!rig || HEIGHT_CAL === null) return;        // the boot builds all of it anyway
+  for (const b of document.querySelectorAll('[data-fam][data-built]')) delete b.dataset.built;
+  for (const k of Object.keys(famF)) delete famF[k];
+  hideCard(true);
+  buildStyles();
+  document.querySelectorAll('#styles [data-style]').forEach(b => b.setAttribute('aria-pressed', b.dataset.style === styleAt));
+  buildUI();
+  if (catAt >= 0 && document.body.classList.contains('tray-open')) openTray(catAt, subAt[catAt]);
+  $('out').classList.remove('on');
+  update();
+  if (!$('bill').hidden) renderBill();
+}
+async function switchLocale(lang, region) {
+  if (region && REGIONS[region] && region !== REGION) { REGION = region; setRegion(region); }
+  if (lang && lang !== getLang()) {
+    const l = await setLang(lang, { persist: true });
+    localizeCatalogue(PARTS, l);
+  }
+  const u = new URL(location.href);
+  u.searchParams.set('lang', LANG_URL[getLang()]); u.searchParams.set('region', REGION);
+  try { history.replaceState(history.state, '', u); } catch {}
+  relocalize();
+}
+for (const box of [$('billLoc'), $('locPop')]) {
+  box.addEventListener('click', (e) => { const b = e.target.closest('[data-lang]'); if (b) switchLocale(b.dataset.lang, null); });
+  box.addEventListener('change', (e) => { if (e.target.matches('[data-region]')) switchLocale(null, e.target.value); });
+}
+$('locBtn').onclick = () => {
+  const pop = $('locPop'), open = pop.hidden;
+  if (open) pop.innerHTML = localeMarkup();
+  pop.hidden = !open; $('locBtn').setAttribute('aria-expanded', String(open));
+};
+addEventListener('pointerdown', (e) => {
+  if ($('locPop').hidden || e.target.closest?.('#locPop, #locBtn')) return;
+  $('locPop').hidden = true; $('locBtn').setAttribute('aria-expanded', 'false');
+}, true);
+langReady.then(applyLocale);
 
 resize(); frame(false); applyCam();
 (function loop(t) {
