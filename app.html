@@ -21,7 +21,7 @@
      downloaded, parsed and run, which on a phone is seconds of an idle
      connection. (The parts themselves are named by the list.) -->
 <link rel="preload" as="fetch" type="model/gltf-binary" href="model/jimny-hq.glb" crossorigin>
-<link rel="preload" as="fetch" type="application/json" href="model/parts/index.json?v=202609291419" crossorigin>
+<link rel="preload" as="fetch" type="application/json" href="model/parts/index.json?v=202609291423" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- The fonts' stylesheet is 100 KB (Noto Sans TC is cut into ~100 ranges
@@ -1040,17 +1040,17 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { rigJimny, applyConfig, updateSplit, loadFinishes } from './rig.js?v=202609291419';
-import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609291419';
-import { buildAccessory, initParts, ensureParts, partsInFlight, prefetchParts, takeMissing, partNames, getPart, allParts } from './accessories.js?v=202609291419';
-import { openAwning, roofTent, campExtra } from './camp.js?v=202609291419';
-import { buildWheel, loadTreadMasks } from './wheels.js?v=202609291419';
-import * as PARTS from './parts.js?v=202609291419';
+import { rigJimny, applyConfig, updateSplit, loadFinishes } from './rig.js?v=202609291423';
+import { COLORS, ROOF_BLACK, LIFTS, WHEELS, TYRES, TYRE_MODELS, FRONT_BUMPERS, REAR_BUMPERS, GRILLES, SNORKELS, MIRRORS, ROOF_RACKS, AWNINGS, SIDE_STEPS, LADDERS, SIMPLE, validate, KITS, HOODS, SPARE_COVERS, LIGHT_BARS, ROOF_LIGHTS, GRILLE_LIGHTS, EXHAUSTS, EXTINGUISHERS, STRIPES, CAGES, FENDERS, FACES, SPOILERS, MUD_FLAPS, SIDE_MOULDINGS, ARB_RACK_ACC, TENTS, CAMP_EXTRAS, SPLIT_PAINTS, SPLIT_Y, LAMP_COVERS, RACK_PAINTS, STYLES, wheelFinish, wheelPrice, SPARE_DELETES, TG_PANELS, TG_BAGS, TG_FRAMES, HITCHES, CARRIERS, HITCH_STD } from './parts.js?v=202609291423';
+import { buildAccessory, initParts, ensureParts, partsInFlight, prefetchParts, takeMissing, partNames, getPart, allParts } from './accessories.js?v=202609291423';
+import { openAwning, roofTent, campExtra } from './camp.js?v=202609291423';
+import { buildWheel, loadTreadMasks } from './wheels.js?v=202609291423';
+import * as PARTS from './parts.js?v=202609291423';
 import { t as T, setLang, getLang, detectLang, detectRegion, setRegion, localizeCatalogue, zhOf, price, toRegion, formatTotal,
-  currencyOf, roundApprox, money as fmtMoney, available, marketName, parkingApplies, REGIONS, REGION_IDS, LANGS, FX } from './i18n/i18n.js?v=202609291419';
+  currencyOf, roundApprox, money as fmtMoney, available, marketName, parkingApplies, REGIONS, REGION_IDS, LANGS, FX } from './i18n/i18n.js?v=202609291423';
 // Written by stamp.sh on each deploy; shown in the HUD so a stale cached copy
 // is obvious at a glance.
-const BUILD = '202609291419';
+const BUILD = '202609291423';
 
 /* ═══ language and region ════════════════════════════════════════════════
    Two settings (i18n/i18n.js): the language of every word on the page, and
@@ -1478,8 +1478,13 @@ document.getElementById('stagePick').onclick = (e) => { const b = e.target.close
 // The boot screen stays up until this stage is on, so the first picture is
 // the finished one.
 let stageBoot;
+// On a slow link everything fetched at once shares the bandwidth, and the car
+// body waited behind the panorama and the parts. The body goes first; the
+// stage and the opening car's parts start once it is in.
+let bodyArrived; const bodyIn = new Promise(r => { bodyArrived = r; });
 { let st = null; try { st = localStorage.getItem('jimny.stage'); } catch {}
-  stageBoot = setStage(navigator.webdriver || stageKey(st) === 'garage' ? 'garage' : 'outdoor'); }
+  const pick = () => setStage(navigator.webdriver || stageKey(st) === 'garage' ? 'garage' : 'outdoor');
+  stageBoot = navigator.webdriver ? pick() : bodyIn.then(pick); }
 // for the shot tools: they wait on `at` before shooting
 window.__jimnyStage = { get at() { return stageAt; }, get ready() { return !!STAGES[stageAt].sky && scene.environment === STAGES[stageAt].env; },
   set: setStage, STAGES, renderer, kl };
@@ -1701,7 +1706,7 @@ const firstFrame = Promise.all([
     // Start on the parts the opening car will wear while the body is still
     // downloading. A guess from the style's settings: whatever it misses,
     // the first update() asks for, and the boot waits for those too.
-    try { ensureParts(guessParts(bootState())); } catch {}
+    bodyIn.then(() => { try { ensureParts(guessParts(bootState())); } catch {} });
   }),
   loadTreadMasks(TYRE_MODELS, `model/tread/`)]);
 let accessoriesIn = false;
@@ -1849,6 +1854,7 @@ const drawCar = (k) => {
     part way through should not be left staring at a dead screen. */
 function loadBody(tries = 0) {
   loader.load(tries ? `model/jimny-hq.glb?retry=${tries}` : 'model/jimny-hq.glb', async (g) => {
+  bodyArrived();
   await firstFrame;
   await langReady;
   applyLocale();
