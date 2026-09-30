@@ -306,7 +306,8 @@ export function loadTreadMasks(models, base = 'model/tread/') {
       resolve();
     };
     img.onerror = () => resolve();
-    img.src = base + m.mask.file;
+    // (with this module's own ?v=<build>, so the masks are versioned like it)
+    img.src = base + m.mask.file + new URL(import.meta.url).search;
   })));
 }
 

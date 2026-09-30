@@ -12,8 +12,8 @@
 // loaded on demand: call `await setLang('ja')` before rendering Japanese text.
 // zh-TW needs no load (it is the text already in parts.js).
 
-import { STRINGS, LANGS } from './strings.js?v=202609291706';
-import { REGIONS, REGION_IDS, FX, convert, SYMBOL, AVAIL } from './markets.js?v=202609291706';
+import { STRINGS, LANGS } from './strings.js?v=202609300441';
+import { REGIONS, REGION_IDS, FX, convert, SYMBOL, AVAIL } from './markets.js?v=202609300441';
 
 export { LANGS, REGIONS, REGION_IDS, FX };
 
@@ -56,11 +56,36 @@ export async function setLang(lang, { persist = false, storage } = {}) {
 /** Inject catalogue text directly (tests, or a page that bundles it). */
 export function useCatalogue(lang, data) { cat[lang] = data; }
 
-/** Language to start with: stored override, else the region's default. */
-export function detectLang(region, { storage } = {}) {
+/** Language to start with: stored override, else the language of the page's
+    path (/en/, /ja/), else the region's default. */
+export function detectLang(region, { storage, path = pathLang() } = {}) {
   const saved = lsGet(LS_LANG, storage);
   if (saved && LANGS.includes(saved)) return saved;
+  if (path) return path;
   return REGIONS[region]?.lang ?? 'zh-TW';
+}
+
+// ---- per-language entry pages -----------------------------------------------
+// Link crawlers (LINE, Facebook) run no script, so a share preview can only be
+// in the language of the page's static <head>. tools/entries.mjs writes one
+// copy of each page per language with its <head> translated: /jimny/en/ and
+// /jimny/ja/ (+ en/parts.html, ja/parts.html); the root and app.html are the
+// Chinese ones. A language copy says which it is in <html data-lang>.
+export const ENTRY = {
+  app: { 'zh-TW': './', en: 'en/', ja: 'ja/' },
+  parts: { 'zh-TW': 'parts.html', en: 'en/parts.html', ja: 'ja/parts.html' },
+};
+/** The language this page's path stands for ('en' / 'ja'), or null. */
+export function pathLang() {
+  const l = globalThis.document?.documentElement?.dataset?.lang;
+  return LANGS.includes(l) ? l : null;
+}
+/** The address of a page's entry in a language, with `params` as its query.
+    Resolved against the site root (the <base> of a language copy). */
+export function entryUrl(page, lang, params = {}) {
+  const u = new URL(ENTRY[page][LANGS.includes(lang) ? lang : 'zh-TW'], globalThis.document.baseURI);
+  for (const [k, v] of Object.entries(params)) if (v != null) u.searchParams.set(k, v);
+  return u.href;
 }
 
 /**

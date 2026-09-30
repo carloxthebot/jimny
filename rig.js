@@ -23,11 +23,14 @@ export const MODEL_SCALE_TARGET = 3550;   // mm, JB74 overall length
 /** Real PBR finishes (Poly Haven, CC0) shared by the car's trim and the parts.
  *  Box-projected part UVs repeat every 100 mm, so repeat = 100 / real size. */
 let FINISHES = null;
+// the build stamp this module was imported with (?v=<build>, stamp.sh), carried
+// onto the maps so they are versioned like everything else (sw.js caches by it)
+const V = new URL(import.meta.url).search;
 export function loadFinishes(THREE, base = 'model/pbr/') {
   if (FINISHES) return FINISHES;
   const ld = new THREE.TextureLoader();
   const set = (id, mm, k) => {
-    const t = (m) => { const x = ld.load(`${base}${id}_${m}.jpg`); x.wrapS = x.wrapT = THREE.RepeatWrapping; x.repeat.set(100 / mm, 100 / mm); x.anisotropy = 4; return x; };
+    const t = (m) => { const x = ld.load(`${base}${id}_${m}.jpg${V}`); x.wrapS = x.wrapT = THREE.RepeatWrapping; x.repeat.set(100 / mm, 100 / mm); x.anisotropy = 4; return x; };
     return { nor: t('nor_gl'), rough: t('rough'), k };
   };
   FINISHES = {

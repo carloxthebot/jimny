@@ -468,6 +468,7 @@ export const STRINGS = {
   'export.total': { 'zh-TW': '零件合計  約 {amount}，輪框以四顆計、不含輪胎與工資', en: 'Parts total  approx. {amount}, wheels as a set of four, excl. tyres and labour', ja: 'パーツ合計  約 {amount}（ホイール4本分、タイヤ・工賃別）' },
   'export.totalOpen': { 'zh-TW': '零件合計  約 {amount}（另有 {open} 項未公布價格），輪框以四顆計、不含輪胎與工資', en: 'Parts total  approx. {amount} (plus {open} items with no published price), wheels as a set of four, excl. tyres and labour', ja: 'パーツ合計  約 {amount}（ほかに価格非公表 {open} 点）（ホイール4本分、タイヤ・工賃別）' },
   'export.warnings': { 'zh-TW': '注意', en: 'Warnings', ja: '注意' },
+  'export.link': { 'zh-TW': '這台的連結  {url}', en: 'This build  {url}', ja: 'このクルマ  {url}' },
   'export.priceNote': { 'zh-TW': '※ 價格為概略值，實際以代理商報價為準。', en: '※ Prices are approximate; the dealer\'s quote is what counts.', ja: '※ 価格は概算。実際は販売店の見積による。' },
 
   // ── disclaimers: .credit (under the dock), .bill-f (bill footer), bill header small
